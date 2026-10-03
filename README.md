@@ -2,13 +2,15 @@
 
 **PLAY SMARTER. LIVE SMARTER.**
 
-A free, MIT-licensed React + TypeScript game and learning studio. **26 original worlds, 22 hands-on classes, eight missions per world, and three difficulty modes.** Version 3 adds advanced math, geometry, calculus, physics, engine and robot builders, an educational virtual computer, modern survival, water and cooking systems, a local production studio, real-time 3D scenes, and a retro cartridge interface. The local assistant, Mentor/Benefactor/Strategist council, optional guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion. No login, ads, analytics, paid API, backend, or public player profiles.
+A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 44 hands-on classes, eight missions per world, and three difficulty modes.** Version 4 adds US driving and CDL fundamentals, trade apprenticeships, utility dispatch, virtual circuits, fire and water safety, and programmable sports, survival, scenario, and space agents. The studio also includes advanced math and physics, engine/robot/virtual computer builders, modern survival, food and water systems, a local production studio, real-time 3D scenes, and the retro cartridge interface. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
+
+All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
 Repository: https://github.com/larrinamsalva/brainsweatstudios
 
 Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 
-[Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Version 3 verification](docs/verification-v3.md)
+[Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
 
 ## Playable worlds
 
@@ -40,6 +42,17 @@ Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 | Water Works | Build treatment/storage; fix leaks; meet five days of demand | Flow balance, clarity versus safety, alternative sources |
 | Kitchen Craft | Plan portions; heat a virtual dish; measure and set cold storage | Heat transfer, food-specific endpoints, storage, waste |
 | Creator Studio | Sequence scenes; plan a mix; rehearse; export locally | Rundowns, captions, privacy, moderation, bitrate/frame timing |
+| Road Ready | Prepare a trip; compare stopping space; resolve road situations | US driving fundamentals, attention, visibility, official state manuals |
+| CDL Foundations | Inspect a virtual truck; balance and secure cargo; plan decisions | Commercial driving concepts, inspection planning, current ELDT pathways |
+| Trade Bench | Read a blueprint; measure; cut virtual stock; assemble and inspect | Apprenticeship pathways, kerf, tolerance, material planning, quality |
+| Line Crew Dispatch | Identify reported faults; coordinate authorized virtual response | Exclusion zones, qualified crews, clearance and restoration sequence |
+| Circuit Workshop | Assemble a virtual board; configure loads; energize, meter, and diagnose | Ohm's law, series/parallel arrangements, modeled protection trips |
+| Fire Escape Lab | Prepare protection layers; navigate alternate clear exits; meet and request help | Escape plans, alarms, getting out and staying out |
+| Water Watch | Establish protection layers; choose a supervised plan; respond from land | Supervision, lifeguarded settings, life jackets, trained assistance |
+| Sport Bot Arena | Program a controller; manage energy; collect and deliver the ball | Priority rules, routing, repeated goals, reproducible traces |
+| Survival Agent Outpost | Gather seeded supplies; manage water and energy; return home | Reserve policies, route planning, survival model tradeoffs |
+| Scenario Agent Dispatch | Navigate sites; complete observation/protection/qualified-dispatch phases | Ordered response, bounded agents, trace debugging |
+| Space Agent Rendezvous | Approach and brake with virtual thrusters; dock inside a soft window | Relative position/velocity, control priorities, energy, ideal motion |
 
 
 Explorer simplifies resources and adds hints. Builder adds constraints. Master tightens resources and decision depth. Suggested ages are approximate, roughly 8–11, 12–14, and 15–17. No birthday is requested.
@@ -48,13 +61,25 @@ Explorer simplifies resources and adds hints. Builder adds constraints. Master t
 
 Open `#/classes` for two classes in each new learning world. Each includes suggested preparation, an original lesson, worked example, adjustable experiment, three explained knowledge checks, and a link to the live game. Lessons and questions are authored in English and Spanish. Preparation is optional; nothing is locked.
 
-Open `#/lab` to select one of 26 cartridges, or `#/lab/engine` to run a world inside the CRT interface. Green and amber palettes are saved per profile. The actual game host runs inside the console, so checkpoints, bots, earned progress, and classes share the normal studio’s state.
+Open `#/lab` to select one of 37 cartridges, or `#/lab/space` to run a world inside the CRT interface. Green and amber palettes are saved per profile. The actual game host runs inside the console, so checkpoints, bots, earned progress, and classes share the normal studio’s state.
 
 The VM is a bounded educational instruction interpreter, not an OS or arbitrary-code virtualizer. It has no shell, network, or real filesystem access. Engine, robot, survival, and heat values are teaching models with stated assumptions. Water and cooking classes link to CDC and FoodSafety.gov; simulations cannot certify real food or water safety.
 
 Creator Studio previews generated visuals without cameras or microphones. It exports a production-plan JSON and, when the browser supports MediaRecorder/WebM, a silent captioned rehearsal video. It does not stream to an external service. Audio levels are a planning model, and actual video size can differ from the bitrate estimate.
 
 New worlds have native WebGL2 depth, perspective, lighting, and keyboard camera controls, with projected vector fallback. The retro styling uses static scanlines, no flicker. Reduced motion stops animation and repeated drawing; high contrast removes scanlines.
+
+Driving classes use US fundamentals and link to current official state motor vehicle services. CDL lessons link to FMCSA; this studio is not an ELDT training provider or licensing exam. Trade and line-crew lessons introduce careers, measurement, planning, and qualified-work boundaries. Electrical controls operate only a virtual board; fire and water games practice preparedness and escalation, not live hazardous work or rescue procedures. No game badge is a license, qualification, apprenticeship completion, or safety certification.
+
+The four agent worlds use an inspectable priority controller with 1–8 rules. Edit conditions and actions, step an episode, run it, pause, replay the trace, change seeds, or import/export a validated policy JSON. A saved running controller resumes stopped. Agents execute a bounded model with a 120-tick limit, no arbitrary code or cloud language model. The space world uses ideal relative Cartesian motion without orbital gravity. Guided bot practice remains separate from player-earned XP.
+
+## Private online play
+
+The online commons supports 2–4-player cooperative Community Dispatch, 2–4-player Agent Duel, invite-only clans of up to 20, and three-round Agent League tournaments for 2–16 players. Host roles can transfer to an existing member. Preset team signals replace free-text messaging.
+
+Players join with private 12-character invitations. Events lock their roster when everyone is ready; leaving an active event closes it. In competitions, the server chooses three shared seeds and evaluates submitted controllers itself. Opponent results stay concealed until all controllers lock. League standings use model score, then ticks, and do not grant local XP.
+
+Connecting creates a generated player name and a random device credential for the current local profile. Progress backups exclude that credential. Online group membership, preset signals, controller submissions, and results are stored separately from offline progress. Rooms and tournaments expire after one day, clans after 30 days, and devices after 90 days. Players can delete their online identity from the commons. No public directory, real-name field, email sign-up, direct messages, advertising, or analytics is included.
 
 ## Run locally
 
@@ -73,7 +98,7 @@ For browser tests:
 ```sh
 npx playwright install --with-deps chromium firefox webkit
 npm run test:e2e
-BOT_FULL_SWEEP=1 CROSS_BROWSER=1 TEST_PRODUCTION=1 npm run test:e2e
+BOT_FULL_SWEEP=1 CROSS_BROWSER=1 TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e
 ```
 
 If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1`. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` can point tests to an installed compatible Chromium executable. Use `TEST_BASE_URL` to test another served build.
@@ -82,11 +107,11 @@ If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1
 
 The production base path is `/brainsweatstudios/`. All application navigation uses hash routes, such as `/#/game/code`, so a refresh asks Pages for the same entry file. Asset URLs use Vite’s production base path.
 
-In the repository’s **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source. The deployment workflow installs the locked packages, runs lint and unit tests, builds the app, and publishes `dist`. It then checks the actual public studio and uploads a screenshot. Code pushes to `main` redeploy it; documentation-only pushes do not. The browser workflow runs on code pushes to main and pull requests, and can also be started manually. Game-system changes check all 624 authored bot runs in Chromium, plus accessibility and feature flows in Chromium, Firefox, and WebKit. Assistant, stylesheet, and interface-test follow-ups run the interface suite without repeating unchanged bot simulations.
+In the repository’s **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source. The deployment workflow installs the locked packages, runs lint and unit tests, builds the app, and publishes `dist`. It then checks the actual public studio and uploads a screenshot. Code pushes to `main` redeploy it; documentation-only pushes do not. The browser workflow runs on code pushes to main and pull requests, and can also be started manually. Game-system changes check all 888 authored bot runs in Chromium, plus accessibility and feature flows in Chromium, Firefox, and WebKit. Assistant, stylesheet, and interface-test follow-ups run the interface suite without repeating unchanged bot simulations. Deployment also tests the online SQL migration in an isolated PostgreSQL instance, including denied browser grants and concurrent version updates.
 
 To fork with another repository name, change the default base in `vite.config.ts` and the workflow’s `VITE_BASE_PATH`, or set that variable for the build. Set `LIVE_SITE_URL` on the published-studio verification step to the fork’s URL. For a root-domain deployment, use `VITE_BASE_PATH=/ npm run build`.
 
-An original service worker precaches the application and all game chunks after the first successful production visit. After installation finishes, the worlds can run offline. It caches only public application assets; progress stays in local storage. Online reloads request the current page instead of permanently serving an older cached page. Updated workers activate without waiting for every old tab to close and retain the previous build’s assets while those tabs await a refresh. A **Refresh studio** notice lets players choose when to load an update; unfinished checkpoints remain saved. If a tab is still running the original release, close every Brain Sweat tab and reopen the studio once. Use a web server to preview `dist`; opening `index.html` directly from a filesystem is unsupported.
+An original service worker precaches the application and all game chunks after the first successful production visit. After installation finishes, the worlds can run offline. It caches only public application assets; progress stays in local storage. Online service configuration and POST requests are not cached. Online reloads request the current page instead of permanently serving an older cached page. Updated workers activate without waiting for every old tab to close and retain the previous build’s assets while those tabs await a refresh. A **Refresh studio** notice lets players choose when to load an update; unfinished checkpoints remain saved. If a tab is still running the original release, close every Brain Sweat tab and reopen the studio once. Use a web server to preview `dist`; opening `index.html` directly from a filesystem is unsupported.
 
 Before publishing, the workflow rebuilds the original v1 and the pre-fix v2, reproduces the stale-page problem, and tests upgrading with two old tabs open. It checks earned progress, old lazy assets, the update notice in English and Spanish, checkpoint refresh, and continued offline play.
 
@@ -95,15 +120,15 @@ Before publishing, the workflow rebuilds the original v1 and the pre-fix v2, rep
 - Six anonymous local profiles are stored in `brain-sweat-studio:profiles:v2`. Each has its own settings, rewards, and mission checkpoints. The active save is also mirrored under the legacy `brain-sweat-studio:v1` key. Existing version 1 and 2 saves migrate automatically. The schema remains version 2 with optional migrated class records and retro palette.
 - Class experiments and answer checks save per profile, export with backups, and do not grant game XP. A class is marked mastered only after all three answers are correct.
 - Finished results store scores, attempts, completion, XP, Brain Points, badges, settings, and local dates.
-- Score 60 completes a mission; score 90 earns three mastery stars. Eight missions × three modes × twenty-six worlds = 624 distinct completion slots.
+- Score 60 completes a mission; score 90 earns three mastery stars. Eight missions × three modes × thirty-seven worlds = 888 distinct completion slots.
 - Replay XP is only the increase in a mission’s best score. The 3, 6, and 9 completion milestones each award a one-time bonus.
-- Fifty-eight achievement badges use actual mission and level conditions. All games are available from the start.
+- Eighty achievement badges use actual mission and level conditions. All games are available from the start.
 - Challenges rotate deterministically using the device’s local date. Missing a day never removes progress.
 - Settings includes JSON export, validated import, and a confirmation before reset. Import derives XP and badges from mission records and rejects malformed data before replacement.
-- Mission controls save checkpoints during play, including programs, budgets, evidence, dialogue, music, and gardens. Reopen a world or use Continue your adventure to resume. A running robot resumes stopped. Export includes unfinished checkpoints; reset affects only the active profile.
+- Mission controls save checkpoints during play, including programs, budgets, evidence, dialogue, music, gardens, virtual builds, and agent policies/traces. Reopen a world or use Continue your adventure to resume. Running robots and controllers resume stopped. Export includes unfinished checkpoints; reset affects only the active profile.
 - No personal information, tracking, advertising, location, credentials, or real employment details are requested. All scenarios are fictional.
 
-The host receives the ordinary technical requests needed to deliver a website. The app does not send game saves to a server. Browser data deletion can erase a save; keep an exported backup. People sharing one browser can choose separate local slots. Clearing browser data erases those slots.
+The host receives the ordinary technical requests needed to deliver a website. The app does not send offline game saves to a server. Optional online play makes separate service requests, including short-lived salted connection-rate hashes. Browser data deletion can erase a save and an online credential; keep an exported progress backup. People sharing one browser can choose separate local slots. Clearing browser data erases those slots.
 
 ## Architecture
 
@@ -111,13 +136,15 @@ The host receives the ordinary technical requests needed to deliver a website. T
 src/app/          Studio pages and lazy game host
 src/components/  Accessible icons, dialogs, error boundary
 src/engine/      Original geometric scene builder and native WebGL2 renderer
-src/games/       Twenty-six game loops and authored field missions
+src/games/       Thirty-seven game loops, bounded models, and authored field missions
 src/data/        Typed game manifest, difficulty and result interfaces
 src/systems/     Profiles, checkpoints, local council, bots, XP, procedural audio
 src/i18n/        Reviewed Spanish catalog and JSX localization
+src/online/      Authenticated online handler, client, and storage adapters
 src/styles/      Design tokens, responsive layouts, focus and contrast
 tests/           Unit and browser gameplay tests
 scripts/         Offline packaging, dependency notices, screenshots
+supabase/        Isolated online SQL migration and packaged Edge entrypoint
 .github/         Build, verification, and Pages workflows
 ```
 
@@ -137,9 +164,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CODE_OF
 
 ## Licensing
 
-Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions, licenses, and runtime license texts are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Run `npm run licenses` after dependency changes. No copyrighted characters, unlicensed assets, real passwords, or external paid services are included.
+Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions, licenses, and runtime license texts are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Run `npm run licenses` after dependency changes. No copyrighted characters, unlicensed media, or real passwords are included. Optional online project costs depend on the selected service plan.
 
 ## Screenshots
+
+![Version 4 studio](docs/screenshots/v4/studio.png)
+![Trade Bench](docs/screenshots/v4/trade.png)
+![Road space class and experiment](docs/screenshots/v4/road-class.png)
+![Space agent controller](docs/screenshots/v4/space-agent.png)
+
+[All 44 classes](docs/screenshots/v4/classes.png) · [Circuit Workshop](docs/screenshots/v4/circuit.png) · [Line Crew Dispatch](docs/screenshots/v4/line-crew.png) · [Fire Escape Lab](docs/screenshots/v4/fire.png) · [Retro space lab](docs/screenshots/v4/retro.png) · [Phone retro lab](docs/screenshots/v4/mobile-retro.png) · [Online commons](docs/screenshots/v4/online.png) · [Verified public studio](docs/screenshots/v4/live.png)
+
+The [cooperative room](docs/screenshots/v4/online-room.png) and [Agent League standings](docs/screenshots/v4/online-tournament.png) show two independent browser players sharing the real handler in the isolated test service. Public online activation is pending the dedicated project setup.
+
+### Earlier Version 3 worlds
 
 ![Version 3 studio](docs/screenshots/v3/studio.png)
 ![Engine Builder](docs/screenshots/v3/engine.png)

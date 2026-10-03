@@ -1,6 +1,7 @@
+import { arenaObstacles, fireObstacles } from '../games/rung4/models';
 export type Vec3 = [number,number,number];
 export interface Mesh { vertices:number[]; color:string }
-const colors:Record<string,string>={math:'#98caff',geometry:'#d6b0ff',calculus:'#ffaece',physics:'#ffe096',engine:'#ffb17e',robot:'#97eed8',vm:'#a4b5ff',trail:'#b7dc95',water:'#8fe1ff',kitchen:'#ffd49e',creator:'#dfaeff'};
+const colors:Record<string,string>={math:'#98caff',geometry:'#d6b0ff',calculus:'#ffaece',physics:'#ffe096',engine:'#ffb17e',robot:'#97eed8',vm:'#a4b5ff',trail:'#b7dc95',water:'#8fe1ff',kitchen:'#ffd49e',creator:'#dfaeff',driving:'#a4dfc8',cdl:'#ffbf82',trade:'#dfc396',lines:'#afd4ff',electric:'#ffe48e',fire:'#ffb2a0',swim:'#8fe2e7',sports:'#bded90',outpost:'#d5ca9a',scenario:'#b8b4ff',space:'#9edcff'};
 const rgb=(hex:string)=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
 export class MeshBuilder {
   meshes:Mesh[]=[];
@@ -40,6 +41,40 @@ export function build3D(kind:string,data:Record<string,number>={},time=0):Mesh[]
     p.box(0,0,-1.3,6,1.1,1.3,'#5c697d');p.box(0,1.1,-1.3,6.2,0.12,1.5,'#e0d3ba');p.cylinder(-1,1.22,-1.2,0.7,0.5,'#8899a2');p.cylinder(-1,1.73,-1.2,0.6,0.04,c);for(let i=0;i<6;i++)p.orb(-1+Math.sin(i)*0.45,1.79,-1.2+Math.cos(i)*0.4,0.1,'#b5d88c');for(let i=0;i<4;i++)p.orb(-1+Math.sin(time+i)*0.3,1.9+(time*0.3+i*0.22)%1,-1.2,0.05,'#c2d4df');p.box(2,0,1,1.3,2.4,1.1,'#c3d1d3');p.box(2,1.35,1.58,1.1,0.045,0.04,'#4e7189');
   }else if(kind==='creator'){
     p.box(0,0,-1.8,5,2.7,0.2,'#6f5897');p.box(0,0.3,-1.66,4.6,2.1,0.04,c);p.cylinder(0,0,0,0.9,0.13,'#aab5d2');p.box(-2.4,0.6,1,0.7,0.7,0.5,'#273a50');p.box(-2.4,0,1,0.08,0.6,0.08,'#b9cdd6');p.box(-2.4,0,1,1.1,0.05,0.7,'#596f87');for(const x of[-2.5,2.5]){p.box(x,0,-1,0.08,2.7,0.08,'#bbc5d8');p.orb(x,2.75,-1,0.42,'#ffe7ae');}p.box(1.8,0,1.8,1.5,0.6,0.8,'#445a72');for(let i=0;i<5;i++)p.box(1.25+i*0.25,0.62,1.8,0.08,0.1+((data.peak||0)+i)%4*0.03,0.5,c);
+  }else if(kind==='driving'||kind==='cdl'){
+    p.box(0,0,0,8.1,0.03,2.5,'#192b38');for(let i=-3;i<=3;i++)p.box(i,0.04,0,0.5,0.02,0.05,'#f1e5bb');
+    const x=-2+(data.progress||0)*4;p.box(x,0.2,0,kind==='cdl'?2.9:1.5,0.55,0.85,c);p.box(x-0.2,0.75,0,0.8,0.4,0.72,'#d4ecf3');
+    if(kind==='cdl'){p.box(x+1.1,0.75,0,1.7,1.05,0.94,'#8097aa');p.box(x+1.1,1.83,0,1.7,0.04,0.94,c);}
+    for(const dx of[-0.55,0.55])for(const dz of[-0.5,0.5])p.orb(x+dx,0.25,dz,0.23,'#111f2d');
+    for(const z of[-2,2])for(const sx of[-3,0,3]){p.box(sx,0,z,0.08,1.8,0.08,'#859dad');p.box(sx,1.4,z,0.6,0.6,0.08,z<0?'#e09789':'#bbd392');}
+    for(let i=0;i<5;i++)p.box(2.4+i*0.22,0.05,0,0.08,0.02,2.4,'#d2d8c7');
+  }else if(kind==='trade'){
+    p.box(0,0,0,6,0.9,3.8,'#526676');p.box(0,0.9,0,6.2,0.1,4,'#b2916d');
+    const w=data.width||3.4,h=data.height||2.2,n=data.parts??4;for(let i=0;i<Math.min(4,n);i++){if(i%2===0)p.box(0,1,-h/2+(i/2)*h,w,0.16,0.17,c);else p.box(-w/2+Math.floor(i/2)*w,1,0,0.17,0.16,h,c);}
+    p.box(-2.3,1.02,0,0.2,0.025,3,'#d9e3dd');for(let i=0;i<13;i++)p.box(-2.27,1.05,-1.3+i*0.2,0.07,0.02,0.015,'#44596c');
+    p.box(2.3,1.04,0,0.65,0.06,2.4,'#4e84a0');for(let i=0;i<4;i++)p.box(2.3,1.11,-0.8+i*0.5,0.42,0.01,0.025,'#b2d7df');
+  }else if(kind==='lines'){
+    for(let i=0;i<6;i++){const x=-3+(i%3)*3,z=-2+Math.floor(i/3)*4;p.box(x,0,z,1.4,0.9,1.2,(data.progress||0)>=1?c:'#526d85');p.box(x,0.9,z,1.55,0.16,1.4,'#adc5cc');p.box(x,0.2,z+0.62,0.3,0.55,0.04,c);p.box(x+0.85,0,z,0.12,2,0.12,'#a98e70');p.box(x+0.85,1.8,z,0.9,0.08,0.08,'#c7d1d4');if(i%3<2)p.box(x+2.15,1.7,z,2.6,0.025,0.025,'#829bac');}
+    p.box(0,0,0,8,0.05,0.85,'#213644');p.box(-3+(data.selected||0)%3*3,0.08,0,0.8,0.42,0.55,'#ffbc77');
+  }else if(kind==='electric'){
+    p.box(0,0,0,6.7,0.15,4.6,'#315e53');p.box(-2.3,0.15,0,0.65,0.75,1.3,'#657d91');p.box(-2.3,0.91,0,0.5,0.07,0.9,c);
+    for(const z of[-1,1]){p.box(0,0.2,z,1.4,0.3,0.45,'#be9a72');p.box(0,0.52,z,0.1,0.03,0.45,'#6e5861');p.box(-1.1,0.2,z,0.8,0.04,0.05,c);p.box(1.1,0.2,z,0.8,0.04,0.05,c);}
+    p.box(1.6,0.2,0,0.05,0.04,2,'#efb176');p.box(-1.6,0.2,0,0.05,0.04,2,'#efb176');p.box(2.3,0.15,0,1,0.55,1.4,'#697aac');p.box(2.3,0.72,0,0.7,0.04,0.8,(data.current||0)>0?'#bcf197':'#92b9c9');
+  }else if(kind==='fire'){
+    p.box(0,0,-2.8,8.2,1.2,0.15,'#8b7a8e');p.box(-4,0,0,0.15,1.2,5.6,'#8b7a8e');
+    for(const [x,z]of fireObstacles(data.mission||0))p.box(x-3.5,0,z-2.5,0.8,1,0.8,'#766579');
+    const exitX=(data.mission||0)%2?3.5:-3.5;p.box(exitX,0,-2.5,0.8,0.06,0.8,'#b1e8a6');p.box(exitX,1.25,-2.8,0.7,0.35,0.08,'#b1e8a6');p.cylinder((data.x??1)-3.5,0,(data.y??4)-2.5,0.17,0.52,c);p.orb((data.x??1)-3.5,0.7,(data.y??4)-2.5,0.2,'#dce4df');
+  }else if(kind==='swim'){
+    p.box(0,0,0,6,0.1,4.2,'#60bad0');p.box(-3.4,0,-0.1,0.8,0.45,5.2,'#d6c4a2');p.box(3.4,0,-0.1,0.8,0.45,5.2,'#d6c4a2');for(let i=0;i<4;i++)p.box(0,0.13,-1.5+i,5.8,0.02,0.025,'#b3ebef');
+    p.cylinder(-3.3,0.5,-1.5,0.12,1.35,'#c9e1e3');p.box(-3.3,1.7,-1.5,0.6,0.3,0.6,c);p.cylinder(3.3,0.5,1,0.36,0.1,'#ffbb8c');p.cylinder(3.3,0.61,1,0.2,0.02,'#d6c4a2');p.box(0,0.2,2.4,2,0.1,0.4,c);
+  }else if(['sports','outpost','scenario'].includes(kind)){
+    for(const [x,z]of arenaObstacles(data.seed||0))p.box(x-4,0,z-3,0.8,0.75,0.8,'#54667b');
+    if(kind==='sports'){p.box(4,0,0,0.12,1.8,2.4,'#c3e8d9');p.box(3.6,1.8,0,0.9,0.08,2.4,c);p.orb(-1,0.18,0,0.18,'#f2d29f');}
+    else{p.box(-3,0,-2.2,1.2,1,1.2,'#8fa589');for(const [x,z]of [[2,1],[5,5],[8,3],[3,5],[7,1]])p.box(x-4,0,z-3,0.35,0.35,0.35,kind==='outpost'?'#e1c08f':'#b8b4ff');}
+    const x=(data.x??0)-4,z=(data.y??3)-3;p.box(x,0.2,z,0.55,0.35,0.6,c);p.box(x,0.55,z,0.36,0.24,0.35,'#d0e0e8');p.orb(x,0.74,z+0.18,0.07,'#20374b');
+  }else if(kind==='space'){
+    p.box(-2,0,-0.5,1.6,1.6,1.6,'#607b96');p.box(-2,1.6,-0.5,1.7,0.15,1.7,c);p.box(-3.4,0.8,-0.5,1.2,0.04,2,'#7187bf');p.box(-0.6,0.8,-0.5,1.2,0.04,2,'#7187bf');p.cylinder(-2,0,-0.5,0.95,0.1,'#97c9d8');
+    const x=Math.max(-1.4,Math.min(3.6,-1.4+(data.x??50)*0.075)),z=Math.max(-2,Math.min(2,(data.y??3)*0.25));p.box(x,0.65,z,0.7,0.45,0.8,'#c3d0df');p.box(x,0.8,z-0.9,1.4,0.04,0.75,c);p.box(x,0.8,z+0.9,1.4,0.04,0.75,c);for(let i=0;i<8;i++)p.orb(-3.5+i,0.6+(i%3)*0.7,-2.5,0.04,'#edf1dd');
   }
   return p.meshes;
 }

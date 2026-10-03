@@ -1,4 +1,5 @@
 import { isAdvanced } from '../games/advanced/models';
+import { isRungFour } from '../games/rung4/models';
 import { Art3D } from './Scene3D';
 import { memo, useEffect, useRef, useState } from 'react';
 import { buildWorld, cssColor, type SceneData } from './geometry';
@@ -16,7 +17,7 @@ out vec4 out_color;
 void main() { out_color = v_color; }`;
 
 export const WorldArt = memo(function WorldArt({ kind, className = '', data = {} }: { kind: string; className?: string; data?: SceneData }) {
-  if (isAdvanced(kind)) return <div className={`world-art ${className}`}><Art3D kind={kind} /></div>;
+  if (isAdvanced(kind) || isRungFour(kind)) return <div className={`world-art ${className}`}><Art3D kind={kind} /></div>;
   const p = buildWorld(kind, data);
   return <svg className={`world-art ${className}`} viewBox="0 0 800 380" aria-hidden="true" focusable="false">{p.shapes.map((s, i) => <polygon key={i} points={s.points.map(point => point.join(',')).join(' ')} fill={cssColor(s.color)} />)}</svg>;
 });

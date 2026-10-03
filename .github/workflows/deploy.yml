@@ -18,6 +18,17 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: isolated-ci-only
+          POSTGRES_DB: brain_sweat_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d brain_sweat_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -34,6 +45,14 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /brainsweatstudios/
+      - name: Verify isolated online database permissions and concurrency
+        run: bash scripts/verify-online-sql.sh
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: isolated-ci-only
+          PGDATABASE: brain_sweat_test
       - run: npx playwright install --with-deps chromium
       - name: Verify returning-player upgrades and offline play
         run: |
@@ -51,20 +70,20 @@ jobs:
           node scripts/verify-production.mjs
       - name: Verify advanced learning flows and graphics
         run: |
-          TEST_PRODUCTION=1 npm run test:e2e -- tests/e2e/advanced-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
+          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
       - name: Capture review graphics
         if: always()
         run: |
           node scripts/test-server.mjs &
           studio_server_pid=$!
           trap 'kill "$studio_server_pid"' EXIT
-          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v3.mjs
+          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v4.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: advanced-studio-review
+          name: rung-four-studio-review
           path: |
-            docs/screenshots/v3
+            docs/screenshots/v4
             test-results
           retention-days: 14
       - name: Upload website
@@ -102,5 +121,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: live-studio-screenshot
-          path: docs/screenshots/live-v3.png
+          path: docs/screenshots/live-v4.png
           retention-days: 14

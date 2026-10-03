@@ -1,5 +1,7 @@
 import { isAdvanced } from '../games/advanced/models';
 import { validateAdvanced } from '../games/advanced/validation';
+import { isRungFour } from '../games/rung4/models';
+import { validateRungFour } from '../games/rung4/validation';
 import type { Checkpoint, Difficulty, GameId, Json } from '../data/types';
 
 type Validator = (value: unknown) => boolean;
@@ -52,12 +54,13 @@ export function validJson(v: unknown, depth = 0): v is Json {
   return object(v) && Object.keys(v).length <= 100 && Object.entries(v).every(([k, val]) => !['__proto__', 'constructor', 'prototype'].includes(k) && validJson(val, depth + 1));
 }
 export function parseSessionKey(key: string): { game: GameId; difficulty: Difficulty; mission: number } | null {
-  const match = /^(money|hustle|scam|media|fix|code|career|food|admin|talk|power|rescue|music|frequency|botany|math|geometry|calculus|physics|engine|robot|vm|trail|water|kitchen|creator)\/(explorer|builder|master)\/([0-7])$/.exec(key);
+  const match = /^(money|hustle|scam|media|fix|code|career|food|admin|talk|power|rescue|music|frequency|botany|math|geometry|calculus|physics|engine|robot|vm|trail|water|kitchen|creator|driving|cdl|trade|lines|electric|fire|swim|sports|outpost|scenario|space)\/(explorer|builder|master)\/([0-7])$/.exec(key);
   return match ? { game: match[1] as GameId, difficulty: match[2] as Difficulty, mission: Number(match[3]) } : null;
 }
 export function validSlot(game: string, key: string, value: unknown, difficulty?: string, mission?: number): boolean {
   if (!validJson(value)) return false;
   if (isAdvanced(game)) return key === 'model' && validateAdvanced(game, value, mission);
+  if (isRungFour(game)) return key === 'model' && validateRungFour(game, value, mission, Math.max(0, ['explorer', 'builder', 'master'].indexOf(difficulty || 'explorer')));
   if (!Object.hasOwn(slots, game)) return false;
   const rules = slots[game as GameId]!; const field = Object.hasOwn(fieldSlots, key);
   if (field) return !['music', 'frequency', 'botany'].includes(game) && (mission === undefined || mission >= 5) && fieldSlots[key](value);
@@ -70,7 +73,7 @@ export function validSlot(game: string, key: string, value: unknown, difficulty?
   return true;
 }
 export function validateCheckpoints(raw: unknown): Record<string, Checkpoint> {
-  if (!object(raw) || Object.keys(raw).length > 624) throw new Error('Invalid mission checkpoints.');
+  if (!object(raw) || Object.keys(raw).length > 888) throw new Error('Invalid mission checkpoints.');
   const result: Record<string, Checkpoint> = {};
   for (const [key, entry] of Object.entries(raw)) {
     const session = parseSessionKey(key);

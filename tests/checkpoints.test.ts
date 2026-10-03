@@ -1,4 +1,5 @@
 import { machineStart, robotStart, trailStart, waterStart, isAdvanced } from '../src/games/advanced/models';
+import { arenaStart, electricStart, fireStart, isRungFour, lineStart, roadStart, tradeStart, truckStart, waterSafetyStart } from '../src/games/rung4/models';
 import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
@@ -8,7 +9,7 @@ import { freshSave, recordResult, SAVE_KEY, validateSave } from '../src/systems/
 import { parseSessionKey, validJson, validSlot, validateCheckpoints } from '../src/systems/checkpointValidation';
 import { powerTurn } from '../src/games/PowerGrid';
 
-const files: Record<GameId, string> = { money: 'MoneyMission', hustle: 'SideHustle', scam: 'ScamShield', media: 'MediaDetective', fix: 'FixItLab', code: 'CodeQuest', career: 'CareerForge', food: 'FoodFuel', admin: 'LifeAdmin', talk: 'TalkItOut', power: 'PowerGrid', rescue: 'RealWorldRescue', music: 'MusicMaker', frequency: 'FrequencyLab', botany: 'BotanyGarden', math:'advanced/STEMWorlds', geometry:'advanced/STEMWorlds', calculus:'advanced/STEMWorlds', physics:'advanced/STEMWorlds', engine:'advanced/Builders', robot:'advanced/Builders', vm:'advanced/Builders', trail:'advanced/LifeWorlds', water:'advanced/LifeWorlds', kitchen:'advanced/LifeWorlds', creator:'advanced/CreatorStudio' };
+const files: Record<GameId, string> = { money: 'MoneyMission', hustle: 'SideHustle', scam: 'ScamShield', media: 'MediaDetective', fix: 'FixItLab', code: 'CodeQuest', career: 'CareerForge', food: 'FoodFuel', admin: 'LifeAdmin', talk: 'TalkItOut', power: 'PowerGrid', rescue: 'RealWorldRescue', music: 'MusicMaker', frequency: 'FrequencyLab', botany: 'BotanyGarden', math:'advanced/STEMWorlds', geometry:'advanced/STEMWorlds', calculus:'advanced/STEMWorlds', physics:'advanced/STEMWorlds', engine:'advanced/Builders', robot:'advanced/Builders', vm:'advanced/Builders', trail:'advanced/LifeWorlds', water:'advanced/LifeWorlds', kitchen:'advanced/LifeWorlds', creator:'advanced/CreatorStudio', driving:'rung4/HumanWorlds',cdl:'rung4/HumanWorlds',trade:'rung4/HumanWorlds',lines:'rung4/HumanWorlds',electric:'rung4/HumanWorlds',fire:'rung4/HumanWorlds',swim:'rung4/HumanWorlds',sports:'rung4/AgentArena',outpost:'rung4/AgentArena',scenario:'rung4/AgentArena',space:'rung4/AgentArena' };
 const modes: Difficulty[] = ['explorer', 'builder', 'master'];
 const date = '2026-10-03T03:00:00.000Z';
 const power = powerTurn({ solar: 2, wind: 1, sun: 0.8, breeze: 0.4, demand: 8, stored: 2, capacity: 4, useBattery: true, gridEnabled: true, cash: 38, efficiency: false });
@@ -16,6 +17,8 @@ function states(difficulty: Difficulty): Record<GameId, Record<string, Json>> {
   const d = modes.indexOf(difficulty);
   const stem={answer:'4',parameter:3,tested:1,correct:true,feedback:'Matched.'};
   return {
+    driving:{model:JSON.parse(JSON.stringify(roadStart()))},cdl:{model:JSON.parse(JSON.stringify(truckStart()))},trade:{model:JSON.parse(JSON.stringify(tradeStart()))},lines:{model:JSON.parse(JSON.stringify(lineStart()))},electric:{model:JSON.parse(JSON.stringify(electricStart()))},fire:{model:JSON.parse(JSON.stringify(fireStart()))},swim:{model:JSON.parse(JSON.stringify(waterSafetyStart()))},
+    sports:{model:JSON.parse(JSON.stringify({seed:0,rules:[{when:'always',action:'approach'}],episode:arenaStart('sports',0,d),tests:0}))},outpost:{model:JSON.parse(JSON.stringify({seed:0,rules:[{when:'always',action:'approach'}],episode:arenaStart('outpost',0,d),tests:0}))},scenario:{model:JSON.parse(JSON.stringify({seed:0,rules:[{when:'always',action:'approach'}],episode:arenaStart('scenario',0,d),tests:0}))},space:{model:JSON.parse(JSON.stringify({seed:0,rules:[{when:'always',action:'approach'}],episode:arenaStart('space',0,d),tests:0}))},
     math:{model:stem},geometry:{model:stem},calculus:{model:stem},physics:{model:stem},
     engine:{model:{config:{type:'piston',cylinders:4,throttle:65,gear:3,cooling:4,load:20},parts:['Power source'],runs:1,tested:true,history:[1000]}},
     robot:{model:JSON.parse(JSON.stringify({config:{motor:2,battery:50,sensor:1,wheels:'grip'},parts:['Chassis'],program:['F'],robot:robotStart(50),tests:1}))},
@@ -54,7 +57,7 @@ beforeEach(() => { vi.resetModules(); storage = memoryStorage(); vi.stubGlobal('
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('checkpoint schemas and migration', () => {
-  it('covers every state field authored in all twenty-six worlds and field missions', () => {
+  it('covers every state field authored in all thirty-seven worlds and field missions', () => {
     const fixtures = states('master');
     for (const [game, file] of Object.entries(files)) {
       const source = readFileSync(new URL(`../src/games/${file}.tsx`, import.meta.url), 'utf8');
@@ -65,12 +68,12 @@ describe('checkpoint schemas and migration', () => {
     const names = [...source.matchAll(/useMissionState(?:<[\s\S]*?>)?\('([^']+)'/g)].map(match => match[1]);
     expect(names.sort()).toEqual(Object.keys(field).filter(k => k !== 'baseOutcome').sort());
   });
-  it('roundtrips all 624 world/mode/mission checkpoint slots without losing fractional model state', () => {
+  it('roundtrips all 888 world/mode/mission checkpoint slots without losing fractional model state', () => {
     const save = freshSave();
     for (const difficulty of modes) for (const [game, state] of Object.entries(states(difficulty))) for (let mission = 0; mission < 8; mission++) {
-      save.checkpoints[`${game}/${difficulty}/${mission}`] = checkpointEntry({ ...state, ...(mission >= 5 && !isAdvanced(game) && !['music', 'frequency', 'botany'].includes(game) ? field : {}) }, mission % 2 === 1);
+      save.checkpoints[`${game}/${difficulty}/${mission}`] = checkpointEntry({ ...state, ...(mission >= 5 && !isAdvanced(game) && !isRungFour(game) && !['music', 'frequency', 'botany'].includes(game) ? field : {}) }, mission % 2 === 1);
     }
-    expect(Object.keys(save.checkpoints)).toHaveLength(624);
+    expect(Object.keys(save.checkpoints)).toHaveLength(888);
     expect(validateSave(JSON.parse(JSON.stringify(save)))).toEqual(save);
     expect(validSlot('power', 'history', [power])).toBe(true);
     expect(Object.hasOwn(power, 'cash')).toBe(false);

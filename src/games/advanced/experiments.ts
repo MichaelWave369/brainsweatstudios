@@ -1,5 +1,7 @@
 import { engineRun, kitchenHeat, projectile, round, streamBudget } from './models';
+import { rungFourExperiment } from '../rung4/experiments';
 export function experiment(kind:string,value:number):{formula:string;rows:[string,number,string][]}{
+ const rung=rungFourExperiment(kind,value);if(rung)return rung;
  switch(kind){
  case'linear':return{formula:'y = 2x + 3',rows:[['Input',value,''],['Output',2*value+3,'']]};
  case'growth':return{formula:'amount = 100 × 1.1ⁿ',rows:[['Periods',value,''],['Amount',round(100*1.1**value),'units']]};

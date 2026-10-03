@@ -21,6 +21,9 @@ self.addEventListener('message', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== self.location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
+  // Optional online configuration can be connected after an app release.
+  // Never retain an old endpoint or cache online session responses.
+  if (url.pathname.endsWith('/online-service.json')) return;
   if (event.request.mode === 'navigate') {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE);

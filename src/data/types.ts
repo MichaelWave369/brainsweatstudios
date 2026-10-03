@@ -3,7 +3,7 @@ import type { ComponentType } from 'react';
 
 export type Difficulty = 'explorer' | 'builder' | 'master';
 export type Skill = 'Money' | 'Business' | 'Safety' | 'Digital literacy' | 'Problem solving' | 'Logic' | 'Work' | 'Health' | 'Independence' | 'Communication' | 'Technology' | 'Music' | 'Sound science' | 'Botany' | 'Ecology' | 'Mathematics' | 'Geometry' | 'Calculus' | 'Physics' | 'Engineering' | 'Robotics' | 'Computing' | 'Resilience' | 'Water systems' | 'Cooking' | 'Production';
-export type GameId = 'money' | 'hustle' | 'scam' | 'media' | 'fix' | 'code' | 'career' | 'food' | 'admin' | 'talk' | 'power' | 'rescue' | 'music' | 'frequency' | 'botany' | 'math' | 'geometry' | 'calculus' | 'physics' | 'engine' | 'robot' | 'vm' | 'trail' | 'water' | 'kitchen' | 'creator';
+export type GameId = 'money' | 'hustle' | 'scam' | 'media' | 'fix' | 'code' | 'career' | 'food' | 'admin' | 'talk' | 'power' | 'rescue' | 'music' | 'frequency' | 'botany' | 'math' | 'geometry' | 'calculus' | 'physics' | 'engine' | 'robot' | 'vm' | 'trail' | 'water' | 'kitchen' | 'creator' | 'driving' | 'cdl' | 'trade' | 'lines' | 'electric' | 'fire' | 'swim' | 'sports' | 'outpost' | 'scenario' | 'space';
 export interface GameManifest {
   id: GameId; title: string; description: string; category: string;
   skills: Skill[]; color: string; icon: string; minutes: string;

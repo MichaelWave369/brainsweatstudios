@@ -82,4 +82,5 @@ fieldset.academy-panel { padding-top:1rem; min-inline-size:0; }
 .runtime-values > div { display: grid; padding: .5rem; background: #213529; border: 1px solid #5b8067; border-radius: .4rem; }
 .runtime-values span, .runtime-values strong { font-size: .8rem; overflow-wrap: anywhere; }
 .runtime-inspector details { margin-block: .6rem; }
+.runtime-lab button.text-link { background: transparent; border: 0; padding: .5rem .25rem; color: #caff66; font: inherit; line-height: 1.5; text-align: left; overflow-wrap: anywhere; }
 @media (max-width: 460px) { .runtime-facts { grid-template-columns: 1fr; } .runtime-table th, .runtime-table td { padding: .5rem .3rem; font-size: .75rem; } .academy-tabs { flex-wrap: wrap; } }

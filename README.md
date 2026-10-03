@@ -2,7 +2,7 @@
 
 **PLAY SMARTER. LIVE SMARTER.**
 
-A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** Version 5 adds an agent academy: bounded controller search, a rover that learns action values from rewards, separate evaluation trials, policy maps, and replayable simulations. Richer geometric worlds, dynamic shadows, and original stereo music and effects bring the experiments to life. Driving/CDL introductions, trades and safety, math and physics, engine/robot/virtual computer builders, modern survival, food/water systems, production planning, and the retro lab remain playable. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
+A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** Version 6 makes the five agent simulations share a deterministic headless runtime, validated controller actions, verified episode receipts, explicit training/validation/holdout splits, bounded transfer experiments and reproducible manifests. The Academy trace inspector shows observations, actions, rewards, controller reasons and state hashes. Richer geometric worlds, dynamic shadows, and original stereo music and effects bring the experiments to life. Driving/CDL introductions, trades and safety, math and physics, engine/robot/virtual computer builders, modern survival, food/water systems, production planning, and the retro lab remain playable. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
@@ -10,7 +10,7 @@ Repository: https://github.com/larrinamsalva/brainsweatstudios
 
 Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 
-[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
+[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 6 verification](docs/verification-v6.md) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
 
 ## Playable worlds
 
@@ -75,7 +75,7 @@ The four agent worlds use an inspectable priority controller with 1–8 rules. E
 
 ## Agent academy
 
-Open `#/academy` or `#/academy?tab=rover`. Training, evaluation, and replay use local simulations and award no game XP. Learned values, controller rules, and training histories save per profile and travel with progress backups. The separate academy JSON can also be exported and strictly validated on import. Training and replay resume stopped after refresh or import; pausing and hidden tabs suspend active work.
+Open `#/academy`, `#/academy?tab=rover` or `#/academy?tab=lab`. Training, evaluation, and replay use local simulations and award no game XP. Learned values, controller rules, and training histories save per profile and travel with progress backups. The separate academy JSON can also be exported and strictly validated on import. Training and replay resume stopped after refresh or import; pausing and hidden tabs suspend active work.
 
 The **controller lab** searches nearby 1–8-rule policies across eight fixed training seeds. Completion wins first, then model score, then fewer ticks. Six generations can improve an incomplete default controller in the sports, survival, scenario, or space arena. Three curricula reuse Explorer/Builder/Master constraints. Evaluation freezes the champion and uses eight separate seeds, with worst score, ticks, reserves, failure advice, and trace replay. Export the policy or use **Load academy champion** in its arena. The approach action includes the existing built-in path planner; this is inspectable controller optimization, not language-model fine-tuning.
 
@@ -83,11 +83,13 @@ The **learning rover** starts with a zero Q-table and no path planner. It explor
 
 Four bilingual classes teach action-value updates, separate evaluation, reward design, and terminal-state values, with original worked examples and interactive calculations. All training is deterministic for the same initial data and options. No cloud model, API key, arbitrary code, or external agent connection is required or included. The results measure these bounded simulations; they do not establish general agent competence.
 
+The **experiment lab** runs frozen comparisons, rule search or actual Q-learning through the same environment boundary. Six inspectable curricula reuse difficulty modes. Eight TRAIN, eight VALIDATION and eight ordinary HOLDOUT trials are followed by eight changed HOLDOUT trials. Reports show bounded transfer delta and failures. A verified tick inspector distinguishes chosen actions from wind-executed actions, reveals relevant Q-values and permits safe backward/forward inspection. Strict data-only controller packages, receipts and manifests can be exchanged and rerun locally. Three manifests and one recording stay per profile. [Academy guide](docs/academy-guide.md) · [Runtime specification](docs/agent-runtime.md) · [Architecture](docs/architecture.md).
+
 ## Private online play
 
 The online commons supports 2–4-player cooperative Community Dispatch, 2–4-player Agent Duel, invite-only clans of up to 20, and three-round Agent League tournaments for 2–16 players. Host roles can transfer to an existing member. Preset team signals replace free-text messaging.
 
-Players join with private 12-character invitations. Events lock their roster when everyone is ready; leaving an active event closes it. In competitions, the server chooses three shared seeds and evaluates submitted controllers itself. Opponent results stay concealed until all controllers lock. League standings use model score, then ticks, and do not grant local XP.
+Players join with private 12-character invitations. Events lock their roster when everyone is ready; leaving an active event closes it. In competitions, the server chooses three shared seeds and evaluates submitted controllers itself. Competition evaluation now uses the same headless runtime and stores environment/receipt/final-state hashes. Opponent results stay concealed until all controllers lock. Client scores and local receipt claims are never accepted as authority. League standings use model score, then ticks, and do not grant local XP.
 
 Connecting creates a generated player name and a random device credential for the current local profile. Progress backups exclude that credential. Online group membership, preset signals, controller submissions, and results are stored separately from offline progress. Rooms and tournaments expire after one day, clans after 30 days, and devices after 90 days. Players can delete their online identity from the commons. No public directory, real-name field, email sign-up, direct messages, advertising, or analytics is included.
 
@@ -100,6 +102,7 @@ npm install
 npm run dev
 npm run build
 npm run test
+npm run test:headless
 npm run lint
 ```
 
@@ -112,6 +115,8 @@ BOT_FULL_SWEEP=1 CROSS_BROWSER=1 TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run 
 ```
 
 If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1`. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` can point tests to an installed compatible Chromium executable. Use `TEST_BASE_URL` to test another served build.
+
+Version 6 work is on `v6-agent-runtime`; the published V5 baseline remains at `a5f107b4f8b413d07630858036090c46deb9fa72` until operator approval. Draft PR verification includes the production build, offline/update checks and isolated online tests without deploying Pages. No release tag or paid/secret changes are made by this rung.
 
 ## GitHub Pages
 
@@ -151,6 +156,7 @@ src/data/        Typed game manifest, difficulty and result interfaces
 src/systems/     Profiles, checkpoints, local council, bots, XP, procedural audio
 src/i18n/        Reviewed Spanish catalog and JSX localization
 src/online/      Authenticated online handler, client, and storage adapters
+src/runtime/     Headless environments, adapters, receipts, packages, curricula and manifests
 src/training/    Bounded controller search, Q-learning, evaluation, strict academy saves
 src/styles/      Design tokens, responsive layouts, focus and contrast
 tests/           Unit and browser gameplay tests
@@ -178,6 +184,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CODE_OF
 Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions, licenses, and runtime license texts are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Run `npm run licenses` after dependency changes. No copyrighted characters, unlicensed media, or real passwords are included. Optional online project costs depend on the selected service plan.
 
 ## Screenshots
+
+V6 review captures will be linked from [the verification report](docs/verification-v6.md). The images below are the preserved V5 release evidence.
 
 ![Version 5 agent academy](docs/screenshots/v5/controllers.png)
 ![Learned delivery rover](docs/screenshots/v5/rover.png)

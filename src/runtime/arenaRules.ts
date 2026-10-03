@@ -20,9 +20,10 @@ export interface ArenaState { kind: ArenaKind; seed: number; difficulty: number;
 export const arenaStart = (kind: ArenaKind, seed: number, difficulty = 0): ArenaState => ({ kind, seed, difficulty, tick: 0, x: kind === 'space' ? 30 + seed % 8 * 5 : 0, y: kind === 'space' ? 3 + seed % 4 : 3, vx: 0, vy: 0, energy: kind === 'space' ? 100 : 35, water: 12, progress: 0, phase: 0, hasBall: false, collisions: 0, collected: [], status: 'ready', trace: [] });
 export const arenaObstacles = (seed: number, variant: Variant = 'standard') => variant === 'transfer' ? [[5, 0], [5, 1], [5, 4], [5, 5], [2, 4]] : [[4, 1], [4, 2], [4, 4], [4, 5], ...(seed % 2 ? [[6, 2]] : [[2, 4]])];
 export const arenaSupplies: [number, number][] = [[2, 1], [5, 5], [8, 3], [3, 5], [7, 1]];
+export const arenaSupplySites = (kind: ArenaKind, variant: Variant = 'standard'): [number, number][] => variant === 'transfer' ? (kind === 'scenario' ? [...arenaSupplies.slice(2), ...arenaSupplies.slice(0, 2)] : [[1, 1], [6, 5], [8, 2], [2, 5], [7, 0]]) : arenaSupplies.map(p => [...p]);
 export const arenaTaskCount = (state: ArenaState) => state.kind === 'sports' ? 1 + state.difficulty : 3 + state.difficulty;
 export function arenaObjective(state: ArenaState, variant: Variant = 'standard'): [number, number] {
-  const supplies: [number, number][] = variant === 'transfer' ? (state.kind === 'scenario' ? [...arenaSupplies.slice(2), ...arenaSupplies.slice(0, 2)] : [[1, 1], [6, 5], [8, 2], [2, 5], [7, 0]]) : arenaSupplies;
+  const supplies = arenaSupplySites(state.kind, variant);
   if (state.kind === 'sports') return state.hasBall ? [8, 3] : [2 + (state.seed + state.progress) % 3, 3];
   if (state.kind === 'outpost') return state.collected.length >= arenaTaskCount(state) ? [0, 3] : supplies[state.collected.length];
   if (state.kind === 'scenario') return supplies[state.progress] || [0, 3];

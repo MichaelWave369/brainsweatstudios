@@ -2,7 +2,7 @@
 
 **PLAY SMARTER. LIVE SMARTER.**
 
-A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** Version 6 makes the five agent simulations share a deterministic headless runtime, validated controller actions, verified episode receipts, explicit training/validation/holdout splits, bounded transfer experiments and reproducible manifests. The Academy trace inspector shows observations, actions, rewards, controller reasons and state hashes. Richer geometric worlds, dynamic shadows, and original stereo music and effects bring the experiments to life. Driving/CDL introductions, trades and safety, math and physics, engine/robot/virtual computer builders, modern survival, food/water systems, production planning, and the retro lab remain playable. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
+A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** Version 7 adds the Agent Garage: optional local Ollama model controllers, an offline deterministic mock, strict action proposals, cancellation and manual handoffs, partial-observation Survey, cooperative Community Restore, Signal Maze, bounded public notebooks, frozen split/transfer comparisons, and verified world replay. Richer geometric worlds, dynamic shadows, and original stereo music and effects bring the experiments to life. Driving/CDL introductions, trades and safety, math and physics, engine/robot/virtual computer builders, modern survival, food/water systems, production planning, and the retro lab remain playable. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
@@ -10,7 +10,7 @@ Repository: https://github.com/larrinamsalva/brainsweatstudios
 
 Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 
-[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 6 verification](docs/verification-v6.md) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
+[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 7 verification](docs/verification-v7.md) · [Version 6 verification](docs/verification-v6.md) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
 
 ## Playable worlds
 
@@ -75,15 +75,53 @@ The four agent worlds use an inspectable priority controller with 1–8 rules. E
 
 ## Agent academy
 
-Open `#/academy`, `#/academy?tab=rover` or `#/academy?tab=lab`. Training, evaluation, and replay use local simulations and award no game XP. Learned values, controller rules, and training histories save per profile and travel with progress backups. The separate academy JSON can also be exported and strictly validated on import. Training and replay resume stopped after refresh or import; pausing and hidden tabs suspend active work.
+Open `#/academy`, `#/academy?tab=rover`, `#/academy?tab=lab` or `#/academy?tab=garage`. Training, evaluation, and replay use local simulations and award no game XP. Learned values, controller rules, and training histories save per profile and travel with progress backups. The separate academy JSON can also be exported and strictly validated on import. Training and replay resume stopped after refresh or import; pausing and hidden tabs suspend active work.
 
 The **controller lab** searches nearby 1–8-rule policies across eight fixed training seeds. Completion wins first, then model score, then fewer ticks. Six generations can improve an incomplete default controller in the sports, survival, scenario, or space arena. Three curricula reuse Explorer/Builder/Master constraints. Evaluation freezes the champion and uses eight separate seeds, with worst score, ticks, reserves, failure advice, and trace replay. Export the policy or use **Load academy champion** in its arena. The approach action includes the existing built-in path planner; this is inspectable controller optimization, not language-model fine-tuning.
 
 The **learning rover** starts with a zero Q-table and no path planner. It explores north/east/south/west actions, collects a parcel, and returns to base within 80 ticks. Its observation combines one of three wall layouts, position, and parcel state: 294 rows × four action values. A steady courier and a windy courier with 12% clockwise action drift can be trained in chunks of 1,000 episodes. The live action map, value inspector, rewards, training curve, and trial replay explain what changed. Evaluation uses 20 fixed seeds with exploration and learning disabled. These seeds are separate from training, but remain within the same small task distribution.
 
-Four bilingual classes teach action-value updates, separate evaluation, reward design, and terminal-state values, with original worked examples and interactive calculations. All training is deterministic for the same initial data and options. No cloud model, API key, arbitrary code, or external agent connection is required or included. The results measure these bounded simulations; they do not establish general agent competence.
+Four bilingual classes teach action-value updates, separate evaluation, reward design, and terminal-state values, with original worked examples and interactive calculations. All training is deterministic for the same initial data and options. No cloud model, API key or arbitrary code is required. Optional local model controllers live in the separate Agent Garage. The results measure these bounded simulations; they do not establish general agent competence.
 
 The **experiment lab** runs frozen comparisons, rule search or actual Q-learning through the same environment boundary. Six inspectable curricula reuse difficulty modes. Eight TRAIN, eight VALIDATION and eight ordinary HOLDOUT trials are followed by eight changed HOLDOUT trials. Reports show bounded transfer delta and failures. A verified tick inspector distinguishes chosen actions from wind-executed actions, reveals relevant Q-values and permits safe backward/forward inspection. Strict data-only controller packages, receipts and manifests can be exchanged and rerun locally. Three manifests and one recording stay per profile. [Academy guide](docs/academy-guide.md) · [Runtime specification](docs/agent-runtime.md) · [Architecture](docs/architecture.md).
+
+## Agent Garage (V7)
+
+Open `#/academy?tab=garage` or **Open agent garage** on the studio home page.
+The offline mock works immediately. Start a world, inspect/step/run, pause/resume,
+take manual control, hand off, and verify an exported/imported action receipt.
+A model proposes an intent; the world validates and computes its own outcomes.
+Survey hides information until a scan consumes resources. Community requires
+engineer/logistics cooperation. Signal Maze includes explicitly untrusted signs.
+The five V6 environments retain their unchanged rules and versions.
+
+Select current state, six-action context, event counts or a bounded public
+notebook. Compare frozen models against reference/champion/Q controllers where
+compatible, using separate practice/validation/holdout and changed conditions.
+No weights, prompt settings or holdout-driven automatic tuning occurs. Reports
+measure task completion, resources, invalid proposals, timeouts/retries and narrow
+recovery/transfer outcomes. They do not establish IQ or real-world qualifications.
+
+For an already-installed local Ollama model:
+
+```sh
+npm run agent:bridge
+# To allow this repository's public studio origin explicitly:
+npm run agent:bridge -- --allow-origin https://larrinamsalva.github.io
+npm run qualify:ollama
+npm run qualify:ollama -- --model EXACT_INSTALLED_MODEL
+npm run test:agents
+```
+
+The bridge binds only loopback and uses fixed local Ollama endpoints. Connect
+explicitly, then choose an installed model. Browser local-network/CORS/HTTPS
+restrictions may require permission or running the studio locally. No models are
+downloaded/deleted and no cloud adapter, API key, paid service or analytics is
+added. No real-model qualification is claimed when Ollama is unavailable.
+
+[Controller guide](docs/agent-controllers.md) · [Local bridge](docs/agent-bridge.md) ·
+[Observation contract](docs/model-observations.md) · [Actions/artifacts](docs/model-actions.md) ·
+[Security](docs/agent-security.md) · [Privacy](docs/privacy.md).
 
 ## Private online play
 
@@ -116,7 +154,7 @@ BOT_FULL_SWEEP=1 CROSS_BROWSER=1 TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run 
 
 If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1`. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` can point tests to an installed compatible Chromium executable. Use `TEST_BASE_URL` to test another served build.
 
-Version 6 is published on GitHub Pages following the operator's merge of PR #1. The frozen V5 baseline remains at `a5f107b4f8b413d07630858036090c46deb9fa72` for regression checks. PR verification builds and tests offline/update behavior and isolated online services without deploying Pages; main-branch deployment also verifies the actual public studio. See the current results in [Version 6 verification](docs/verification-v6.md). No release tag or paid/secret changes are made by this rung.
+Version 6 is published on GitHub Pages following the operator's merge of PR #1. The frozen V5 baseline remains at `a5f107b4f8b413d07630858036090c46deb9fa72` for regression checks. V7 is prepared for operator review and merge; no automatic merge is performed. PR verification builds and tests offline/update behavior and isolated online services without deploying Pages; main-branch deployment also verifies the actual public studio. See the current results in [Version 6 verification](docs/verification-v6.md). No release tag or paid/secret changes are made by this rung.
 
 ## GitHub Pages
 
@@ -132,7 +170,7 @@ Before publishing, the workflow rebuilds the original v1 and the pre-fix v2, rep
 
 ## Progress and privacy
 
-- Six anonymous local profiles are stored in `brain-sweat-studio:profiles:v2`. Each has its own settings, rewards, mission checkpoints, and academy learning. The active save is also mirrored under the legacy `brain-sweat-studio:v1` key. Existing version 1 and 2 saves migrate automatically. The schema remains version 2; missing class records, retro palette, and academy data migrate to defaults.
+- Six anonymous local profiles are stored in `brain-sweat-studio:profiles:v2`. Each has its own settings, rewards, mission checkpoints, and academy learning. The active save is also mirrored under the legacy `brain-sweat-studio:v1` key. Existing version 1 and 2 saves migrate automatically. The schema remains version 2; V5/V6 Academy saves gain an empty agent garage; missing class records, retro palette, and academy data migrate to defaults.
 - Class experiments and answer checks save per profile, export with backups, and do not grant game XP. A class is marked mastered only after all three answers are correct.
 - Finished results store scores, attempts, completion, XP, Brain Points, badges, settings, and local dates.
 - Score 60 completes a mission; score 90 earns three mastery stars. Eight missions × three modes × thirty-seven worlds = 888 distinct completion slots.

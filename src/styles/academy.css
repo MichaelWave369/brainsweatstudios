@@ -84,3 +84,18 @@ fieldset.academy-panel { padding-top:1rem; min-inline-size:0; }
 .runtime-inspector details { margin-block: .6rem; }
 .runtime-lab button.text-link { background: transparent; border: 0; padding: .5rem .25rem; color: #caff66; font: inherit; line-height: 1.5; text-align: left; overflow-wrap: anywhere; }
 @media (max-width: 460px) { .runtime-facts { grid-template-columns: 1fr; } .runtime-table th, .runtime-table td { padding: .5rem .3rem; font-size: .75rem; } .academy-tabs { flex-wrap: wrap; } }
+
+.garage-layout { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:1.5rem; }
+.garage-layout > * { min-width:0; }
+.garage-status { display:flex; justify-content:space-between; flex-wrap:wrap; align-items:center; gap:.8rem; margin-bottom:1rem; }
+.garage-status strong { color:#caffb7; font:.85rem ui-monospace,monospace; padding:.5rem .75rem; background:#101c2e; border:1px solid #639876; border-radius:7px; }
+.garage-input { display:grid; gap:.5rem; margin:1rem 0; color:#d7e7f1; font-size:.875rem; }
+.garage-input input { min-width:0; width:100%; box-sizing:border-box; color:#e7f2f8; background:#102035; border:1px solid #718b9e; border-radius:7px; padding:.7rem; font:inherit; }
+.garage-actions { display:flex; flex-wrap:wrap; gap:.55rem; padding:1rem; margin:1rem 0; border:1px solid #7b9bad; border-radius:8px; min-inline-size:0; }
+.garage-actions legend { padding:0 .4rem; color:#e1eef5; }
+.garage-scene svg { display:block; width:100%; height:auto; border:1px solid #6d92a9; border-radius:12px; box-shadow:0 16px 30px #030d1d55; }
+.garage-scene-description { color:#d0e2ec; overflow-wrap:anywhere; }
+.garage-error { color:#ffcf9e; }
+.agent-garage .runtime-facts dd { overflow-wrap:anywhere; }
+@media (max-width:900px) { .garage-layout { grid-template-columns:minmax(0,1fr); } }
+@media (max-width:420px) { .agent-garage .academy-panel { padding:1rem; } .garage-actions .btn { flex:1 1 40%; } }

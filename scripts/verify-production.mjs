@@ -40,6 +40,10 @@ try {
   const lab=await page.evaluate(()=>JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.lab);
   await page.reload(); assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.lab),lab);
   await page.getByRole('heading',{name:'Verified trace inspector',exact:true}).waitFor();
+  await page.goto(`${base}#/academy?tab=garage`); await page.getByRole('button',{name:'Start garage world',exact:true}).click(); await page.getByRole('button',{name:'Run garage episode',exact:true}).click();
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.garage.receipt.result.success);
+  await page.getByRole('button',{name:'Verify model world replay',exact:true}).click(); await page.getByText('World replay verified from recorded actions. Model regeneration was not requested.',{exact:true}).waitFor();
+  await page.reload(); await page.getByRole('heading',{name:'Model receipt inspector',exact:true}).waitFor();
   await page.goto(`${base}#/class/derivatives`); await page.getByLabel('Point x',{exact:true}).fill('5');
   await page.goto(`${base}#/lab/engine`); await page.getByRole('button',{name:/Start mission 1|Resume checkpoint/}).click(); await page.locator('.crt-screen .game-controls').waitFor();
   await page.goto(`${base}#/assistant`); await page.getByRole('heading', { name: 'Your personal assistant', exact: true }).waitFor();
@@ -47,6 +51,6 @@ try {
   await page.getByLabel('Language', { exact: true }).selectOption('es'); await page.getByRole('heading', { name: 'Laboratorio de bots', exact: true }).waitFor(); await page.reload(); assert.equal(await page.locator('html').getAttribute('lang'), 'es'); await page.getByLabel('Idioma', { exact: true }).selectOption('en');
   await page.goto(`${base}#/game/money`); await page.getByRole('button', { name: /Start mission 1|Resume checkpoint/ }).click(); await page.getByRole('button', { name: 'Start the month' }).click(); for (let i = 0; i < 4; i++) await page.getByRole('button', { name: /Find another way/ }).click(); await page.getByText('EXPERIMENT COMPLETE', { exact: true }).waitFor({ state: 'visible' });
   await page.reload(); await page.getByRole('link', { name: 'My progress', exact: true }).click(); await page.getByText(`1/${studio.slots}`, { exact: true }).waitFor({ state: 'visible' }); assert.deepEqual(errors, []);
-  console.log('Production check passed: Pages prefix, all offline game routes and classes, offline academy learning/evaluation/restoration, refresh saving, and no page errors.');
+  console.log('Production check passed: Pages prefix, all offline game routes and classes, offline academy and Agent Garage learning/evaluation/replay/restoration, refresh saving, and no page errors.');
   await context.close();
 } finally { await browser.close(); await new Promise(resolve => server.close(resolve)); }

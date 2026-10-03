@@ -1,4 +1,4 @@
-# Version 6 architecture
+# Version 7 architecture
 
 Brain Sweat remains a human educational studio. The 37 ordinary worlds, classes,
 assistant/council, checkpoints, progress, retro lab, sound and offline shell are
@@ -85,3 +85,38 @@ PR workflows exercise production prefix/offline/upgrade/database/browser checks
 without deploying Pages. The operator merged V6 on 2026-10-03; Pages publication
 and actual published-site verification passed. Future publication still
 requires operator approval. Public online remains pending.
+
+## V7 provider edge
+
+The immutable V6 runtime and artifacts keep version 1.0.0. Independent agent
+schemas live in `src/agents/`; `garageWorlds.ts` wraps the five existing worlds
+and adds three bounded reference worlds without importing a provider or React.
+The Garage's provider adapter registry and async host handle structured public
+observations, explicit budgets, context, cancellation and typed errors. Every
+controller reaches the same private world validator. See [controller boundary](agent-controllers.md).
+
+```mermaid
+flowchart TD
+  UI["Agent Garage / local profile"] --> H["Async controller host"]
+  H --> M["Mock provider"]
+  H --> B["Optional loopback bridge"]
+  B --> O["Installed local Ollama"]
+  H --> V["Proposal + actor validation"]
+  V --> W["Private synchronous world"]
+  W --> R["Receipt / world replay"]
+  R --> UI
+```
+
+The Node bridge is a separate optional command, absent from website/online
+server bundles. Model descriptors contain no connection credential. Saved
+Garage data is capped at 500 KB, one receipt and two manifests. Academy import
+is now 1.5 MB; progress stays 2 MB and profile schema 2. V5/V6 saves gain empty
+Garage data. Running work and local connections resume stopped/disconnected.
+
+World replay is deterministic from actions; model regeneration can vary.
+Provider and world-step timings are distinct. Context/history/trace/notebook,
+requests/retries and recordings have explicit caps; the UI yields between
+steps/episodes and pauses hidden work. Reference scenes redraw on state changes;
+existing geometric WebGL/vector/audio limits remain. No model authority enters
+the online server; model competitions remain future work. V7 publication is
+pending the operator's reviewed merge and actual-public verification.

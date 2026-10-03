@@ -46,6 +46,7 @@ jobs:
       - name: Verify headless runtime and deployment package
         run: |
           npm run test:headless
+          npm run test:agents
           node scripts/package-online.mjs
           npx --yes deno@2.9.6 check supabase/functions/brain-sweat-online/index.ts
       - name: Build Pages app
@@ -77,20 +78,20 @@ jobs:
           node scripts/verify-production.mjs
       - name: Verify advanced learning flows and graphics
         run: |
-          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/academy-features.spec.ts tests/e2e/runtime-features.spec.ts tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
+          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/academy-features.spec.ts tests/e2e/runtime-features.spec.ts tests/e2e/agent-garage-features.spec.ts tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
       - name: Capture review graphics
         if: always()
         run: |
           node scripts/test-server.mjs &
           studio_server_pid=$!
           trap 'kill "$studio_server_pid"' EXIT
-          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v6.mjs
+          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v7.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rung-six-studio-review
+          name: rung-seven-studio-review
           path: |
-            docs/screenshots/v6
+            docs/screenshots/v7
             test-results
           retention-days: 14
       - name: Upload website
@@ -130,5 +131,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: live-studio-screenshot
-          path: docs/screenshots/live-v6.png
+          path: docs/screenshots/live-v7.png
           retention-days: 14

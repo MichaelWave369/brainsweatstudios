@@ -13,7 +13,7 @@ export interface AgentReceipt {
   episode: string; config: WorldConfig; initialControllers: Record<string, ControllerSpec>;
   contextStrategy: ContextStrategy; budgets: Budgets; initialHash: string;
   records: AgentRecord[]; handoffs: Handoff[]; result: WorldResult; finalHash: string;
-  ending: 'running' | 'complete' | 'stopped' | 'budget' | 'error'; worldTraceHash: string; modelTraceHash: string; digest: string;
+  ending: 'running' | 'complete' | 'stopped' | 'budget' | 'error'; requestsUsed: number; worldTraceHash: string; modelTraceHash: string; digest: string;
 }
 export interface SessionOptions { config: WorldConfig; controllers: Record<string, ControllerSpec>; providers: ProviderAdapter[]; budgets?: Budgets; context?: ContextStrategy; onChange?: () => void; now?: () => number }
 export function contextData(strategy: ContextStrategy, records: readonly AgentRecord[], notebook: Notebook): ContextData {
@@ -44,7 +44,7 @@ export function createAgentSession(options: SessionOptions) {
   const observation = (agentId = actor()) => modelObservation(world, agentId, episode, Math.min(240, requests + 1), budgets, records.filter(r => r.observation.agent.id === agentId && r.transition).at(-1)?.transition?.events || []);
   const cancelPending = () => { generation++; abort?.abort(); abort = null; };
   const receipt = (): AgentReceipt => {
-    const payload = { schema: 'model-episode@1' as const, agentVersion: '1.0.0' as const, template: TEMPLATE_VERSION, observationSchema: 'model-observation@1' as const, actionSchema: 'model-action@1' as const, episode, config: clone(config), initialControllers: clone(initialControllers), contextStrategy: strategy, budgets: clone(budgets), initialHash, records: clone(records), handoffs: clone(handoffs), result: world.result(), finalHash: world.stateHash(), ending, ...traceHashes(config, initialHash, records, world.stateHash()) };
+    const payload = { schema: 'model-episode@1' as const, agentVersion: '1.0.0' as const, template: TEMPLATE_VERSION, observationSchema: 'model-observation@1' as const, actionSchema: 'model-action@1' as const, episode, config: clone(config), initialControllers: clone(initialControllers), contextStrategy: strategy, budgets: clone(budgets), initialHash, records: clone(records), handoffs: clone(handoffs), result: world.result(), finalHash: world.stateHash(), ending, requestsUsed: requests, ...traceHashes(config, initialHash, records, world.stateHash()) };
     return freeze({ ...payload, digest: hash(payload) });
   };
   async function invoke(provider: ProviderAdapter, request: Parameters<ProviderAdapter['propose']>[0], signal: AbortSignal): Promise<ProviderResponse> {
@@ -61,9 +61,9 @@ export function createAgentSession(options: SessionOptions) {
   }
   async function step(manual?: Intent): Promise<AgentRecord | null> {
     if (busy || paused || ending === 'stopped' || world.result().terminal) return null;
-    if (world.result().ticks >= budgets.maxTicks || requests >= budgets.maxRequests) { ending = 'budget'; lastError = 'BUDGET'; update('COMPLETE'); return null; }
+    if (world.result().ticks >= budgets.maxTicks || requests >= budgets.maxRequests) { ending = 'budget'; continuous = false; lastError = 'BUDGET'; update('COMPLETE'); return null; }
     const agentId = actor(), spec = controllers[agentId];
-    if (spec.family === 'human' && !manual) { update('WAITING'); return null; }
+    if (spec.family === 'human' && !manual) { continuous = false; update('WAITING'); return null; }
     busy = true; const revision = generation;
     let row: AgentRecord | null = null;
     try {
@@ -114,7 +114,7 @@ export function createAgentSession(options: SessionOptions) {
     } finally { busy = false; options.onChange?.(); }
   }
   return {
-    get status() { return status; }, get busy() { return busy; }, get ending() { return ending; }, get lastError() { return lastError; }, get continuous() { return continuous; },
+    get status() { return status; }, get busy() { return busy; }, get ending() { return ending; }, get requestCount() { return requests; }, get lastError() { return lastError; }, get continuous() { return continuous; },
     get controllers() { return clone(controllers); }, get records() { return records as readonly AgentRecord[]; },
     observation, currentObservation: () => currentObservation || observation(), result: world.result, receipt,
     notebook: (agentId = actor()) => clone(notes[agentId]), actor, step,
@@ -122,7 +122,7 @@ export function createAgentSession(options: SessionOptions) {
     resume() { if (ending === 'stopped') return; paused = false; ending = world.result().terminal ? 'complete' : 'running'; lastError = null; update(world.result().terminal ? 'COMPLETE' : 'WAITING'); },
     stop() { paused = false; continuous = false; ending = 'stopped'; cancelPending(); update('COMPLETE'); },
     disconnect() { paused = true; continuous = false; cancelPending(); lastError = 'DISCONNECTED'; update('PAUSED'); },
-    run() { if (!paused && ending !== 'stopped') { continuous = true; ending = 'running'; update('WAITING'); } },
+    run() { if (!paused && ending !== 'stopped' && !world.result().terminal && controllers[actor()].family !== 'human') { continuous = true; ending = 'running'; update('WAITING'); } },
     handoff(agentId: string, next: ControllerSpec, reason = 'Operator changed the controller.') {
       if (!Object.hasOwn(controllers, agentId) || reason.length > 200 || handoffs.length >= 32) throw new AgentError('MALFORMED', 'Invalid or excessive controller handoff.');
       const validated = validateController(next); cancelPending();

@@ -74,8 +74,8 @@ describe('common simulation authority', () => {
     expect(a.isTerminal()).toBe(true); expect(a.snapshot().task).toBe(3);
   });
   it('migrates V5 academy/profile backups, preserves legacy policies, and bounds the new notebook', () => {
-    const save = freshSave(), old = JSON.parse(JSON.stringify(save)); delete old.academy.lab;
-    expect(validateSave(old).academy.lab).toEqual(freshLab()); expect(validateSave({ ...old, version: 1, academy: undefined }).xp).toBe(0);
+    const save = freshSave(), old = JSON.parse(JSON.stringify(save)); delete old.academy.lab; delete old.academy.garage;
+    expect(validateSave(old).academy.lab).toEqual(freshLab()); expect(validateSave(old).academy.garage.schema).toBe('agent-garage@1'); expect(validateSave({ ...old, version: 1, academy: undefined }).xp).toBe(0);
     const receipt = recordEpisode(configuration('sports', 1), authoredController('sports')); save.academy.lab.receipt = receipt;
     expect(validateSave(JSON.parse(JSON.stringify(save))).academy.lab.receipt).toEqual(receipt);
     expect(parsePolicy(packageRules('sports', workedPolicy('sports')), 'sports')).toEqual(workedPolicy('sports'));

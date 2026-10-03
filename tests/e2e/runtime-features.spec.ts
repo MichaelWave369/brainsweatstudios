@@ -77,7 +77,7 @@ test('runtime: English and Spanish, reduced motion, narrow layouts and keyboard 
   await page.getByRole('button', { name: 'Registrar un episodio', exact: true }).click(); await page.getByRole('button', { name: 'Siguiente paso', exact: true }).click();
   await page.getByText('Estado cambiado y hash', { exact: true }).click();
   for (const width of [320, 390]) { await page.setViewportSize({ width, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true); }
-  await audit(page); const tab = page.getByRole('tab', { name: 'Laboratorio de experimentos', exact: true }); await tab.focus(); await page.keyboard.press('Home'); await expect(page.getByRole('tab', { name: 'Laboratorio de controladores', exact: true })).toBeFocused(); await page.keyboard.press('End'); await expect(tab).toBeFocused();
+  await audit(page); const tab = page.getByRole('tab', { name: 'Laboratorio de experimentos', exact: true }); await tab.focus(); await page.keyboard.press('Home'); await expect(page.getByRole('tab', { name: 'Laboratorio de controladores', exact: true })).toBeFocused(); await page.keyboard.press('End'); await expect(page.getByRole('tab', { name: 'Garaje de agentes', exact: true })).toBeFocused(); await page.keyboard.press('ArrowLeft'); await expect(tab).toBeFocused();
   await page.getByLabel('Idioma', { exact: true }).selectOption('en'); await expect(page.getByRole('heading', { name: 'Experiment lab', exact: true })).toBeVisible(); await audit(page);
 });
 

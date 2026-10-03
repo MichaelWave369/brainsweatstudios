@@ -174,3 +174,12 @@ discard a stale episode/tick response, then call the same validator/step. A mode
 must never receive environment mutation methods or storage/online credentials.
 No such provider is connected in V6; adapter cancellation, latency budgets,
 consent and explicit upload controls require a separate reviewed integration.
+
+## V7 extension
+
+The previously future async model host is now implemented independently in
+`src/agents/`, using unchanged V6 world rules through `garageWorlds.ts`. See
+[model controllers](agent-controllers.md), [observations](model-observations.md)
+and [new artifacts](model-actions.md). V6 receipt/package/manifest validators
+remain intact; their unsigned provenance limitations still apply. Optional
+model output cannot mutate world state or confer server competition authority.

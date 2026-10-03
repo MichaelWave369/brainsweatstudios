@@ -2,7 +2,7 @@ import { canonical, clone, exact, freeze, hash, integer, plain } from '../runtim
 import { curriculum, seedGroups } from '../runtime/curriculum.ts';
 import { createGarageWorld, validateWorldConfig, worldConfig, type WorldConfig, type WorldId } from '../runtime/garageWorlds.ts';
 import { AgentError, CONTEXTS, DEFAULT_BUDGETS, TEMPLATE_VERSION, bytes, controllerSpec, validateBudgets, validateController, type Budgets, type ContextStrategy, type ControllerSpec, type ProviderAdapter } from './contracts.ts';
-import { createAgentSession, type AgentReceipt } from './session.ts';
+import { createAgentSession, type AgentReceipt, type AgentSession } from './session.ts';
 import { verifyAgentReceipt } from './receipts.ts';
 
 export interface TrialMetric { split: 'TRAIN' | 'VALIDATION' | 'HOLDOUT'; transfer: boolean; candidate: boolean; seed: number; success: boolean; score: number; ticks: number; resources: number; invalid: number; timeouts: number; retries: number; requests: number; blocked: number; failures: string[]; worldHash: string; modelHash: string }
@@ -46,21 +46,22 @@ function reportDeltas(trials: TrialMetric[]) {
   const rate = (filter: (t: TrialMetric) => boolean) => { const rows = trials.filter(filter); return rows.filter(t => t.success).length / rows.length * 100; };
   return { transferDelta: rate(t => t.candidate && t.transfer) - rate(t => t.candidate && t.split === 'HOLDOUT' && !t.transfer), baselineDelta: rate(t => t.candidate && t.split === 'HOLDOUT' && !t.transfer) - rate(t => !t.candidate && t.split === 'HOLDOUT' && !t.transfer) };
 }
-export async function* modelExperimentSteps(input: ModelExperiment, providers: ProviderAdapter[], signal: AbortSignal): AsyncGenerator<{ completed: number; total: number; receipt: AgentReceipt }, { manifest: ModelExperiment; receipt: AgentReceipt }> {
+export async function* modelExperimentSteps(input: ModelExperiment, providers: ProviderAdapter[], signal: AbortSignal, control?: { beforeStep: () => Promise<void>; session: (session: AgentSession | null) => void }): AsyncGenerator<{ completed: number; total: number; receipt: AgentReceipt }, { manifest: ModelExperiment; receipt: AgentReceipt }> {
   const spec = validateModelExperiment(input), trials: TrialMetric[] = [], recovery = { rejectedThenValid: 0, failedTurns: 0, blockedThenProgress: 0 };
   let totalRequests = 0, inputTokens: number | null = null, outputTokens: number | null = null, last: AgentReceipt | null = null;
   const groups = [{ split: 'TRAIN', transfer: false }, { split: 'VALIDATION', transfer: false }, { split: 'HOLDOUT', transfer: false }, { split: 'HOLDOUT', transfer: true }] as const;
   for (const group of groups) for (const candidate of [true, false]) for (const seed of spec.seeds[group.split].slice(0, spec.trialsPerSplit)) {
     if (signal.aborted) throw new AgentError('CANCELLED', 'Model experiment cancelled.');
     const session = createAgentSession({ config: { ...spec.config, seed, variant: group.transfer ? 'transfer' : spec.config.variant }, controllers: candidate ? spec.controllers : spec.baseline, providers, context: spec.context, budgets: spec.budgets });
+    control?.session(session);
     const cancel = () => session.stop(); signal.addEventListener('abort', cancel, { once: true });
-    try { while (!session.result().terminal && session.status !== 'ERROR' && session.ending !== 'budget') { if (totalRequests >= spec.maxTotalRequests) throw new AgentError('BUDGET', 'Experiment reached its total request limit.'); const row = await session.step(); if (signal.aborted) throw new AgentError('CANCELLED', 'Model experiment cancelled.'); if (!row) break; totalRequests += row.attempts.length; } }
-    finally { signal.removeEventListener('abort', cancel); }
+    try { while (!session.result().terminal && session.status !== 'ERROR' && session.ending !== 'budget') { await control?.beforeStep(); if (signal.aborted) throw new AgentError('CANCELLED', 'Model experiment cancelled.'); if (totalRequests >= spec.maxTotalRequests) throw new AgentError('BUDGET', 'Experiment reached its total request limit.'); const count = session.requestCount; const row = await session.step(); totalRequests += session.requestCount - count; if (signal.aborted) throw new AgentError('CANCELLED', 'Model experiment cancelled.'); if (!row && session.status !== 'PAUSED') break; } }
+    finally { signal.removeEventListener('abort', cancel); control?.session(null); }
     last = verifyAgentReceipt(session.receipt());
     const attempts = last.records.flatMap(r => r.attempts), failures = [...new Set([...attempts.flatMap(a => a.code ? [a.code] : []), ...(last.result.success ? [] : [last.result.reason === 'running' ? last.ending : last.result.reason])])];
     last.records.forEach((r, i) => { if (r.transition && r.attempts.some(a => a.code)) recovery.rejectedThenValid++; if (!r.transition) recovery.failedTurns++; if (i > 0 && last!.records[i - 1].transition?.events.some(e => ['blocked', 'collision', 'precondition'].includes(e.type)) && r.transition?.events.some(e => e.type === 'objective')) recovery.blockedThenProgress++; });
     attempts.forEach(a => { if (a.usage.inputTokens !== null) inputTokens = (inputTokens ?? 0) + a.usage.inputTokens; if (a.usage.outputTokens !== null) outputTokens = (outputTokens ?? 0) + a.usage.outputTokens; });
-    trials.push({ ...group, candidate, seed, success: last.result.success, score: last.result.score, ticks: last.result.ticks, resources: last.result.resources, invalid: attempts.filter(a => ['ILLEGAL_ACTION', 'MALFORMED', 'OVERSIZED', 'EMPTY'].includes(String(a.code))).length, timeouts: attempts.filter(a => a.code === 'TIMEOUT').length, retries: last.records.reduce((n, r) => n + Math.max(0, r.attempts.length - 1), 0), requests: attempts.length, blocked: last.result.collisions, failures, worldHash: last.worldTraceHash, modelHash: last.modelTraceHash });
+    trials.push({ ...group, candidate, seed, success: last.result.success, score: last.result.score, ticks: last.result.ticks, resources: last.result.resources, invalid: attempts.filter(a => ['ILLEGAL_ACTION', 'MALFORMED', 'OVERSIZED', 'EMPTY'].includes(String(a.code))).length, timeouts: attempts.filter(a => a.code === 'TIMEOUT').length, retries: last.records.reduce((n, r) => n + Math.max(0, r.attempts.length - 1), 0), requests: last.requestsUsed, blocked: last.result.collisions, failures, worldHash: last.worldTraceHash, modelHash: last.modelTraceHash });
     yield { completed: trials.length, total: spec.trialsPerSplit * 8, receipt: last };
   }
   const { id: _id, digest: _digest, ...initialSpec } = spec; void _id; void _digest;

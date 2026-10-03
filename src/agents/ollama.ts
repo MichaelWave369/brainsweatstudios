@@ -14,19 +14,20 @@ export async function boundedJSON(response: Response, maxBytes: number): Promise
   const data = new Uint8Array(total); let offset = 0; chunks.forEach(c => { data.set(c, offset); offset += c.length; });
   try { return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(data)); } catch { throw new AgentError('MALFORMED', 'Provider returned malformed JSON.'); }
 }
-export function ollamaAdapter(base = DEFAULT_BRIDGE, fetcher: typeof fetch = fetch): ProviderAdapter & { connect(signal: AbortSignal): Promise<void>; disconnect(): void } {
+export function ollamaAdapter(base = DEFAULT_BRIDGE, fetcher: typeof fetch = fetch): ProviderAdapter & { connect(signal: AbortSignal): Promise<void>; disconnect(): void; metadata(model: string, signal: AbortSignal): Promise<ModelInfo> } {
   const address = bridgeAddress(base); let token: string | null = null;
   async function request(path: string, signal: AbortSignal, body?: unknown): Promise<unknown> {
     try {
       const response = await fetcher(address + path, { method: body === undefined ? 'GET' : 'POST', headers: { ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(token ? { 'X-Brain-Sweat-Bridge': token } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal, credentials: 'omit', cache: 'no-store', redirect: 'error', ...({ targetAddressSpace: 'loopback' } as RequestInit) });
       const result = await boundedJSON(response, 60000);
-      if (!response.ok) throw new AgentError(response.status === 408 || response.status === 504 ? 'TIMEOUT' : response.status === 429 ? 'BUDGET' : response.status === 400 ? 'MALFORMED' : 'UNAVAILABLE', 'The local bridge could not complete this request.');
+      if (!response.ok) { if (plain(result) && ['TIMEOUT', 'REFUSAL', 'MALFORMED', 'OVERSIZED', 'UNAVAILABLE', 'VERSION', 'BUDGET', 'DISCONNECTED'].includes(String(result.error))) throw new AgentError(result.error as ConstructorParameters<typeof AgentError>[0], 'The local bridge could not complete this request.'); throw new AgentError(response.status === 408 || response.status === 504 ? 'TIMEOUT' : response.status === 429 ? 'BUDGET' : response.status === 400 ? 'MALFORMED' : 'UNAVAILABLE', 'The local bridge could not complete this request.'); }
       return result;
     } catch (error) { if (error instanceof AgentError) throw error; throw new AgentError(signal.aborted ? 'CANCELLED' : 'UNAVAILABLE', 'Local connection failed. Check the bridge, allowed origin and browser local-network permission, or run the studio locally.'); }
   }
   return { id: 'ollama', version: AGENT_VERSION,
     async connect(signal) { const value = await request('/health', signal); if (!plain(value) || value.schema !== 'agent-bridge@1' || typeof value.sessionToken !== 'string' || !/^[a-f0-9]{64}$/.test(value.sessionToken)) throw new AgentError('VERSION', 'The bridge version is incompatible.'); token = value.sessionToken; },
     disconnect() { token = null; },
+    async metadata(model, signal) { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/metadata', signal, { model }); if (!plain(value) || !plain(value.model)) throw new AgentError('MALFORMED', 'The bridge returned invalid metadata.'); return value.model as unknown as ModelInfo; },
     async models(signal) { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/models', signal); if (!plain(value) || !Array.isArray(value.models)) throw new AgentError('MALFORMED', 'The bridge returned an invalid model list.'); return value.models as ModelInfo[]; },
     async propose(input: ProviderRequest, signal): Promise<ProviderResponse> { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/inference', signal, input); if (!plain(value) || typeof value.text !== 'string' || typeof value.model !== 'string' || !plain(value.usage)) throw new AgentError('MALFORMED', 'The bridge returned an invalid proposal envelope.'); return value as unknown as ProviderResponse; },
   };

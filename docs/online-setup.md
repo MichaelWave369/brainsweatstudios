@@ -73,3 +73,10 @@ flowchart TD
   F --> H
   S -->|"Authorized concealed view"| C
 ```
+
+## V7 model boundary
+
+Local model receipts and Garage runs are not accepted as online results. The
+server still chooses seeds and executes validated data-only rule controllers.
+Model competitions are future work; no model/provider code or local bridge is
+packaged into this Edge handler. The public endpoint remains pending setup.

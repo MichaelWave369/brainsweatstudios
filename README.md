@@ -2,7 +2,7 @@
 
 **PLAY SMARTER. LIVE SMARTER.**
 
-A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 44 hands-on classes, eight missions per world, and three difficulty modes.** Version 4 adds US driving and CDL fundamentals, trade apprenticeships, utility dispatch, virtual circuits, fire and water safety, and programmable sports, survival, scenario, and space agents. The studio also includes advanced math and physics, engine/robot/virtual computer builders, modern survival, food and water systems, a local production studio, real-time 3D scenes, and the retro cartridge interface. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
+A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** Version 5 adds an agent academy: bounded controller search, a rover that learns action values from rewards, separate evaluation trials, policy maps, and replayable simulations. Richer geometric worlds, dynamic shadows, and original stereo music and effects bring the experiments to life. Driving/CDL introductions, trades and safety, math and physics, engine/robot/virtual computer builders, modern survival, food/water systems, production planning, and the retro lab remain playable. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
@@ -10,7 +10,7 @@ Repository: https://github.com/larrinamsalva/brainsweatstudios
 
 Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 
-[Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
+[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
 
 ## Playable worlds
 
@@ -59,7 +59,7 @@ Explorer simplifies resources and adds hints. Builder adds constraints. Master t
 
 ## Classes and retro lab
 
-Open `#/classes` for two classes in each new learning world. Each includes suggested preparation, an original lesson, worked example, adjustable experiment, three explained knowledge checks, and a link to the live game. Lessons and questions are authored in English and Spanish. Preparation is optional; nothing is locked.
+Open `#/classes` for two classes in each learning world, plus four additional agent lessons. Each includes suggested preparation, an original lesson, worked example, adjustable experiment, three explained knowledge checks, and a link to the live game. Lessons and questions are authored in English and Spanish. Preparation is optional; nothing is locked.
 
 Open `#/lab` to select one of 37 cartridges, or `#/lab/space` to run a world inside the CRT interface. Green and amber palettes are saved per profile. The actual game host runs inside the console, so checkpoints, bots, earned progress, and classes share the normal studio’s state.
 
@@ -67,11 +67,21 @@ The VM is a bounded educational instruction interpreter, not an OS or arbitrary-
 
 Creator Studio previews generated visuals without cameras or microphones. It exports a production-plan JSON and, when the browser supports MediaRecorder/WebM, a silent captioned rehearsal video. It does not stream to an external service. Audio levels are a planning model, and actual video size can differ from the bitrate estimate.
 
-New worlds have native WebGL2 depth, perspective, lighting, and keyboard camera controls, with projected vector fallback. The retro styling uses static scanlines, no flicker. Reduced motion stops animation and repeated drawing; high contrast removes scanlines.
+Scenes use native WebGL2 depth, perspective, shadow maps with nine-sample filtering, tone mapping, and keyboard camera controls, with projected vector fallback. The four agent arenas and learning rover add original stadium, outpost, city, delivery, and spacecraft geometry, moving beacons, and traces. Sound uses original oscillator-based chords, bass, percussion, stereo panning, and separate music/effect gains through a compressor. Sound unlocks only after interaction; mute and hidden-page behavior silence the graph, and music starts off. The retro styling uses static scanlines, no flicker. Reduced motion stops animation and repeated drawing; high contrast removes scanlines.
 
 Driving classes use US fundamentals and link to current official state motor vehicle services. CDL lessons link to FMCSA; this studio is not an ELDT training provider or licensing exam. Trade and line-crew lessons introduce careers, measurement, planning, and qualified-work boundaries. Electrical controls operate only a virtual board; fire and water games practice preparedness and escalation, not live hazardous work or rescue procedures. No game badge is a license, qualification, apprenticeship completion, or safety certification.
 
 The four agent worlds use an inspectable priority controller with 1–8 rules. Edit conditions and actions, step an episode, run it, pause, replay the trace, change seeds, or import/export a validated policy JSON. A saved running controller resumes stopped. Agents execute a bounded model with a 120-tick limit, no arbitrary code or cloud language model. The space world uses ideal relative Cartesian motion without orbital gravity. Guided bot practice remains separate from player-earned XP.
+
+## Agent academy
+
+Open `#/academy` or `#/academy?tab=rover`. Training, evaluation, and replay use local simulations and award no game XP. Learned values, controller rules, and training histories save per profile and travel with progress backups. The separate academy JSON can also be exported and strictly validated on import. Training and replay resume stopped after refresh or import; pausing and hidden tabs suspend active work.
+
+The **controller lab** searches nearby 1–8-rule policies across eight fixed training seeds. Completion wins first, then model score, then fewer ticks. Six generations can improve an incomplete default controller in the sports, survival, scenario, or space arena. Three curricula reuse Explorer/Builder/Master constraints. Evaluation freezes the champion and uses eight separate seeds, with worst score, ticks, reserves, failure advice, and trace replay. Export the policy or use **Load academy champion** in its arena. The approach action includes the existing built-in path planner; this is inspectable controller optimization, not language-model fine-tuning.
+
+The **learning rover** starts with a zero Q-table and no path planner. It explores north/east/south/west actions, collects a parcel, and returns to base within 80 ticks. Its observation combines one of three wall layouts, position, and parcel state: 294 rows × four action values. A steady courier and a windy courier with 12% clockwise action drift can be trained in chunks of 1,000 episodes. The live action map, value inspector, rewards, training curve, and trial replay explain what changed. Evaluation uses 20 fixed seeds with exploration and learning disabled. These seeds are separate from training, but remain within the same small task distribution.
+
+Four bilingual classes teach action-value updates, separate evaluation, reward design, and terminal-state values, with original worked examples and interactive calculations. All training is deterministic for the same initial data and options. No cloud model, API key, arbitrary code, or external agent connection is required or included. The results measure these bounded simulations; they do not establish general agent competence.
 
 ## Private online play
 
@@ -117,7 +127,7 @@ Before publishing, the workflow rebuilds the original v1 and the pre-fix v2, rep
 
 ## Progress and privacy
 
-- Six anonymous local profiles are stored in `brain-sweat-studio:profiles:v2`. Each has its own settings, rewards, and mission checkpoints. The active save is also mirrored under the legacy `brain-sweat-studio:v1` key. Existing version 1 and 2 saves migrate automatically. The schema remains version 2 with optional migrated class records and retro palette.
+- Six anonymous local profiles are stored in `brain-sweat-studio:profiles:v2`. Each has its own settings, rewards, mission checkpoints, and academy learning. The active save is also mirrored under the legacy `brain-sweat-studio:v1` key. Existing version 1 and 2 saves migrate automatically. The schema remains version 2; missing class records, retro palette, and academy data migrate to defaults.
 - Class experiments and answer checks save per profile, export with backups, and do not grant game XP. A class is marked mastered only after all three answers are correct.
 - Finished results store scores, attempts, completion, XP, Brain Points, badges, settings, and local dates.
 - Score 60 completes a mission; score 90 earns three mastery stars. Eight missions × three modes × thirty-seven worlds = 888 distinct completion slots.
@@ -141,6 +151,7 @@ src/data/        Typed game manifest, difficulty and result interfaces
 src/systems/     Profiles, checkpoints, local council, bots, XP, procedural audio
 src/i18n/        Reviewed Spanish catalog and JSX localization
 src/online/      Authenticated online handler, client, and storage adapters
+src/training/    Bounded controller search, Q-learning, evaluation, strict academy saves
 src/styles/      Design tokens, responsive layouts, focus and contrast
 tests/           Unit and browser gameplay tests
 scripts/         Offline packaging, dependency notices, screenshots
@@ -167,6 +178,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CODE_OF
 Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions, licenses, and runtime license texts are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Run `npm run licenses` after dependency changes. No copyrighted characters, unlicensed media, or real passwords are included. Optional online project costs depend on the selected service plan.
 
 ## Screenshots
+
+![Version 5 agent academy](docs/screenshots/v5/controllers.png)
+![Learned delivery rover](docs/screenshots/v5/rover.png)
+
+[Version 5 studio](docs/screenshots/v5/studio.png) · [Richer sports arena](docs/screenshots/v5/sports.png) · [Retro space simulation](docs/screenshots/v5/space.png) · [Agent learning class](docs/screenshots/v5/agent-class.png) · [Phone rover controls](docs/screenshots/v5/mobile-rover.png) · [Spanish evaluation](docs/screenshots/v5/spanish-evaluation.png) · [Verified public studio](docs/screenshots/v5/live.png)
+
+### Earlier Version 4 worlds
 
 ![Version 4 studio](docs/screenshots/v4/studio.png)
 ![Trade Bench](docs/screenshots/v4/trade.png)

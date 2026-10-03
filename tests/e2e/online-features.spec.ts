@@ -62,7 +62,7 @@ test('two separate browser identities cooperate through shared server turns and 
         return layout.width===320?'fits':JSON.stringify(layout);
       },{message:'The connected commons fits the phone viewport after resize',timeout:5000}).toBe('fits');
     }catch(error){
-      await test.info().attach('connected-phone-layout',{body:await host.screenshot({fullPage:true}),contentType:'image/png'});
+      await test.info().attach('connected-phone-layout',{body:await host.screenshot({path:`test-results/connected-phone-${test.info().project.name}.png`,fullPage:true}),contentType:'image/png'});
       throw error;
     }
   }finally{await Promise.all(contexts.map(c=>c.close()));}

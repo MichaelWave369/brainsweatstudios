@@ -20,7 +20,7 @@ for (const locale of ['en', 'es'] as const) {
 }
 test('skip link, keyboard mission controls, reading fallback, and narrow layouts', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: { getVoices: () => [], addEventListener: () => {}, removeEventListener: () => {}, cancel: () => {} } }));
-  await page.goto('/'); await page.keyboard.press('Tab'); await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused(); await page.keyboard.press('Enter'); await expect(page.locator('main')).toBeFocused(); await expect(page.locator('.world-card')).toHaveCount(26);
+  await page.goto('/'); await expect(page.locator('main h1')).toBeVisible(); await page.keyboard.press('Tab'); await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused(); await page.keyboard.press('Enter'); await expect(page.locator('main')).toBeFocused(); await expect(page.locator('.world-card')).toHaveCount(26);
   await page.getByRole('button', { name: 'Read aloud', exact: true }).click();
   await expect(page.getByText('No local voice is available for this language on this device.').filter({ visible: true })).toBeVisible();
   for (const width of [320, 390]) {

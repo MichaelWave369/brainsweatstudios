@@ -42,6 +42,7 @@
 .advanced-layout .game-stats,.class-detail .game-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.advanced-layout .game-stat,.class-detail .game-stat,.advanced-layout .game-stat>div,.class-detail .game-stat>div{min-width:0}.advanced-layout .game-stat span,.class-detail .game-stat span{white-space:normal;overflow-wrap:anywhere}.advanced-layout .game-stat strong,.class-detail .game-stat strong,.worked-example{overflow-wrap:anywhere}
 @media(max-width:520px){.crt-screen .mission-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.crt-screen .mission-tabs button{min-width:0}}
 /* Rung four workshops, controllers, and live competition. */
+@media(max-width:720px) { .sidebar:not(.open) { display:none; } }
 .choice-stack { display: grid; gap: .65rem; }
 .choice-stack .btn { justify-content: flex-start; text-align: left; white-space: normal; }
 .decision-panel { padding: 1rem; border: 1px solid var(--border); border-radius: 16px; background: #111b27; }

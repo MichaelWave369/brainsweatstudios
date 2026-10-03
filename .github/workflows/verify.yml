@@ -29,6 +29,12 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run lint && npm run test && npm run build
+      - name: Verify WebKit connected phone navigation
+        run: npm run test:e2e -- tests/e2e/online-features.spec.ts --project=webkit --workers=2
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+          ONLINE_TEST_SERVER: 1
       - name: Agent gameplay and cross-browser accessibility
         run: |
           studio_ui_only=0

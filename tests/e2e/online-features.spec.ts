@@ -50,6 +50,12 @@ test('two separate browser identities cooperate through shared server turns and 
     expect(scan.violations).toEqual([]);
     if(test.info().project.name==='chromium')await group(host).screenshot({path:'docs/screenshots/v4/online-room.png'});
     await host.setViewportSize({width:320,height:844});
+    const navigation=host.getByRole('navigation',{name:'Studio',includeHidden:true});
+    await expect(navigation).toBeHidden();
+    await host.getByRole('button',{name:'Open navigation',exact:true}).click();
+    await expect(navigation).toBeVisible();
+    await host.getByRole('button',{name:'Close menu',exact:true}).press('Enter');
+    await expect(navigation).toBeHidden();
     await expect.poll(async()=>{
       const layout=await host.evaluate(()=>({width:document.documentElement.scrollWidth,spill:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>322).slice(0,12).map(e=>({tag:e.tagName,class:e.className,right:e.getBoundingClientRect().right}))}));
       return layout.width===320?'fits':JSON.stringify(layout);

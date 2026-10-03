@@ -3,6 +3,10 @@ type Experiment={formula:string;rows:[string,number,string][]};
 export function rungFourExperiment(kind:string,v:number):Experiment|null {
   const result=(formula:string,rows:Experiment['rows']):Experiment=>({formula,rows});
   switch(kind){
+    case 'q-learning-rate':return result('Qnew = 2 + α × (1 + 0.97×5 − 2); α = input/10',[['Learning rate',v/10,''],['Target value',5.85,''],['Updated action value',rounded(2+v/10*3.85),'']]);
+    case 'evaluation-count':return result('success rate = successes / 20 × 100',[['Successful trials',v,''],['Unsuccessful trials',20-v,''],['Evaluation success rate',v*5,'%']]);
+    case 'reward-loops':return result('closer + farther = (0.2−0.12) + (−0.2−0.12) = −0.24',[['Movement ticks',v*2,''],['Distance reward total',0,''],['Loop reward total',rounded(-0.24*v),'']]);
+    case 'future-discount':return result('continuing Q = 2 + 0.25×(1 + γ×5 − 2); terminal Q = 1.75',[['Future discount',v/10,''],['Continuing action value',rounded(2+0.25*(1+v/10*5-2)),''],['Terminal action value',1.75,'']]);
     case 'road-stop':{const s=stoppingDistance(v,1.5,false);return result('v = mph × 0.44704; distance = 1.5v + v²/10',[['Reaction distance',rounded(s.reaction),'m'],['Braking distance',rounded(s.braking),'m'],['Total stopping distance',rounded(s.total),'m']]);}
     case 'road-reaction':{const s=stoppingDistance(30,v/10,false);return result('30 mph = 13.4112 m/s; reaction travel = speed × time',[['Reaction time',v/10,'s'],['Reaction distance',rounded(s.reaction),'m'],['Total stopping distance',rounded(s.total),'m']]);}
     case 'cargo':return result('rear = 12; total = front + rear; imbalance = |front − rear|',[['Total cargo',v+12,'model units'],['Cargo imbalance',Math.abs(v-12),'model units']]);

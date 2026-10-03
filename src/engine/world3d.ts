@@ -1,4 +1,5 @@
 import { arenaObstacles, fireObstacles } from '../games/rung4/models';
+import { roverWalls } from '../training/models';
 export type Vec3 = [number,number,number];
 export interface Mesh { vertices:number[]; color:string }
 const colors:Record<string,string>={math:'#98caff',geometry:'#d6b0ff',calculus:'#ffaece',physics:'#ffe096',engine:'#ffb17e',robot:'#97eed8',vm:'#a4b5ff',trail:'#b7dc95',water:'#8fe1ff',kitchen:'#ffd49e',creator:'#dfaeff',driving:'#a4dfc8',cdl:'#ffbf82',trade:'#dfc396',lines:'#afd4ff',electric:'#ffe48e',fire:'#ffb2a0',swim:'#8fe2e7',sports:'#bded90',outpost:'#d5ca9a',scenario:'#b8b4ff',space:'#9edcff'};
@@ -16,7 +17,8 @@ export class MeshBuilder {
 }
 export function build3D(kind:string,data:Record<string,number>={},time=0):Mesh[] {
   const p=new MeshBuilder(),c=colors[kind]||'#a6d9ef';
-  p.box(0,-0.5,0,9,0.35,7,'#233447');p.box(0,-0.17,0,8.6,0.12,6.6,'#304359');
+  const floor=kind==='sports'?'#385c48':kind==='outpost'?'#5a624c':kind==='space'?'#253a54':kind==='learner'?'#294d58':'#304359';
+  p.box(0,-0.5,0,9,0.35,7,'#233447');p.box(0,-0.17,0,8.6,0.12,6.6,floor);
   for(let i=-4;i<=4;i++)p.box(i,-0.03,0,0.018,0.018,6.3,'#4e677b');for(let i=-3;i<=3;i++)p.box(0,-0.03,i,8.3,0.018,0.018,'#4e677b');
   const pillar=(x:number,z:number,h=1.6)=>{p.box(x,0,z,0.65,h,0.65,'#465c73');p.box(x,h,z,0.72,0.08,0.72,c);};
   if(['math','geometry','calculus','physics'].includes(kind)){
@@ -67,14 +69,47 @@ export function build3D(kind:string,data:Record<string,number>={},time=0):Mesh[]
   }else if(kind==='swim'){
     p.box(0,0,0,6,0.1,4.2,'#60bad0');p.box(-3.4,0,-0.1,0.8,0.45,5.2,'#d6c4a2');p.box(3.4,0,-0.1,0.8,0.45,5.2,'#d6c4a2');for(let i=0;i<4;i++)p.box(0,0.13,-1.5+i,5.8,0.02,0.025,'#b3ebef');
     p.cylinder(-3.3,0.5,-1.5,0.12,1.35,'#c9e1e3');p.box(-3.3,1.7,-1.5,0.6,0.3,0.6,c);p.cylinder(3.3,0.5,1,0.36,0.1,'#ffbb8c');p.cylinder(3.3,0.61,1,0.2,0.02,'#d6c4a2');p.box(0,0.2,2.4,2,0.1,0.4,c);
-  }else if(['sports','outpost','scenario'].includes(kind)){
-    for(const [x,z]of arenaObstacles(data.seed||0))p.box(x-4,0,z-3,0.8,0.75,0.8,'#54667b');
-    if(kind==='sports'){p.box(4,0,0,0.12,1.8,2.4,'#c3e8d9');p.box(3.6,1.8,0,0.9,0.08,2.4,c);p.orb(-1,0.18,0,0.18,'#f2d29f');}
-    else{p.box(-3,0,-2.2,1.2,1,1.2,'#8fa589');for(const [x,z]of [[2,1],[5,5],[8,3],[3,5],[7,1]])p.box(x-4,0,z-3,0.35,0.35,0.35,kind==='outpost'?'#e1c08f':'#b8b4ff');}
-    const x=(data.x??0)-4,z=(data.y??3)-3;p.box(x,0.2,z,0.55,0.35,0.6,c);p.box(x,0.55,z,0.36,0.24,0.35,'#d0e0e8');p.orb(x,0.74,z+0.18,0.07,'#20374b');
+  }else if(['sports','outpost','scenario','learner'].includes(kind)){
+    const learner=kind==='learner',center=learner?3:4;
+    const walls=learner?roverWalls(data.layout||0):arenaObstacles(data.seed||0);
+    for(const [x,z]of walls){p.box(x-center,0,z-3,0.8,0.66,0.8,'#54667b');p.box(x-center,0.66,z-3,0.85,0.08,0.85,'#738aa1');}
+    if(kind==='sports'){
+      for(const z of[-2.8,2.8])p.box(0,0,z,8.2,0.018,0.035,'#cce3c4');for(const x of[-4,0,4])p.box(x,0,0,0.035,0.018,5.6,'#cce3c4');
+      for(let i=0;i<28;i++){const a=i/28*Math.PI*2;p.box(Math.cos(a)*1.1,0.015,Math.sin(a)*1.1,0.09,0.015,0.09,'#cce3c4');}
+      for(const z of[-3.65,3.65])for(let i=0;i<3;i++){p.box(0,0.1+i*0.32,z+Math.sign(z)*i*0.18,7,0.28,0.35,'#506480');for(let seat=0;seat<12;seat++)p.box(-3.1+seat*0.56,0.4+i*0.32,z+Math.sign(z)*i*0.18,0.28,0.18,0.25,seat%3===0?'#dba674':'#819aa6');}
+      p.box(4,0,-1.2,0.08,1.7,0.08,'#d7eee1');p.box(4,0,1.2,0.08,1.7,0.08,'#d7eee1');p.box(4,1.7,0,0.08,0.08,2.45,'#d7eee1');
+      for(let i=0;i<9;i++)p.box(4.35,0.15+i*0.18,0,0.04,0.025,2.4,'#769389');p.orb((data.goalX??2)-4,0.18,(data.goalY??3)-3,0.18,'#f0caa0');
+    }else if(kind==='outpost'){
+      p.box(-3,0,-2.25,1.3,0.8,1.3,'#899a70');p.orb(-3,0.9,-2.25,0.85,'#b9ccb0');p.box(-3,0,-1.58,0.4,0.75,0.08,'#37546c');
+      p.cylinder(-4,0,-3,0.25,0.55,'#83d2df');p.box(-3.6,0.05,-3,0.3,0.1,0.5,'#d5d8c2');
+      for(const [x,z]of[[-4.6,-3.5],[-2,-3.9],[0,-3.8],[2.7,-3.8],[4.7,2.9]]){p.cylinder(x,0,z,0.1,0.75,'#8a705c');p.orb(x,1.15,z,0.58,'#8bb282');p.orb(x,1.55,z,0.36,'#b2d39e');}
+      for(let i=0;i<3;i++)p.orb(-2+i*2.2,0.55,-4.6,0.9+i*0.2,'#6c8190');
+    }else if(kind==='scenario'){
+      for(let i=0;i<5;i++){const x=-4+i*2,z=-3.6,h=1.2+i%3*0.7;p.box(x,0,z,1.1,h,0.85,'#596d8b');p.box(x,h,z,1.2,0.08,0.95,'#aac2d5');for(let j=0;j<3;j++)p.box(x-0.32+j*0.32,0.6,z+0.44,0.16,0.22,0.025,'#cee7bd');}
+      for(const x of[-4.4,4.4]){p.box(x,0,1.5,0.07,2,0.07,'#94aab5');p.orb(x,2,1.5,0.15,'#f8daa7');}
+    }else{
+      p.box(3,0,-3,0.7,0.12,0.7,'#f4c27e');p.box(-3,0,3,0.8,0.12,0.8,'#9eedc9');
+      for(const x of[-4.4,4.4]){p.box(x,0,-2.6,0.8,1.4,0.8,'#465e7a');p.box(x,1.4,-2.6,0.84,0.12,0.84,'#9cdaec');for(let i=0;i<3;i++)p.box(x,0.2+i*0.35,-2.17,0.5,0.04,0.02,'#b0dfd5');}
+      if(data.storm)for(let i=0;i<8;i++){const x=-4.1+i*1.15,z=-2.4+(time*2+i)%5;p.box(x,1.2+(i%3)*0.4,z,0.035,0.15,0.035,'#b9d8e5');}
+    }
+    if(kind==='outpost'||kind==='scenario')for(const [i,[x,z]]of [[2,1],[5,5],[8,3],[3,5],[7,1]].entries())if(i>=(data.progress||0)){p.box(x-4,0,z-3,0.38,0.38,0.38,kind==='outpost'?'#e3c89c':'#b8b4ff');p.box(x-4,0.39,z-3,0.08,0.02,0.4,'#eaf2d7');}
+    const gx=(data.goalX??2)-center,gz=(data.goalY??3)-3;
+    for(let i=0;i<16;i++){const a=i/16*Math.PI*2;p.box(gx+Math.cos(a)*0.42,0.03,gz+Math.sin(a)*0.42,0.085,0.03,0.085,'#c9f0b4');}
+    p.orb(gx,0.95+Math.sin(time*2)*0.07,gz,0.11,'#bfeec6');
+    for(let i=0;i<Math.min(12,data.trailCount||0);i++)p.cylinder((data[`tx${i}`]||0)-center,0.05,(data[`ty${i}`]||0)-3,0.06+i*0.003,0.025,'#7dded3');
+    const x=(data.x??0)-center,z=(data.y??3)-3,bob=Math.sin(time*2.5)*0.015;p.box(x,0.18+bob,z,0.62,0.33,0.7,c);p.box(x,0.52+bob,z,0.42,0.26,0.38,'#d2e0e9');p.box(x,0.57+bob,z+0.2,0.33,0.1,0.03,'#2b566b');
+    for(const dx of[-0.32,0.32])for(const dz of[-0.22,0.22])p.orb(x+dx,0.16,z+dz,0.12,'#162c3a');p.cylinder(x,0.79+bob,z,0.02,0.16,'#a5c2d5');p.orb(x,0.96+bob,z,0.04,'#a7f2d8');
+    if(data.carrying)p.box(x,0.79,z-0.18,0.23,0.22,0.23,'#f4c27e');
   }else if(kind==='space'){
     p.box(-2,0,-0.5,1.6,1.6,1.6,'#607b96');p.box(-2,1.6,-0.5,1.7,0.15,1.7,c);p.box(-3.4,0.8,-0.5,1.2,0.04,2,'#7187bf');p.box(-0.6,0.8,-0.5,1.2,0.04,2,'#7187bf');p.cylinder(-2,0,-0.5,0.95,0.1,'#97c9d8');
     const x=Math.max(-1.4,Math.min(3.6,-1.4+(data.x??50)*0.075)),z=Math.max(-2,Math.min(2,(data.y??3)*0.25));p.box(x,0.65,z,0.7,0.45,0.8,'#c3d0df');p.box(x,0.8,z-0.9,1.4,0.04,0.75,c);p.box(x,0.8,z+0.9,1.4,0.04,0.75,c);for(let i=0;i<8;i++)p.orb(-3.5+i,0.6+(i%3)*0.7,-2.5,0.04,'#edf1dd');
+    for(let i=0;i<52;i++){const sx=-7+(i*31%140)/10,sz=-6+(i*17%100)/10,sy=1+(i*13%60)/10;p.orb(sx,sy,sz,i%7===0?0.045:0.022,i%3===0?'#acd8ee':'#d9d5eb');}
+    for(const dx of[-3.4,-0.6])for(let i=0;i<5;i++)p.box(dx-0.5+i*0.25,0.845,-0.5,0.025,0.008,1.9,'#aacbe0');
+    p.box(-2,0.45,0.32,0.65,0.65,0.08,'#24465b');p.box(-2,0.8,0.38,0.3,0.12,0.03,'#b3f2d5');p.cylinder(-2,1.75,-0.5,0.11,0.7,'#91aec5');p.orb(-2,2.5,-0.5,0.2,'#c7d8e4');
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2;p.orb(-1.3,0.9+Math.cos(a)*0.42,-0.5+Math.sin(a)*0.42,0.05,'#b4edc8');}
+    for(let i=0;i<Math.min(12,data.trailCount||0);i++)p.orb(Math.max(-1.4,Math.min(3.6,-1.4+(data[`tx${i}`]||0)*0.075)),0.48,Math.max(-2,Math.min(2,(data[`ty${i}`]||0)*0.25)),0.035,'#72d6e6');
+    if(Math.hypot(data.vx||0,data.vy||0)>0.1){p.orb(x+0.44,0.83,z,0.09+Math.sin(time*6)*0.025,'#b1e9f5');p.orb(x+0.58,0.83,z,0.055,'#7dc6ea');}
+    p.box(x,1.11,z,0.24,0.05,0.26,'#91d9e8');
   }
   return p.meshes;
 }

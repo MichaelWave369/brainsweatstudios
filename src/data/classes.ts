@@ -1,6 +1,7 @@
 import type { AdvancedId } from '../games/advanced/models';
 import type { RungFourId } from '../games/rung4/models';
 import { rungFourCourses } from './rungFourClasses';
+import { academyCourses } from './academyClasses';
 export type LocalText={en:string;es:string};
 const t=(en:string,es:string):LocalText=>({en,es});
 export interface KnowledgeCheck {prompt:LocalText;choices:LocalText[];correct:number;why:LocalText}
@@ -32,6 +33,7 @@ export const courses:Course[]=[
  {id:'stream-engineering',world:'creator',title:t('Studio engineering: mix and bandwidth','Ingeniería de estudio: mezcla y ancho de banda'),description:t('Calculate headroom, video size, and frame timing.','Calcula margen de audio, tamaño de video y tiempo por cuadro.'),prerequisite:t('Percentages, seconds, and basic logarithms','Porcentajes, segundos y logaritmos básicos'),idea:t('dBFS measures a digital level relative to full scale. Mixing signals can raise peaks, so leave headroom and keep narration clear. Video size depends on bitrate and duration; frame rate determines the time available per frame.','dBFS mide el nivel digital respecto al máximo. Mezclar señales puede subir picos: deja margen y conserva la claridad de la voz. El tamaño depende de tasa y duración; la frecuencia de cuadros determina el tiempo por cuadro.'),example:t('6 megabits per second for 25 seconds estimates 6×25/8 = 18.75 megabytes before container overhead. At 30 fps, each frame has about 33.33 ms.','6 megabits por segundo durante 25 segundos estiman 6×25/8 = 18.75 megabytes antes de sobrecarga. A 30 fps, cada cuadro dispone de unos 33.33 ms.'),experiment:'bitrate',parameter:t('Bitrate (Mbps)','Tasa de bits (Mbps)'),min:1,max:12,initial:6,questions:[q('6 Mbps for 25 seconds estimates…','6 Mbps durante 25 segundos estiman…',[['150 MB','150 MB'],['18.75 MB','18.75 MB'],['6 MB','6 MB']],1,'Divide megabits by 8 to get megabytes.','Divide megabits entre 8 para obtener megabytes.'),q('30 frames per second gives each frame…','30 cuadros por segundo dan a cada cuadro…',[['30 seconds','30 segundos'],['1 ms','1 ms'],['About 33.33 ms','Unos 33.33 ms']],2,'1000 milliseconds divided by 30.','1000 milisegundos divididos entre 30.'),q('Mix headroom helps avoid…','El margen de mezcla ayuda a evitar…',[['Clipping at full scale','Saturación al llegar al máximo'],['All file downloads','Todas las descargas'],['Every camera cut','Todos los cortes de cámara']],0,'Combined peaks can exceed individual levels.','Los picos combinados pueden superar los individuales.')]},
 ];
 courses.push(...rungFourCourses);
+courses.push(...academyCourses);
 export const courseById=(id:string)=>courses.find(c=>c.id===id);
 export interface LessonRecord {parameter:number;answers:number[];tested:boolean;best:number;attempts:number;date:string}
 export function lessonScore(course:Course,answers:number[]) {return Math.round(course.questions.filter((q,i)=>q.correct===answers[i]).length/course.questions.length*100);}

@@ -2,6 +2,7 @@ import { courseById, lessonScore, type LessonRecord } from '../data/classes';
 import { freshSave, recordResult, SAVE_KEY, validateSave } from './progress';
 import type { Checkpoint, Difficulty, GameId, Json, SaveData, Settings } from '../data/types';
 import { parseSessionKey, validSlot } from './checkpointValidation';
+import { validateAcademy, type AcademySave } from '../training/models';
 export const PROFILE_KEY = 'brain-sweat-studio:profiles:v2';
 export interface Profile { id: string; label: string; save: SaveData }
 interface Bundle { version: 2; active: string; profiles: Profile[] }
@@ -90,6 +91,11 @@ export function markBotPractice(key: string) { if (!parseSessionKey(key)) return
 export function clearCheckpoint(key: string, notify = true) { const save = currentProfile().save; const checkpoints = { ...save.checkpoints }; delete checkpoints[key]; commitSave({ ...save, checkpoints }, notify); }
 
 export function refreshProfiles() { revision++; listeners.forEach(l => l()); }
+
+export function saveAcademy(value: AcademySave, profileId: string) {
+  if (profileId !== currentProfile().id) return;
+  commitSave({ ...currentProfile().save, academy: validateAcademy(value) }, false);
+}
 
 export function saveLesson(id:string,parameter:number,answers:number[],submit=false):LessonRecord {
  const course=courseById(id);if(!course||!Number.isFinite(parameter)||parameter<course.min||parameter>course.max||answers.length!==3||!answers.every((a,i)=>Number.isInteger(a)&&a>=-1&&a<course.questions[i].choices.length))throw new Error('Invalid class activity.');

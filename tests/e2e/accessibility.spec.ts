@@ -4,7 +4,7 @@ import { freshSave } from '../../src/systems/progress';
 import { games } from '../../src/data/games';
 
 test.describe.configure({ mode: 'parallel' });
-const routes = ['/', '/progress', '/challenges', '/achievements', '/skills', '/settings', '/online', '/classes', '/class/derivatives', '/lab', '/lab/engine', '/assistant', '/bots', '/privacy', '/adults'];
+const routes = ['/', '/progress', '/challenges', '/achievements', '/skills', '/settings', '/online', '/academy', '/academy?tab=rover', '/classes', '/class/derivatives', '/lab', '/lab/engine', '/assistant', '/bots', '/privacy', '/adults'];
 for (const locale of ['en', 'es'] as const) {
   test(`accessible studio pages and all mission controls: ${locale}`, async ({ page }) => {
     test.setTimeout(360000);

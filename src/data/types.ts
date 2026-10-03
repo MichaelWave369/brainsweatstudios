@@ -1,4 +1,5 @@
 import type { LessonRecord } from './classes';
+import type { AcademySave } from '../training/models';
 import type { ComponentType } from 'react';
 
 export type Difficulty = 'explorer' | 'builder' | 'master';
@@ -18,7 +19,7 @@ export interface Settings { music: number; effects: number; muted: boolean; redu
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 export interface Checkpoint { state: Record<string, Json>; updatedAt: string; botPractice: boolean }
 export interface SaveData {
-  version: 2; classes: Record<string, LessonRecord>; difficulty: Difficulty; xp: number; points: number;
+  version: 2; classes: Record<string, LessonRecord>; academy: AcademySave; difficulty: Difficulty; xp: number; points: number;
   records: Record<string, MissionRecord>; milestones: number[];
   badges: string[]; unlockedGames: GameId[];
   streak: number; lastPlayed: string; daily: Record<string, DailyRecord>;

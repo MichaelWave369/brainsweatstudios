@@ -70,20 +70,20 @@ jobs:
           node scripts/verify-production.mjs
       - name: Verify advanced learning flows and graphics
         run: |
-          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
+          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/academy-features.spec.ts tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
       - name: Capture review graphics
         if: always()
         run: |
           node scripts/test-server.mjs &
           studio_server_pid=$!
           trap 'kill "$studio_server_pid"' EXIT
-          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v4.mjs
+          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v5.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rung-four-studio-review
+          name: rung-five-studio-review
           path: |
-            docs/screenshots/v4
+            docs/screenshots/v5
             test-results
           retention-days: 14
       - name: Upload website
@@ -121,5 +121,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: live-studio-screenshot
-          path: docs/screenshots/live-v4.png
+          path: docs/screenshots/live-v5.png
           retention-days: 14

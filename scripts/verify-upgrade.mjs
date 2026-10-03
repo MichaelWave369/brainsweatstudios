@@ -63,7 +63,7 @@ try {
     // The other old tab can still fetch its lazy game chunk during activation.
     await other.goto(`${base}#/game/code`); await other.getByRole('button', { name: 'Start mission 1', exact: true }).click(); await other.locator('.game-controls').waitFor();
     await page.reload(); await page.getByRole('link', { name: 'All worlds', exact: true }).click(); await page.locator('.world-card').last().waitFor(); assert.equal(await page.locator('.world-card').count(), 37);
-    await page.getByText('NEW IN VERSION 4', { exact: true }).waitFor();
+    await page.getByText('NEW IN VERSION 5', { exact: true }).waitFor();
     // Migration is initially in memory; the next normal save writes the v2 bundle.
     await page.getByRole('link', { name: 'My progress', exact: true }).click(); await page.getByText('1/888', { exact: true }).waitFor();
     await page.getByLabel('Difficulty', { exact: true }).selectOption('builder'); await page.getByLabel('Difficulty', { exact: true }).selectOption('explorer');
@@ -76,7 +76,7 @@ try {
     await page.getByRole('button', { name: 'Actualizar el estudio', exact: true }).click(); await page.getByRole('button', { name: 'Continuar punto de control', exact: true }).click(); assert.equal(await page.getByLabel('Nota del paso 16', { exact: true }).inputValue(), '2');
     assert.equal(await page.getByText('Hay una nueva actualización del estudio.', { exact: true }).count(), 0);
     await page.getByLabel('Idioma', { exact: true }).selectOption('en'); await page.getByRole('link', { name: 'Play', exact: true }).click(); await context.setOffline(true); await page.reload(); await page.locator('.world-card').last().waitFor(); assert.equal(await page.locator('.world-card').count(), 37);
-    assert.deepEqual(errors, []); console.log('Upgrade verified: two open v1 tabs reach v4, earned progress survives, old lazy assets remain usable, the next update prompts in both languages, melody survives refresh, and offline play works.');
+    assert.deepEqual(errors, []); console.log('Upgrade verified: two open v1 tabs reach v5, earned progress survives, old lazy assets remain usable, the next update prompts in both languages, melody survives refresh, and offline play works.');
   }
   await context.close();
 } catch (error) {

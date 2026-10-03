@@ -73,7 +73,7 @@ export function createOnlineHandler(store:OnlineStore,options:{origins:string[];
         if(!device){
           if(previousDevice)await store.remove(previousDevice.id);
           const address=request.headers.get('x-forwarded-for')?.split(',')[0].trim()||'unknown';
-          await limit(await sha256(`${options.pepper}:connect:${address}`),12,3600000);
+          await limit(await sha256(`${options.pepper}:connect:${address}`),32,3600000);
           const actor={id:crypto.randomUUID(),name:`${adjectives[random(8)]} ${animals[random(8)]} ${1000+random(9000)}`};
           const candidate:StoredRow={id:actor.id,bucket:'device',lookup,data:actor,version:0,expiresAt:expires(now(),90*86400000)};
           if(await store.insert(candidate))device=candidate;else device=alive(await store.find(lookup));

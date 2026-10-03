@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createOnlineHandler, evaluateController, sha256 } from '../src/online/server';
 import { MemoryOnlineStore, RestOnlineStore } from '../src/online/store';
 import { workedPolicy } from '../src/games/rung4/models';
 import type { OnlineSession, OnlineView, StoredRow } from '../src/online/types';
-import { competitionStandings } from '../src/online/client';
+import { competitionStandings, onlineRequest } from '../src/online/client';
 let store:MemoryOnlineStore,handler:ReturnType<typeof createOnlineHandler>,clock:number;
 const tokens=['A','B','C','D','E'].map(letter=>letter.repeat(43));
 async function request(actor:number,body:Record<string,unknown>,extra:Record<string,string>={}) {
@@ -20,6 +20,13 @@ async function readyEvent(type='room',extra:Record<string,unknown>={}){
 }
 beforeEach(()=>{clock=Date.parse('2026-10-03T12:00:00Z');store=new MemoryOnlineStore();handler=createOnlineHandler(store,{origins:['http://localhost'],pepper:'unit-test',now:()=>clock});});
 describe('private online authentication and authorization',()=>{
+  it('allows a full clan to connect from one shared network while keeping a bounded registration quota',async()=>{
+    for(let i=0;i<33;i++){
+      const token=i.toString(36).padStart(43,'Z');
+      const response=await handler(new Request('http://localhost/api',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token,'x-forwarded-for':'192.0.2.1'},body:JSON.stringify({op:'connect'})}));
+      expect(response.status).toBe(i<32?200:429);
+    }
+  });
   it('stores only a token hash and reconnects the same generated identity',async()=>{const first=await connect(0),again=await connect(0);expect(again.actor).toEqual(first.actor);expect(first.actor.name).toMatch(/\d{4}$/);const row=await store.find('device:'+await sha256(tokens[0]));expect(row?.data).toEqual(first.actor);expect(JSON.stringify(row)).not.toContain(tokens[0]);});
   it('requires a credential, validates origins, methods, JSON, and strict fields',async()=>{expect((await request(0,{op:'list'})).status).toBe(401);const missing=await handler(new Request('http://localhost/api',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"op":"connect"}'}));expect(missing.status).toBe(401);expect((await request(0,{op:'connect'},{Origin:'https://untrusted.example'})).status).toBe(403);expect((await handler(new Request('http://localhost/api'))).status).toBe(405);expect((await request(0,{op:'connect',email:'not-accepted'})).status).toBe(400);await connect(0);expect((await request(0,{op:'unknown'})).status).toBe(400);expect((await request(0,{op:'create',type:'clan',name:'free chat text'})).status).toBe(400);});
   it('enforces member and host permissions even when entity IDs are known',async()=>{await connect(0);await connect(1);await connect(2);const e=await create(0);expect((await request(2,{op:'signal',id:e.id,version:0,signal:'ready'})).status).toBe(404);expect((await request(2,{op:'list'})).body.entities).toEqual([]);await request(1,{op:'join',type:'room',code:e.code});expect((await action(1,e.id,'start')).status).toBe(403);expect((await action(1,e.id,'transfer',{member:(await connect(1)).actor.id})).status).toBe(403);});
@@ -57,4 +64,23 @@ describe('server-authoritative multiplayer',()=>{
 });
 describe('PostgREST store adapter',()=>{
   it('uses service credentials only at the adapter and a version filter for atomic updates',async()=>{const requests:{url:string;options:RequestInit}[]=[];const row:StoredRow={id:crypto.randomUUID(),bucket:'room',lookup:'room:TEST',data:{members:[]},version:2,expiresAt:new Date().toISOString()};const fetcher=(async(url:URL|RequestInfo,options?:RequestInit)=>{requests.push({url:String(url),options:options!});return Response.json([]);}) as typeof fetch;const remote=new RestOnlineStore('https://project.supabase.co','sb_secret_test-only',fetcher);expect(await remote.cas({...row,version:3},2)).toBe(false);expect(requests[0].url).toContain('&version=eq.2');expect(requests[0].options.method).toBe('PATCH');expect((requests[0].options.headers as Record<string,string>).Authorization).toBeUndefined();expect((requests[0].options.headers as Record<string,string>).apikey).toBe('sb_secret_test-only');expect(JSON.parse(String(requests[0].options.body)).version).toBe(3);await remote.list('actor');expect(requests[1].url).toContain('data->members=cs.');});
+});
+describe('online request lifecycle',()=>{
+  it('cancels polling on either its request deadline or the caller disconnecting',async()=>{
+    try{
+      for(const source of ['deadline','caller']){
+        vi.restoreAllMocks();
+        const deadline=new AbortController(),caller=new AbortController();
+        vi.spyOn(AbortSignal,'timeout').mockReturnValue(deadline.signal);
+        vi.spyOn(globalThis,'fetch').mockImplementation(async(_input,options)=>new Promise((_resolve,reject)=>{
+          const signal=options!.signal!;
+          signal.addEventListener('abort',()=>reject(signal.reason),{once:true});
+        }));
+        const pending=onlineRequest({endpoint:'http://localhost/api',publishableKey:''},tokens[0],{op:'list'},caller.signal);
+        const rejected=expect(pending).rejects.toMatchObject({name:'AbortError'});
+        (source==='deadline'?deadline:caller).abort(new DOMException('Request stopped','AbortError'));
+        await rejected;
+      }
+    }finally{vi.restoreAllMocks();}
+  });
 });

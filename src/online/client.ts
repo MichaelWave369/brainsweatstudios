@@ -18,7 +18,8 @@ export function deviceToken(profile:string){
 export function clearDeviceToken(profile:string){localStorage.removeItem(ONLINE_KEY+profile);}
 export async function onlineRequest(config:OnlineConfig,token:string,body:Record<string,unknown>,signal?:AbortSignal):Promise<OnlineSession|{entity:OnlineView;session:OnlineSession}|{deleted:true}>{
   const headers:Record<string,string>={'Content-Type':'application/json',Authorization:`Bearer ${token}`};if(config.publishableKey)headers.apikey=config.publishableKey;
-  const response=await fetch(config.endpoint,{method:'POST',headers,body:JSON.stringify(body),signal:signal||AbortSignal.timeout(12000),cache:'no-store'});
+  const deadline=AbortSignal.timeout(12000),requestSignal=signal?AbortSignal.any([signal,deadline]):deadline;
+  const response=await fetch(config.endpoint,{method:'POST',headers,body:JSON.stringify(body),signal:requestSignal,cache:'no-store'});
   const data=await response.json();if(!response.ok)throw new Error(data.error||'Online service unavailable. Try again.');return data;
 }
 export function competitionStandings(view:OnlineView){

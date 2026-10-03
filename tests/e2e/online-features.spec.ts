@@ -50,8 +50,10 @@ test('two separate browser identities cooperate through shared server turns and 
     expect(scan.violations).toEqual([]);
     if(test.info().project.name==='chromium')await group(host).screenshot({path:'docs/screenshots/v4/online-room.png'});
     await host.setViewportSize({width:320,height:844});
-    const layout=await host.evaluate(()=>({width:document.documentElement.scrollWidth,spill:[...document.querySelectorAll('main *')].filter(e=>e.getBoundingClientRect().right>322).slice(0,12).map(e=>({tag:e.tagName,class:e.className,right:e.getBoundingClientRect().right}))}));
-    expect(layout.width,JSON.stringify(layout.spill)).toBe(320);
+    await expect.poll(async()=>{
+      const layout=await host.evaluate(()=>({width:document.documentElement.scrollWidth,spill:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>322).slice(0,12).map(e=>({tag:e.tagName,class:e.className,right:e.getBoundingClientRect().right}))}));
+      return layout.width===320?'fits':JSON.stringify(layout);
+    },{message:'The connected commons fits the phone viewport after resize',timeout:5000}).toBe('fits');
   }finally{await Promise.all(contexts.map(c=>c.close()));}
 });
 test('clans, host transfer, shared tournament evaluation, reconnect, and deletion work end to end',async({browser})=>{

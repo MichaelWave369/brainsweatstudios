@@ -59,6 +59,21 @@ describe('optional loopback bridge', () => {
     const b = await setup(stalled), client = new AbortController(), promise = fetch(b.origin + '/models', { headers: b.headers, signal: client.signal }).catch(() => null); await ready; client.abort(); await promise;
     await new Promise<void>(resolve => setImmediate(resolve)); await b.close(); expect(aborted).toBe(true);
   });
+  it('bounds request floods and rejects non-ASCII session tokens without crashing', async () => {
+    const b = await setup();
+    const bad = await fetch(b.origin + '/models', { headers: { ...b.headers, 'X-Brain-Sweat-Bridge': 'é'.repeat(64) } }); expect(bad.status).toBe(403);
+    let limited = 0; for (let i = 0; i < 185; i++) { const r = await fetch(b.origin + '/health', { headers: { Origin: origin } }); if (r.status === 429) limited++; await r.body?.cancel(); } expect(limited).toBeGreaterThan(0);
+  });
+  it('rejects unknown provider response shapes, remote model metadata and oversized streamed output', async () => {
+    for (const variant of ['tools', 'remote', 'oversized']) {
+      const delegate = fakeOllama([]), altered: typeof fetch = async (url, options) => {
+        if (variant === 'remote' && String(url).endsWith('/api/show')) return Response.json({ remote_host: 'cloud.invalid', capabilities: ['completion'] });
+        if (String(url).endsWith('/api/chat')) return variant === 'oversized' ? Response.json({ model, done: true, message: { content: 'x'.repeat(24000) } }) : Response.json({ model, done: true, message: { content: '{}', tool_calls: [{ function: { name: 'shell' } }] } });
+        return delegate(url, options);
+      };
+      const b = await setup(altered), result = await fetch(b.origin + '/inference', { method: 'POST', headers: b.headers, body: JSON.stringify(providerRequest()) }); expect(result.status).toBe(variant === 'remote' ? 503 : 400); expect(await result.text()).not.toContain('cloud.invalid');
+    }
+  });
   it('the browser adapter connects only explicitly and never selects a model automatically', async () => {
     const b = await setup(), localFetch: typeof fetch = (url, opts) => fetch(url, { ...opts, headers: { ...opts?.headers, Origin: origin } }), adapter = ollamaAdapter(b.origin, localFetch);
     await expect(adapter.models(new AbortController().signal)).rejects.toThrow(/Connect/); await adapter.connect(new AbortController().signal); const models = await adapter.models(new AbortController().signal); expect(models[0].id).toBe(model);

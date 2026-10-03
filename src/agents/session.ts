@@ -114,13 +114,14 @@ export function createAgentSession(options: SessionOptions) {
     } finally { busy = false; options.onChange?.(); }
   }
   return {
-    get status() { return status; }, get busy() { return busy; }, get ending() { return ending; }, get requestCount() { return requests; }, get lastError() { return lastError; }, get continuous() { return continuous; },
+    get config() { return config; }, get status() { return status; }, get busy() { return busy; }, get ending() { return ending; }, get requestCount() { return requests; }, get lastError() { return lastError; }, get continuous() { return continuous; },
     get controllers() { return clone(controllers); }, get records() { return records as readonly AgentRecord[]; },
     observation, currentObservation: () => currentObservation || observation(), result: world.result, receipt,
     notebook: (agentId = actor()) => clone(notes[agentId]), actor, step,
     pause() { paused = true; continuous = false; cancelPending(); update('PAUSED'); },
     resume() { if (ending === 'stopped') return; paused = false; ending = world.result().terminal ? 'complete' : 'running'; lastError = null; update(world.result().terminal ? 'COMPLETE' : 'WAITING'); },
     stop() { paused = false; continuous = false; ending = 'stopped'; cancelPending(); update('COMPLETE'); },
+    connectProvider(provider: ProviderAdapter) { if (!['mock', 'ollama'].includes(provider.id) || provider.version !== '1.0.0') throw new AgentError('VERSION', 'Incompatible provider adapter.'); providers.set(provider.id, provider); },
     disconnect() { paused = true; continuous = false; cancelPending(); lastError = 'DISCONNECTED'; update('PAUSED'); },
     run() { if (!paused && ending !== 'stopped' && !world.result().terminal && controllers[actor()].family !== 'human') { continuous = true; ending = 'running'; update('WAITING'); } },
     handoff(agentId: string, next: ControllerSpec, reason = 'Operator changed the controller.') {

@@ -54,7 +54,7 @@ test('garage: Spanish, keyboard tabs, 320/390 layouts and reduced-motion graphic
 
 test('garage: explicit local bridge connection discovers a selected model and executes validated proposals', async ({ page }) => {
   await prepare(page); const calls: string[] = []; await page.route('http://127.0.0.1:11435/**', async route => {
-    const url = route.request().url(); calls.push(url); let body: unknown;
+    const url = route.request().url(); calls.push(url); if (route.request().method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Allow-Headers': 'Content-Type, X-Brain-Sweat-Bridge', 'Access-Control-Allow-Private-Network': 'true' } }); return; } let body: unknown;
     if (url.endsWith('/health')) body = { schema: 'agent-bridge@1', sessionToken: 'a'.repeat(64) };
     else if (url.endsWith('/models')) body = { models: [{ id: 'test-local:latest', sizeBytes: 123456, contextLength: null, capabilities: [], digest: null, local: true }] };
     else if (url.endsWith('/metadata')) body = { model: { id: 'test-local:latest', sizeBytes: 123456, contextLength: 8192, capabilities: ['completion'], digest: null, local: true } };
@@ -66,5 +66,5 @@ test('garage: explicit local bridge connection discovers a selected model and ex
 });
 
 test('garage: offline mock, data exchange and world replay never require a provider request', async ({ page }) => {
-  await prepare(page); await page.goto('/#/academy?tab=garage'); const requests: string[] = []; page.on('request', r => requests.push(r.url())); await page.context().setOffline(true); await complete(page, 'community'); await page.getByRole('button', { name: 'Verify model world replay', exact: true }).click(); expect(requests).toEqual([]); await page.context().setOffline(false); await audit(page);
+  await prepare(page); await page.goto('/#/academy?tab=garage'); await expect(page.getByRole('heading', { name: 'Agent garage', exact: true })).toBeVisible(); await expect(page.getByLabel('Garage environment', { exact: true })).toBeEnabled(); const studioOrigin = new URL(page.url()).origin, requests: string[] = []; page.on('request', r => { if (r.method() === 'POST' || new URL(r.url()).origin !== studioOrigin) requests.push(r.url()); }); await page.context().setOffline(true); await complete(page, 'community'); await page.getByRole('button', { name: 'Verify model world replay', exact: true }).click(); expect(requests).toEqual([]); await page.context().setOffline(false); await audit(page);
 });

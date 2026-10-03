@@ -16,7 +16,7 @@ export async function createAgentBridge(options: { port?: number; ollamaPort?: n
   const upstream = `http://127.0.0.1:${upstreamPort}`, token = randomBytes(32).toString('hex');
   let active = 0, closed = false, windowStart = Date.now(), requests = 0;
   const pending = new Set<AbortController>();
-  const server = createServer((req, res) => { void handle(req, res); });
+  const server = createServer({ maxHeaderSize: 8192 }, (req, res) => { void handle(req, res); });
   server.requestTimeout = 65000; server.headersTimeout = 5000; server.keepAliveTimeout = 1000; server.maxConnections = 16;
   async function upstreamJSON(path: '/api/tags' | '/api/show' | '/api/chat', signal: AbortSignal, body?: unknown, limit = 60000) {
     const response = await fetcher(upstream + path, { method: body === undefined ? 'GET' : 'POST', headers: body === undefined ? {} : { 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal, redirect: 'error', credentials: 'omit' });
@@ -62,7 +62,7 @@ export async function createAgentBridge(options: { port?: number; ollamaPort?: n
     if (++requests > 180 || active >= 2 || closed) return send(res, 429, { error: 'LIMIT' });
     if (path === '/health') return send(res, 200, { schema: 'agent-bridge@1', provider: 'ollama', sessionToken: token, scope: 'loopback-only' });
     const supplied = req.headers['x-brain-sweat-bridge'];
-    if (typeof supplied !== 'string' || supplied.length !== token.length || !timingSafeEqual(Buffer.from(supplied), Buffer.from(token))) return send(res, 403, { error: 'SESSION' });
+    if (typeof supplied !== 'string' || !/^[a-f0-9]{64}$/.test(supplied) || !timingSafeEqual(Buffer.from(supplied), Buffer.from(token))) return send(res, 403, { error: 'SESSION' });
     const controller = new AbortController(); pending.add(controller); active++;
     const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 60000);
     const disconnected = () => { if (!res.writableEnded) controller.abort(); }; res.on('close', disconnected);
@@ -77,7 +77,7 @@ export async function createAgentBridge(options: { port?: number; ollamaPort?: n
       if (info.capabilities.length && !info.capabilities.includes('completion')) throw new AgentError('UNAVAILABLE', 'This installed model does not advertise text completion.');
       const deadline = setTimeout(() => controller.abort(), request.budgets.timeoutMs);
       try {
-        const output = await upstreamJSON('/api/chat', controller.signal, { model: info.id, stream: false, think: false, format: request.controller.settings.format === 'schema' ? proposalSchema(request.observation.legalActions) : 'json', messages: [{ role: 'system', content: MISSION_INSTRUCTIONS }, { role: 'user', content: JSON.stringify({ observation: request.observation, context: request.context }) }], options: { temperature: request.controller.settings.temperature, seed: request.controller.settings.seed, num_predict: 256, num_ctx: Math.min(info.contextLength || 4096, 8192) } }, request.budgets.responseBytes + 16000);
+        const output = await upstreamJSON('/api/chat', controller.signal, { model: info.id, stream: false, think: false, format: request.controller.settings.format === 'schema' ? proposalSchema(request.observation.legalActions, request.context.strategy === 'BOUNDED_EPISODE_MEMORY') : 'json', messages: [{ role: 'system', content: MISSION_INSTRUCTIONS }, { role: 'user', content: JSON.stringify({ observation: request.observation, context: request.context }) }], options: { temperature: request.controller.settings.temperature, seed: request.controller.settings.seed, num_predict: 256, num_ctx: Math.min(info.contextLength || 4096, 8192) } }, request.budgets.responseBytes + 16000);
         if (!plain(output) || !plain(output.message) || typeof output.message.content !== 'string' || output.message.tool_calls || output.done !== true || output.model !== info.id) throw new AgentError('MALFORMED', 'Unexpected local model response.');
         if (new TextEncoder().encode(output.message.content).length > request.budgets.responseBytes) throw new AgentError('OVERSIZED', 'Model proposal exceeded its budget.');
         // Explicit projection discards any provider thinking/private fields.

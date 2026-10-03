@@ -27,7 +27,7 @@ try {
       while (!session.result().terminal && session.status !== 'ERROR' && session.receipt().ending !== 'budget') await session.step();
       const receipt = verifyAgentReceipt(session.receipt()); report.trials.push({ world, seed: 20017, result: receipt.result, ending: receipt.ending, requests: receipt.records.reduce((n, r) => n + r.attempts.length, 0), errors: receipt.records.flatMap(r => r.attempts.filter(a => a.code).map(a => a.code)), worldTraceHash: receipt.worldTraceHash, modelTraceHash: receipt.modelTraceHash });
     }
-    report.status = 'qualified'; report.explanation = 'These are measured bounded-world trials with world replay verified. Model regeneration is not guaranteed; no weights or prompts were tuned.';
+    report.status = report.trials.every(t => t.ending === 'complete' && t.result.success) ? 'completed' : 'failed'; report.explanation = 'These are measured bounded-world trials with world replay verified. Model regeneration is not guaranteed; no weights or prompts were tuned.';
   }
 } catch { report.explanation = 'No successful qualification: local Ollama or the selected model was unavailable, timed out or incompatible. No model was installed or cloud provider contacted.'; }
 finally { await bridge.close(); }

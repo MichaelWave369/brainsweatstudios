@@ -81,6 +81,12 @@ describe('model controller boundary', () => {
     for (const mutate of [(v: typeof r) => { v.records[0].observation.state.progress = 4; }, (v: typeof r) => { v.records[0].transition!.reward = 999; }, (v: typeof r) => { v.result.score = 1; }, (v: typeof r) => { v.records[0].validated!.action.type = 'wait'; }]) { const v = clone(r); mutate(v); expect(() => verifyAgentReceipt(redigest(v))).toThrow(); }
     expect(verifyReceipt(recordEpisode(configuration('sports', 3), authoredController('sports'))).schema).toBe('episode@1');
   });
+  it('supports bounded model notebook updates and later explicit provider connection during a handoff', async () => {
+    const notebook = { ...freshNotebook(), plans: ['Scan one site before collecting.'] }, adapter: ProviderAdapter = { ...mockAdapter(), async propose(r) { return { text: JSON.stringify({ action: { type: 'scan' }, notebook }), model: r.controller.model, usage: { inputTokens: null, outputTokens: null } }; } };
+    const s = session('survey', controllerSpec('human'), { providers: [], context: 'BOUNDED_EPISODE_MEMORY' }); s.connectProvider(adapter); s.handoff('pilot', controllerSpec()); await s.step();
+    expect(s.notebook().plans).toEqual(notebook.plans); expect(verifyAgentReceipt(s.receipt()).records[0].notebook).toEqual(notebook);
+    expect(() => validateNotebook({ ...notebook, facts: ['x'.repeat(160)].concat(Array(8).fill('fact')) })).toThrow();
+  });
   it('frozen model experiments preserve split isolation, transfer and deterministic mock reruns', async () => {
     const spec = createModelExperiment('survey', controllerSpec(), controllerSpec('reference'), 'explorer', 3, 'EVENT_SUMMARY', DEFAULT_BUDGETS, 1), before = clone(spec.controllers);
     const output = await runModelExperiment(spec, providers()); expect(output.manifest.report!.trials).toHaveLength(8); expect(spec.controllers).toEqual(before);

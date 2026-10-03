@@ -6,12 +6,12 @@ import { mockAdapter } from './mock.ts';
 import { createModelExperiment, rerunModelExperiment, runModelExperiment } from './experiments.ts';
 
 export async function runAgentHarness() {
-  const started = performance.now(), providers = [mockAdapter()]; let episodes = 0, ticks = 0, successes = 0, replays = 0;
+  const started = performance.now(), providers = [mockAdapter()]; let episodes = 0, ticks = 0, successes = 0, replays = 0, worldStepMs = 0, controllerAwaitMs = 0, verificationMs = 0, maxReceiptBytes = 0, teamTicks = 0;
   for (const world of GARAGE_WORLDS) for (const variant of ['standard', 'transfer'] as const) for (const seed of [3, 20017]) {
     const controllers: Record<string, ControllerSpec> = world === 'community' ? { engineer: controllerSpec(), logistics: controllerSpec() } : { pilot: controllerSpec() };
     const session = createAgentSession({ config: worldConfig(world, seed, 1, variant), controllers, providers });
     while (!session.result().terminal && session.status !== 'ERROR' && session.ending !== 'budget') await session.step();
-    const receipt = verifyAgentReceipt(session.receipt()); episodes++; ticks += receipt.result.ticks; successes += Number(receipt.result.success); replays++;
+    const raw = session.receipt(), verifyStart = performance.now(), receipt = verifyAgentReceipt(raw); verificationMs += performance.now() - verifyStart; maxReceiptBytes = Math.max(maxReceiptBytes, new TextEncoder().encode(JSON.stringify(raw)).length); worldStepMs += receipt.records.reduce((n, r) => n + r.worldMs, 0); controllerAwaitMs += receipt.records.flatMap(r => r.attempts).reduce((n, a) => n + a.providerMs, 0); if (world === 'community') teamTicks += receipt.result.ticks; episodes++; ticks += receipt.result.ticks; successes += Number(receipt.result.success); replays++;
   }
   const fault = controllerSpec(); fault.settings.mockMode = 'alternating';
   const session = createAgentSession({ config: worldConfig('signal-maze'), controllers: { pilot: fault }, providers });
@@ -21,5 +21,5 @@ export async function runAgentHarness() {
   const spec = createModelExperiment('survey', controllerSpec(), controllerSpec('reference'), 'explorer', 3, 'RECENT_WINDOW', DEFAULT_BUDGETS, 1);
   const experiment = await runModelExperiment(spec, providers), rerun = await rerunModelExperiment(experiment.manifest, providers);
   if (!rerun.worldReplayMatch || !rerun.modelRegenerationMatch) throw new Error('Mock model experiment failed deterministic rerun.');
-  return { agentVersion: '1.0.0', provider: 'deterministic-mock', episodes, ticks, successes, verifiedReplays: replays, frozenExperimentTrials: experiment.manifest.report!.trials.length, recoveredInvalidActions: session.records.length, milliseconds: Math.round(performance.now() - started), realModelRequired: false };
+  return { agentVersion: '1.0.0', provider: 'deterministic-mock', episodes, ticks, successes, verifiedReplays: replays, frozenExperimentTrials: experiment.manifest.report!.trials.length, recoveredInvalidActions: session.records.length, milliseconds: Math.round(performance.now() - started), realModelRequired: false, measured: { worldStepMs: Math.round(worldStepMs), mockControllerAwaitMs: Math.round(controllerAwaitMs), receiptVerificationMs: Math.round(verificationMs), largestReceiptBytes: maxReceiptBytes, cooperativeTicks: teamTicks }, uiCadence: '35ms yield between displayed steps; existing render caps retained' };
 }

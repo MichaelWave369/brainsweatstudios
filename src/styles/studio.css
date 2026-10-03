@@ -38,3 +38,5 @@
 @media(max-width:520px){.class-grid,.cartridge-grid{grid-template-columns:1fr}.class-card{padding:20px}.class-filters>label:first-child{display:grid;width:100%;gap:8px}.class-filters .search-box{width:100%}.class-intro{padding:18px;gap:12px}.class-detail .prose-panel{padding:20px}.camera-controls .btn{font-size:10px;padding:9px 5px}.crt-frame{margin:0 -8px}.crt-screen{padding:10px 8px}.crt-controls{letter-spacing:1px;font-size:8px}.retro-deck>select{width:100%}.expansion-banner .button-row .btn{width:100%}.retro-switches .btn{padding:12px}.advanced-layout .game-stat strong{font-size:17px}}
 
 .crt-screen .game-heading h2{font:clamp(25px,3vw,38px)/1.2 ui-monospace,monospace;color:var(--phosphor);margin:8px 0 12px}
+
+.advanced-layout .game-stats,.class-detail .game-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.advanced-layout .game-stat,.class-detail .game-stat,.advanced-layout .game-stat>div,.class-detail .game-stat>div{min-width:0}.advanced-layout .game-stat span,.class-detail .game-stat span{white-space:normal;overflow-wrap:anywhere}.advanced-layout .game-stat strong,.class-detail .game-stat strong,.worked-example{overflow-wrap:anywhere}

@@ -124,8 +124,9 @@
 .team-signals .btn { font-size:.75rem; padding:.55rem .7rem; }
 .online-transfer { display:flex; align-items:end; flex-wrap:wrap; gap:.8rem; }
 .online-transfer .lab-select { flex:1; min-width:0; max-width:100%; }
+.online-create select, .online-transfer select { width:100%; max-width:100%; box-sizing:border-box; }
 .online-account { border-top:1px solid #354359; padding:1rem 0; font-size:.82rem; color:#b9c6d7; line-height:1.6; }
 .private-group p { line-height:1.65; }
 .online-controller textarea { width:100%; box-sizing:border-box; }
 @media(max-width:720px) { .online-intro,.online-create { grid-template-columns:1fr; } .online-intro { padding:1.3rem; } .private-group { padding:1rem; } }
-@media(max-width:520px) { .online-create { padding:1rem; } .online-create .lab-select,.online-transfer .lab-select { grid-template-columns:1fr; gap:.5rem; } .online-roster { grid-template-columns:1fr; } .private-group header .quiet-pill { font-size:.7rem; } .invite-code { align-items:stretch; flex-direction:column; } .invite-code input { letter-spacing:.07em; } }
+@media(max-width:520px) { .online-create { padding:1rem; } .online-create .lab-select,.online-transfer .lab-select { grid-template-columns:minmax(0,1fr); gap:.5rem; } .online-transfer { flex-direction:column; align-items:stretch; } .online-transfer .lab-select { flex:none; } .online-roster { grid-template-columns:1fr; } .private-group header .quiet-pill { font-size:.7rem; } .invite-code { align-items:stretch; flex-direction:column; } .invite-code input { letter-spacing:.07em; } }

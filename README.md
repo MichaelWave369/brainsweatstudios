@@ -8,6 +8,8 @@ Repository: https://github.com/larrinamsalva/brainsweatstudios
 
 Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 
+[Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Version 3 verification](docs/verification-v3.md)
+
 ## Playable worlds
 
 | World | Game loop | Practice |
@@ -80,7 +82,7 @@ If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1
 
 The production base path is `/brainsweatstudios/`. All application navigation uses hash routes, such as `/#/game/code`, so a refresh asks Pages for the same entry file. Asset URLs use Vite’s production base path.
 
-In the repository’s **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source. The deployment workflow installs the locked packages, runs lint and unit tests, builds the app, and publishes `dist`. It then checks the actual public studio and uploads a screenshot. Pushes to `main` redeploy it. The browser workflow runs on pushes to main and pull requests, and can also be started manually. Game-system changes check all 624 authored bot runs in Chromium, plus accessibility and feature flows in Chromium, Firefox, and WebKit. Assistant-only follow-ups run the interface suite without repeating the unchanged bot simulations.
+In the repository’s **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source. The deployment workflow installs the locked packages, runs lint and unit tests, builds the app, and publishes `dist`. It then checks the actual public studio and uploads a screenshot. Code pushes to `main` redeploy it; documentation-only pushes do not. The browser workflow runs on code pushes to main and pull requests, and can also be started manually. Game-system changes check all 624 authored bot runs in Chromium, plus accessibility and feature flows in Chromium, Firefox, and WebKit. Assistant, stylesheet, and interface-test follow-ups run the interface suite without repeating unchanged bot simulations.
 
 To fork with another repository name, change the default base in `vite.config.ts` and the workflow’s `VITE_BASE_PATH`, or set that variable for the build. Set `LIVE_SITE_URL` on the published-studio verification step to the fork’s URL. For a root-domain deployment, use `VITE_BASE_PATH=/ npm run build`.
 
@@ -139,12 +141,13 @@ Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions,
 
 ## Screenshots
 
-![Version 2 studio](docs/screenshots/studio.png)
-![Money Mission](docs/screenshots/money.png)
-![Scam Shield](docs/screenshots/scam.png)
-![Code Quest](docs/screenshots/code.png)
-![Power Grid](docs/screenshots/power.png)
-![Skills map](docs/screenshots/skills.png)
+![Version 3 studio](docs/screenshots/v3/studio.png)
+![Engine Builder](docs/screenshots/v3/engine.png)
+![Calculus class and adjustable experiment](docs/screenshots/v3/calculus-class.png)
+![Retro lab running Engine Builder](docs/screenshots/v3/retro.png)
+![Creator Studio](docs/screenshots/v3/creator.png)
+
+[All 22 classes](docs/screenshots/v3/classes.png) · [Robot Foundry](docs/screenshots/v3/robot.png) · [Virtual Machine Workshop](docs/screenshots/v3/computer.png) · [Kitchen Craft](docs/screenshots/v3/kitchen.png) · [Phone retro lab](docs/screenshots/v3/mobile-retro.png) · [Verified public site](docs/screenshots/v3/live.png)
 
 ## Version 2 additions
 

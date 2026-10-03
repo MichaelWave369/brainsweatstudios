@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { clamp, difficultyIndex, money, type GameProps } from '../data/types';
 import { Action, GameLayout, Meter, Notice, Stat, Stats } from './shared';
 import Icon from '../components/Icon';
@@ -19,7 +19,7 @@ const forecasts = [
   [{ sun: 1.1, wind: 0.6 }, { sun: 0.7, wind: 0.8 }, { sun: 0.2, wind: 0.3 }, { sun: 0, wind: 1.2 }, { sun: 1.3, wind: 0.7 }, { sun: 0.5, wind: 0.4 }],
 ];
 export default function PowerGrid({ difficulty, mission, paused, onFinish }: GameProps) {
-  const d = difficultyIndex(difficulty); const [turn, setTurn] = useState(0); const [cash, setCash] = useState([120, 108, 96][d]); const [solar, setSolar] = useState(0); const [wind, setWind] = useState(0); const [batteries, setBatteries] = useState(0); const [stored, setStored] = useState(0); const [efficiency, setEfficiency] = useState(false); const [gridEnabled, setGrid] = useState(true); const [useBattery, setUseBattery] = useState(true); const [coverage, setCoverage] = useState(0); const [history, setHistory] = useState<ReturnType<typeof powerTurn>[]>([]); const [log, setLog] = useState<string[]>([]);
+  const d = difficultyIndex(difficulty); const [turn, setTurn] = useMissionState('turn', 0); const [cash, setCash] = useMissionState('cash', [120, 108, 96][d]); const [solar, setSolar] = useMissionState('solar', 0); const [wind, setWind] = useMissionState('wind', 0); const [batteries, setBatteries] = useMissionState('batteries', 0); const [stored, setStored] = useMissionState('stored', 0); const [efficiency, setEfficiency] = useMissionState('efficiency', false); const [gridEnabled, setGrid] = useMissionState('gridEnabled', true); const [useBattery, setUseBattery] = useMissionState('useBattery', true); const [coverage, setCoverage] = useMissionState('coverage', 0); const [history, setHistory] = useMissionState<ReturnType<typeof powerTurn>[]>('history', []); const [log, setLog] = useMissionState<string[]>('log', []);
   const forecast = forecasts[mission][turn]; const demand = [7, 8, 9][d] + (turn % 3) + (mission === 4 ? 1 : 0); const preview = powerTurn({ solar, wind, sun: forecast.sun, breeze: forecast.wind, demand, stored, capacity: batteries * 4, useBattery, gridEnabled, cash, efficiency });
   const buy = (kind: 'solar' | 'wind' | 'battery' | 'efficiency') => { const cost = { solar: 18, wind: 24, battery: 16, efficiency: 20 }[kind]; if (cash < cost) return; setCash(cash - cost); if (kind === 'solar') setSolar(solar + 1); else if (kind === 'wind') setWind(wind + 1); else if (kind === 'battery') setBatteries(batteries + 1); else setEfficiency(true); };
   function advance() {

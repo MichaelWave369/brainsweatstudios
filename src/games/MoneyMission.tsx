@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { difficultyIndex, money, clamp, type GameProps } from '../data/types';
 import { Action, GameLayout, Notice, Stats, Stat, StepDots } from './shared';
 
@@ -12,8 +12,8 @@ const missions = [
 export default function MoneyMission({ difficulty, mission, onFinish, paused }: GameProps) {
   const d = difficultyIndex(difficulty); const gross = [1500, 2100, 2850][d] + mission * 100; const tax = [0, 0.1, 0.15][d]; const income = Math.round(gross * (1 - tax));
   const needs = { rent: [460, 660, 900][d], food: [180, 250, 330][d], phone: [30, 45, 65][d], transport: [70, 120, 170][d], utilities: [65, 100, 150][d] };
-  const [budget, setBudget] = useState<Record<string, number>>({ ...needs, savings: [160, 190, 200][d], fun: [70, 100, 120][d] });
-  const [phase, setPhase] = useState<'budget' | 'month'>('budget'); const [week, setWeek] = useState(0); const [cash, setCash] = useState(0); const [bank, setBank] = useState(0); const [debt, setDebt] = useState(0); const [funLeft, setFunLeft] = useState(0); const [log, setLog] = useState<string[]>([]);
+  const [budget, setBudget] = useMissionState<Record<string, number>>('budget', { ...needs, savings: [160, 190, 200][d], fun: [70, 100, 120][d] });
+  const [phase, setPhase] = useMissionState<'budget' | 'month'>('phase', 'budget'); const [week, setWeek] = useMissionState('week', 0); const [cash, setCash] = useMissionState('cash', 0); const [bank, setBank] = useMissionState('bank', 0); const [debt, setDebt] = useMissionState('debt', 0); const [funLeft, setFunLeft] = useMissionState('funLeft', 0); const [log, setLog] = useMissionState<string[]>('log', []);
   const allocated = Object.values(budget).reduce((sum, v) => sum + v, 0); const event = missions[mission].events[week]; const cost = Math.round(event[2] * [1, 1.3, 1.6][d]);
   function respond(strategy: 'fund' | 'credit' | 'trim' | 'compare') {
     let nextCash = cash; let nextBank = bank; let nextDebt = debt; let nextFun = funLeft; let paid = cost; let text = '';

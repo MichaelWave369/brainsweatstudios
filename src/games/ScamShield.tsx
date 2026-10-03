@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { clamp, difficultyIndex, type GameProps } from '../data/types';
 import { Action, GameLayout, Notice, Stat, Stats } from './shared';
 
@@ -24,7 +24,7 @@ export const messages: Message[] = [
 const clueOptions = ['Gift-card payment', 'Asks for a password', 'Asks for a security code', 'Rushes your decision', 'Wants secrecy', 'Unverified identity', 'Unexpected request', 'Upfront payment', 'Too-good reward', 'Has punctuation', 'Uses a greeting'];
 export default function ScamShield({ difficulty, mission, paused, onFinish }: GameProps) {
   const d = difficultyIndex(difficulty); const count = [6, 7, 8][d]; const inbox = Array.from({ length: count }, (_, i) => messages[(mission * 3 + i * 2 + d) % messages.length]);
-  const [index, setIndex] = useState(0); const [selected, setSelected] = useState<string[]>([]); const [review, setReview] = useState<{ bucket: Bucket; points: number } | null>(null); const [total, setTotal] = useState(0); const [correct, setCorrect] = useState(0); const [evidenceFound, setEvidence] = useState(0);
+  const [index, setIndex] = useMissionState('index', 0); const [selected, setSelected] = useMissionState<string[]>('selected', []); const [review, setReview] = useMissionState<{ bucket: Bucket; points: number } | null>('review', null); const [total, setTotal] = useMissionState('total', 0); const [correct, setCorrect] = useMissionState('correct', 0); const [evidenceFound, setEvidence] = useMissionState('evidenceFound', 0);
   const message = inbox[index]; const options = d === 0 ? [...new Set([...message.clues, 'Has punctuation', 'Uses a greeting'])] : clueOptions;
   function sort(bucket: Bucket) { const hits = selected.filter(c => message.clues.includes(c)).length; const extras = selected.filter(c => !message.clues.includes(c)).length; const evidence = message.clues.length ? clamp((hits - extras) / message.clues.length, 0, 1) : selected.length === 0 ? 1 : 0; const points = (bucket === message.bucket ? 60 : 0) + evidence * 40; setReview({ bucket, points }); setTotal(total + points); if (bucket === message.bucket) setCorrect(correct + 1); setEvidence(evidenceFound + hits); }
   function next() { if (index + 1 === count) { const score = Math.round(total / count); onFinish({ score, summary: `You sorted ${correct} of ${count} messages into a supported safety category and found ${evidenceFound} relevant warning signs.`, lesson: 'Pause before acting. Inspect the request, check the sender independently, and keep passwords, PINs, and one-time codes private. “Verify” is a strong choice when you do not yet have enough evidence. All messages and domains in this game are fictional.', metrics: { 'Messages handled': count, 'Supported classifications': correct, 'Warnings found': evidenceFound } }); } else { setIndex(index + 1); setSelected([]); setReview(null); } }

@@ -23,7 +23,7 @@ export class Painter {
   }
 }
 export type SceneData = Record<string, number | string | boolean | number[]>;
-const palette: Record<string, string> = { money: '#caff66', hustle: '#ffbf70', scam: '#73d5ff', media: '#bba2ff', fix: '#ffda6a', code: '#88f1d0', career: '#ffa0bd', food: '#c1e678', admin: '#80b4ff', talk: '#ffa68a', power: '#ae9bff', rescue: '#8ee2e0' };
+const palette: Record<string, string> = { money: '#caff66', hustle: '#ffbf70', scam: '#73d5ff', media: '#bba2ff', fix: '#ffda6a', code: '#88f1d0', career: '#ffa0bd', food: '#c1e678', admin: '#80b4ff', talk: '#ffa68a', power: '#ae9bff', rescue: '#8ee2e0', music: '#ffabd5', frequency: '#7bdeff', botany: '#a9e78a' };
 const star = (p: Painter, x: number, y: number, c: string, size = 7) => { p.line(x - size, y, x + size, y, 2, c); p.line(x, y - size, x, y + size, 2, c); };
 function building(p: Painter, x: number, y: number, h: number, c: string, lit = true) { p.iso(x, y, 34, 38, h, c); for (let j = 0; j < Math.max(1, h / 19); j++) { p.rect(x + 10, y - h + 9 + j * 16, 6, 6, lit ? '#eaffb4' : '#374054'); p.rect(x + 23, y - h + 14 + j * 16, 5, 6, lit ? '#eaffb4' : '#374054'); } }
 export function buildWorld(kind: string, data: SceneData = {}, phase = 0) {
@@ -34,7 +34,19 @@ export function buildWorld(kind: string, data: SceneData = {}, phase = 0) {
   p.poly([[105, 270], [400, 360], [400, 372], [105, 282]], '#141a29');
   p.poly([[400, 360], [697, 267], [697, 279], [400, 372]], '#1c2436');
   for (let i = 0; i <= 8; i++) { p.line(105 + i * 37, 270 - i * 13.5, 400 + i * 37, 360 - i * 11.6, 1, '#48526c', 0.23); p.line(105 + i * 37, 270 + i * 11.2, 400 + i * 37, 161 + i * 13.3, 1, '#48526c', 0.23); }
-  if (kind === 'power') {
+  if (kind === 'music') {
+    const notes = Array.isArray(data.notes) ? data.notes : [0, 2, 4, 3, 1, 5, 4, 0];
+    for (let i = 0; i < 8; i++) { const height = 35 + Math.max(0, Number(notes[i * 2] ?? notes[i] ?? 0)) * 13; p.iso(210 + i * 48, 265 + i * 5, 27, 30, height, i % 2 ? '#ab83c9' : c); p.circle(225 + i * 48, 273 + i * 5, 5, '#edf5ff'); }
+    p.line(221, 160, 580, 105, 3, '#ffabd5');
+  } else if (kind === 'frequency') {
+    const hz = Number(data.hz || 330);
+    for (let i = 0; i < 64; i++) { const x = 155 + i * 8; const a = i / 64 * Math.PI * 2 * hz / 160; const b = (i + 1) / 64 * Math.PI * 2 * hz / 160; p.line(x, 188 + Math.sin(a + t) * 55, x + 8, 188 + Math.sin(b + t) * 55, 3, c); }
+    p.iso(304, 316, 146, 69, 23, '#375c73'); p.circle(365, 276, 16, '#caff66'); p.circle(437, 304, 11, c);
+  } else if (kind === 'botany') {
+    const growth = Number(data.growth ?? 45); const count = Number(data.pots ?? 3);
+    for (let i = 0; i < Math.max(1, count); i++) { const x = 256 + i * 105; const y = 269 + i * 12; p.iso(x, y, 45, 48, 35, '#a77358'); p.line(x + 41, y - 25, x + 41, y - 65 - growth * 0.45, 6, '#89c75e'); for (let leaf = 0; leaf < 3; leaf++) { const ly = y - 47 - leaf * 17 - growth * 0.2; p.poly([[x + 41, ly], [x + 12, ly - 19], [x + 14, ly + 2]], '#7aa94d'); p.poly([[x + 41, ly - 8], [x + 69, ly - 28], [x + 72, ly - 9]], '#b8e978'); } }
+    p.circle(610, 95, 28, '#ffd874');
+  } else if (kind === 'power') {
     const lit = data.lit !== false; const solar = Number(data.solar ?? 3); const wind = Number(data.wind ?? 2);
     for (let i = 0; i < 5; i++) building(p, 405 + (i % 3) * 57, 256 + (i % 3) * 18 - Math.floor(i / 3) * 45, 46 + i * 13, ['#66718d', '#8189a5', '#59647f'][i % 3], lit);
     p.line(297, 293, 469, 280, 4, lit ? '#caff66' : '#626e87', 0.8);

@@ -1,4 +1,5 @@
-import { games } from '../data/games';
+import { validateCheckpoints } from './checkpointValidation';
+import { games, totalMissions } from '../data/games';
 import { clamp } from '../data/types';
 import type { Difficulty, GameId, MissionRecord, SaveData } from '../data/types';
 
@@ -6,9 +7,9 @@ export const SAVE_KEY = 'brain-sweat-studio:v1';
 export const localDate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const dayNumber = (date: string) => Date.parse(`${date}T12:00:00Z`) / 86400000;
 export const freshSave = (): SaveData => ({
-  version: 1, difficulty: 'explorer', xp: 0, points: 0, records: {}, milestones: [], badges: [],
+  version: 2, checkpoints: {}, difficulty: 'explorer', xp: 0, points: 0, records: {}, milestones: [], badges: [],
   unlockedGames: games.map(g => g.id), streak: 0, lastPlayed: '', daily: {},
-  settings: { music: 0, effects: 0.25, muted: false, reducedMotion: false, highContrast: false, tutorials: true },
+  settings: { music: 0, effects: 0.25, muted: false, reducedMotion: false, highContrast: false, tutorials: true, locale: 'en', haptics: false, botControl: false },
   selectedDifficulty: false,
 });
 export const completedCount = (save: SaveData) => Object.values(save.records).filter(r => r.completed).length;
@@ -25,9 +26,9 @@ export const badges: Badge[] = [
   { id: 'three', title: 'Triple Threat', description: 'Complete 3 different missions.', icon: 'zap', earned: s => completedCount(s) >= 3 },
   { id: 'six', title: 'Sixth Sense', description: 'Complete 6 different missions.', icon: 'brain', earned: s => completedCount(s) >= 6 },
   { id: 'nine', title: 'Nine Lives Master', description: 'Complete 9 different missions.', icon: 'crown', earned: s => completedCount(s) >= 9 },
-  { id: 'all-worlds', title: 'World Wanderer', description: 'Complete a mission in all 12 worlds.', icon: 'compass', earned: s => games.every(g => gameStats(s, g.id).completed > 0) },
+  { id: 'all-worlds', title: 'World Wanderer', description: 'Complete a mission in all 12 original worlds.', icon: 'compass', earned: s => games.slice(0, 12).every(g => gameStats(s, g.id).completed > 0) },
   { id: 'level-five', title: 'Brain in Motion', description: 'Reach studio level 5.', icon: 'rocket', earned: s => levelInfo(s.xp).level >= 5 },
-  ...games.map(g => ({ id: `${g.id}-first`, title: ({ money: 'Budget Boss', hustle: 'Business Builder', scam: 'Scam Slammer', media: 'Evidence Explorer', fix: 'Fix-It Rookie', code: 'Debug Detective', career: 'Career Starter', food: 'Basket Builder', admin: 'Deadline Defender', talk: 'Communication Champ', power: 'Power Planner', rescue: 'Calm Navigator' } as Record<GameId, string>)[g.id], description: `Complete a ${g.title} mission.`, icon: g.icon, earned: (s: SaveData) => gameStats(s, g.id).completed > 0 })),
+  ...games.map(g => ({ id: `${g.id}-first`, title: ({ money: 'Budget Boss', hustle: 'Business Builder', scam: 'Scam Slammer', media: 'Evidence Explorer', fix: 'Fix-It Rookie', code: 'Debug Detective', career: 'Career Starter', food: 'Basket Builder', admin: 'Deadline Defender', talk: 'Communication Champ', power: 'Power Planner', rescue: 'Calm Navigator', music: 'Rhythm Builder', frequency: 'Wave Explorer', botany: 'Garden Guardian' } as Record<GameId, string>)[g.id], description: `Complete a ${g.title} mission.`, icon: g.icon, earned: (s: SaveData) => gameStats(s, g.id).completed > 0 })),
   ...games.map(g => ({ id: `${g.id}-mastery`, title: `${g.title} Master`, description: `Score 90 or more in ${g.title}.`, icon: 'star', earned: (s: SaveData) => gameStats(s, g.id).best >= 90 })),
 ];
 export function recordResult(save: SaveData, game: GameId, difficulty: Difficulty, mission: number, rawScore: number, date = localDate()) {
@@ -57,11 +58,11 @@ const isObject = (v: unknown): v is Record<string, unknown> => v !== null && typ
 const int = (v: unknown, max = 1e8): v is number => Number.isInteger(v) && Number(v) >= 0 && Number(v) <= max;
 const validDate = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v));
 export function validateSave(raw: unknown): SaveData {
-  if (!isObject(raw) || raw.version !== 1 || !['explorer', 'builder', 'master'].includes(String(raw.difficulty)) || !isObject(raw.records) || !isObject(raw.settings) || !isObject(raw.daily) || Object.keys(raw.records).length > 180 || Object.keys(raw.daily).length > 5000) throw new Error('This is not a compatible Brain Sweat save. Choose an exported version 1 JSON file.');
+  if (!isObject(raw) || (raw.version !== 1 && raw.version !== 2) || (typeof raw.difficulty !== 'string' || !['explorer', 'builder', 'master'].includes(raw.difficulty)) || !isObject(raw.records) || !isObject(raw.settings) || !isObject(raw.daily) || Object.keys(raw.records).length > totalMissions || Object.keys(raw.daily).length > 5000) throw new Error('This is not a compatible Brain Sweat save. Choose an exported version 1 or 2 JSON file.');
   const next = freshSave();
   next.difficulty = raw.difficulty as Difficulty;
   for (const [key, value] of Object.entries(raw.records)) {
-    if (!isObject(value) || !games.some(g => g.id === value.game) || !['explorer', 'builder', 'master'].includes(String(value.difficulty)) || !int(value.mission, 4) || !int(value.score, 100) || !int(value.attempts, 100000) || !validDate(value.date)) throw new Error('The mission history in this save is damaged. Your current progress has not changed.');
+    if (!isObject(value) || !games.some(g => g.id === value.game) || (typeof value.difficulty !== 'string' || !['explorer', 'builder', 'master'].includes(value.difficulty)) || !int(value.mission, 7) || !int(value.score, 100) || !int(value.attempts, 100000) || !validDate(value.date)) throw new Error('The mission history in this save is damaged. Your current progress has not changed.');
     const r = value as unknown as MissionRecord;
     if (key !== missionKey(r.game, r.difficulty, r.mission)) throw new Error('The mission identifiers do not match.');
     next.records[key] = { game: r.game, difficulty: r.difficulty, mission: r.mission, score: r.score, attempts: r.attempts, date: r.date, completed: r.score >= 60, xp: r.score };
@@ -82,6 +83,11 @@ export function validateSave(raw: unknown): SaveData {
   const settings = raw.settings;
   for (const field of ['music', 'effects'] as const) { if (typeof settings[field] !== 'number' || !Number.isFinite(settings[field])) throw new Error('Invalid sound settings.'); next.settings[field] = clamp(settings[field] as number, 0, 1); }
   for (const field of ['muted', 'reducedMotion', 'highContrast', 'tutorials'] as const) { if (typeof settings[field] !== 'boolean') throw new Error('Invalid accessibility settings.'); next.settings[field] = settings[field] as boolean; }
+  if (raw.version === 2) {
+    if ((typeof settings.locale !== 'string' || !['en', 'es'].includes(settings.locale)) || typeof settings.haptics !== 'boolean' || typeof settings.botControl !== 'boolean') throw new Error('Invalid language or practice settings.');
+    next.settings.locale = settings.locale as 'en' | 'es'; next.settings.haptics = settings.haptics; next.settings.botControl = settings.botControl;
+    next.checkpoints = validateCheckpoints(raw.checkpoints);
+  }
   next.selectedDifficulty = raw.selectedDifficulty === true;
   next.lastPlayed = validDate(raw.lastPlayed) ? raw.lastPlayed : '';
   next.streak = int(raw.streak, 100000) ? raw.streak : 0;

@@ -13,6 +13,11 @@ export const games: GameManifest[] = [
   { id: 'talk', title: 'Talk It Out', description: 'Your words can change where the story goes.', category: 'Everyday adventures', skills: ['Communication', 'Problem solving'], color: '#ffa68a', icon: 'message', minutes: '3–5', missions: 5, xp: 100, route: '/game/talk', load: () => import('../games/TalkItOut') },
   { id: 'power', title: 'Power Grid', description: 'Build a clean-energy town. Keep the lights on.', category: 'Build & solve', skills: ['Technology', 'Problem solving', 'Logic'], color: '#ae9bff', icon: 'zap', minutes: '4–8', missions: 5, xp: 100, route: '/game/power', load: () => import('../games/PowerGrid') },
   { id: 'rescue', title: 'Real World Rescue', description: 'Stay calm. Find a safe route through the unexpected.', category: 'Everyday adventures', skills: ['Safety', 'Independence', 'Problem solving'], color: '#8ee2e0', icon: 'compass', minutes: '3–6', missions: 5, xp: 100, route: '/game/rescue', load: () => import('../games/RealWorldRescue') },
+  { id: 'music', title: 'Music Maker', description: 'Compose a rhythm. Shape a melody. Hear your idea.', category: 'Creative science', skills: ['Music', 'Logic'], color: '#ffabd5', icon: 'volume', minutes: '4–8', missions: 8, xp: 100, route: '/game/music', load: () => import('../games/MusicMaker') },
+  { id: 'frequency', title: 'Frequency Lab', description: 'Explore pitch, waves, resonance, and gentle haptics.', category: 'Creative science', skills: ['Sound science', 'Technology'], color: '#7bdeff', icon: 'zap', minutes: '3–6', missions: 8, xp: 100, route: '/game/frequency', load: () => import('../games/FrequencyLab') },
+  { id: 'botany', title: 'Botany Garden', description: 'Grow a garden. Observe first. Balance living systems.', category: 'Creative science', skills: ['Botany', 'Ecology', 'Problem solving'], color: '#a9e78a', icon: 'apple', minutes: '4–8', missions: 8, xp: 100, route: '/game/botany', load: () => import('../games/BotanyGarden') },
 ];
+for (const game of games) game.missions = 8;
+export const totalMissions = games.reduce((sum, game) => sum + game.missions * 3, 0);
 export const gameById = (id: string) => games.find(g => g.id === id);
-export const categories = ['All worlds', 'Money & business', 'Digital worlds', 'Build & solve', 'Everyday adventures'];
+export const categories = ['All worlds', 'Money & business', 'Digital worlds', 'Build & solve', 'Everyday adventures', 'Creative science'];

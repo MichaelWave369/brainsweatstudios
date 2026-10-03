@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { clamp, difficultyIndex, type GameProps } from '../data/types';
 import { Action, GameLayout, Notice, Stat, Stats, StepDots } from './shared';
 
@@ -10,7 +10,7 @@ const repairs = [
   { title: 'The drafty window model', problem: 'Air moves through a gap in a tabletop window model. Measure the gap before choosing a simulated part.', points: ['Window label', 'Gap beside the frame', 'Desk drawer'], inspect: 1, start: 15, end: 245, unit: 'mm', tool: 'Model weather strip', options: ['Model weather strip', 'Sandpaper only', 'Glue over the entire window'], target: 55, action: 'Strip alignment on the model', result: 'The model’s strip is aligned and the draft indicator settles.', lesson: 'Good diagnosis avoids unnecessary work. Measure a gap and match the simulated part to the problem. Real windows, ladders, sharp tools, and glass need appropriate adult supervision.' },
 ];
 export default function FixItLab({ difficulty, mission, paused, onFinish }: GameProps) {
-  const d = difficultyIndex(difficulty); const repair = repairs[mission]; const [stage, setStage] = useState(0); const [mistakes, setMistakes] = useState(0); const [notice, setNotice] = useState(''); const [measurement, setMeasurement] = useState(0); const [adjustment, setAdjustment] = useState(20); const [tool, setTool] = useState('');
+  const d = difficultyIndex(difficulty); const repair = repairs[mission]; const [stage, setStage] = useMissionState('stage', 0); const [mistakes, setMistakes] = useMissionState('mistakes', 0); const [notice, setNotice] = useMissionState('notice', ''); const [measurement, setMeasurement] = useMissionState('measurement', 0); const [adjustment, setAdjustment] = useMissionState('adjustment', 20); const [tool, setTool] = useMissionState('tool', '');
   const correctMeasure = repair.end - repair.start; const target = repair.target; const tolerance = [16, 9, 4][d]; const inZone = Math.abs(adjustment - target) <= tolerance;
   const tryAgain = (text: string) => { setMistakes(m => m + 1); setNotice(text); };
   function advanceMeasure() { if (measurement !== correctMeasure) tryAgain(`Subtract the starting mark from the ending mark: ${repair.end} − ${repair.start}. Try that measurement.`); else { setStage(2); setNotice('That measurement fits. Now choose the tool for the diagnosis.'); } }

@@ -6,6 +6,7 @@ The application has only React, React DOM, Scheduler, and Lucide as runtime depe
 
 | Package | Version | License | Use |
 | --- | --- | --- | --- |
+| @axe-core/playwright | 4.11.1 | MPL-2.0 | Development / build |
 | @babel/code-frame | 7.29.7 | MIT | Development / build |
 | @babel/compat-data | 7.29.7 | MIT | Development / build |
 | @babel/core | 7.29.7 | MIT | Development / build |
@@ -44,6 +45,7 @@ The application has only React, React DOM, Scheduler, and Lucide as runtime depe
 | @oxc-project/types | 0.152.0 | MIT | Development / build |
 | @playwright/test | 1.63.0 | Apache-2.0 | Development / build |
 | @rolldown/binding-linux-x64-gnu | 1.2.12 | MIT | Development / build |
+| @rolldown/binding-linux-x64-musl | 1.2.12 | MIT | Development / build |
 | @rolldown/pluginutils | 1.0.1 | MIT | Development / build |
 | @types/chai | 5.2.3 | MIT | Development / build |
 | @types/deep-eql | 4.0.2 | MIT | Development / build |
@@ -71,6 +73,7 @@ The application has only React, React DOM, Scheduler, and Lucide as runtime depe
 | ansi-styles | 4.3.0 | MIT | Development / build |
 | argparse | 2.0.1 | Python-2.0 | Development / build |
 | assertion-error | 2.0.1 | MIT | Development / build |
+| axe-core | 4.11.4 | MPL-2.0 | Development / build |
 | balanced-match | 4.0.4 | MIT | Development / build |
 | balanced-match | 1.0.2 | MIT | Development / build |
 | baseline-browser-mapping | 2.11.27 | Apache-2.0 | Development / build |
@@ -140,6 +143,7 @@ The application has only React, React DOM, Scheduler, and Lucide as runtime depe
 | levn | 0.4.1 | MIT | Development / build |
 | lightningcss | 1.33.0 | MPL-2.0 | Development / build |
 | lightningcss-linux-x64-gnu | 1.33.0 | MPL-2.0 | Development / build |
+| lightningcss-linux-x64-musl | 1.33.0 | MPL-2.0 | Development / build |
 | locate-path | 6.0.0 | MIT | Development / build |
 | lodash.merge | 4.6.2 | MIT | Development / build |
 | lru-cache | 5.1.1 | ISC | Development / build |

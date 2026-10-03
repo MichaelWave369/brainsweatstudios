@@ -1,20 +1,31 @@
-# First release verification
+# Version 2 verification
 
-The release includes twelve game loops and five mission variants in each game. Three modes change resources, hints, complexity, or decision constraints. It includes sixty authored mission variants and 180 distinct progress slots when counting the difficulty modes.
+Release 2.0.0 expands Brain Sweat Studio to 15 worlds, eight missions per world, and three modes: 360 progress slots. The original 12 worlds have five base simulations and three connected field scenarios each. Music Maker, Frequency Lab, and Botany Garden each have eight authored briefs.
 
-Verified with the production TypeScript/Vite build, ESLint, Vitest, and Chromium browser gameplay checks:
+## Verified locally
 
-- Twelve unit checks: unique manifests and badges; replay XP; one-time milestone bonuses; save roundtrip and malformed imports; play streak preservation; local-date challenges; business capacity; meal portions; battery limits; affordable grid imports; robot collisions.
-- Thirty-six mission completion runs: one variant from every game in Explorer, Builder, and Master modes. Explorer used mission 1, Builder mission 3, and Master mission 5. Each reached a result screen with a completion score and earned badges, without JavaScript page errors.
-- Export/reset/import roundtrip, including preserving the current save when an invalid JSON version is imported.
-- Navigation, world search, category filters, unknown-route handling, and hash-route refreshes.
-- All studio views and game tutorials fit 320- and 390-pixel viewports. A touch session completed Money Mission.
-- Unsupported WebGL2 uses the vector fallback and can finish a mission.
-- Pausing disables mission controls; leaving a game deletes its WebGL buffers.
-- The production `/brainsweatstudios/` folder prefix, all twelve lazy game routes offline, offline gameplay, and saved progress after an offline refresh passed `scripts/verify-production.mjs` without JavaScript page errors.
+Production TypeScript/Vite build and ESLint pass. The unit suite has 79 passing checks across mission rewards, game consequences, creative science, localization, and profiles/checkpoints.
 
-Live release verified on October 2, 2026 at https://larrinamsalva.github.io/brainsweatstudios/. GitHub Actions installed the locked dependencies, passed lint and unit tests, built the app, and deployed it successfully. All twelve live game routes loaded their mission controls. A live Money Mission finished with 100/100, awarded XP and three badges, and retained the result after a page refresh. The cloud browser used the vector fallback; WebGL2 rendering and GPU cleanup were verified in the local Chromium checks above. A screenshot of the live home is included in `docs/screenshots/live-1790998805180.jpg`.
+- All **360 bot runs** completed in the production build: every mission in all 15 worlds in Explorer, Builder, and Master. Each reached a result with a score of at least 60, zero JavaScript page errors, and no earned XP, badges, streaks, or mission records.
+- Another 36 completion runs used direct player controls, one original-world variant in each mode. These awarded normal progress. Music and frequency also completed with earned progress and silent controls.
+- The complete production browser run passed 412 checks. Follow-up checks cover the final nickname translation opt-out and a simulated low-power display.
+- Automated WCAG 2 A/AA and 2.1 A/AA scans found no violations on 10 studio pages and all 15 active mission interfaces in English and Spanish: 50 scanned views.
+- The skip link focuses the main content. Keyboard commands, pause, narrow 320/390-pixel layouts, touch controls, vector fallback, and GPU cleanup were exercised.
+- The low-power simulation uses a 390-pixel display, 3× device pixel ratio, 4× CPU throttling, and reduced motion. The three creative worlds fit the screen, cap render resolution at 1.5× CSS size, and stop drawing when motion is reduced.
+- All 360 checkpoint identifiers roundtrip through validation. Browser reload tests covered Power Grid, Media Detective, Scam Shield, Food & Fuel, Music Maker, Frequency Lab, Botany Garden, and Code Quest. A running robot resumes stopped with its queue, position, and cursor retained.
+- Existing version 1 awards migrate to version 2. Six profile slots isolate saves and settings. Malformed imports leave the active save intact; stale effects cannot write into a different profile. Storage failures show a warning and allow export. A damaged profile bundle can recover the mirrored legacy active save.
+- Local reading chooses an explicitly local voice, stops on mute/navigation, and shows a text fallback when no matching voice exists. Remote voices are excluded. Haptics remain optional and disabled on unsupported devices.
+- Spanish has 1,974 reviewed catalog entries. Browser playtests started all 15 worlds, refreshed the assistant, completed a bot field mission with zero XP, and exercised mobile keyboard controls, with no page errors or React warnings. Long unknown imported text is bounded to avoid expensive template matching. Player nicknames marked `translate="no"` remain verbatim.
+- `scripts/verify-production.mjs` passed the actual `/brainsweatstudios/` prefix, service-worker installation, offline reload, all 15 lazy game routes offline, assistant/bot pages, Spanish refresh, offline gameplay, and saved progress after refresh.
 
-These checks validate a smaller first release. They do not replace playtesting with kids and teenagers, screen-reader testing, real low-power phone measurements, or coverage of every possible decision path. Missions 2 and 4 share the same tested loops but were not independently completed in all modes in this check. Exact session durations will need playtesting.
+## Continuous checks
 
-Saves include finished results only. Closing a tab during a mission restarts that unfinished session. There is one anonymous save per browser profile. Daily challenge dates use the device clock and are not an anti-cheat system. Badges and scores are game progress, not certificates or intelligence measurements.
+The GitHub browser workflow runs on main pushes and pull requests. It executes the full 360-run agent sweep in Chromium and the accessibility/feature flows in Chromium, Firefox, and WebKit. Test results are attached to the repository’s Actions runs. Local Firefox startup was blocked by this workspace’s process sandbox; local WebKit lacked native libraries. These limitations do not establish a failure in the application. The Actions results are the evidence for those engines.
+
+## Scope and limits
+
+The optional bots operate actual controls using deterministic authored strategies. They can find broken flows and inspect consequences, but do not measure whether real children understand a game or how an individual screen-reader user experiences it. Automated scans are not an accessibility certification. The CPU/display checks simulate a constrained device; they are not battery or physical-phone measurements. Speech voices and vibration depend on the device. Spanish completion was sampled, not independently replayed for every one of the 360 cases. Not every alternate decision path has been exhausted.
+
+The assistant and council run offline with authored guidance and saved progress. They do not use a remote language model, store chat history, or provide real funds. Garden values are fictional; music does not alter plant growth. Timed phone vibrations are distinct from an audio signal’s hertz.
+
+Saves use local browser storage and can be erased by browser-data deletion or exhausted storage quotas. Export an active profile before changing devices. Scores and badges record game practice, not qualifications or intelligence measurements.

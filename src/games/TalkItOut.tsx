@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { clamp, difficultyIndex, type GameProps } from '../data/types';
 import { Action, GameLayout, Meter, Notice, Stat, Stats, StepDots } from './shared';
 
@@ -32,7 +32,7 @@ const situations: Situation[] = [
   ] },
 ];
 export default function TalkItOut({ difficulty, mission, paused, onFinish }: GameProps) {
-  const d = difficultyIndex(difficulty); const story = situations[mission]; const [goal, setGoal] = useState(''); const [step, setStep] = useState(0); const [calm, setCalm] = useState([65, 55, 45][d]); const [trust, setTrust] = useState([60, 50, 40][d]); const [respect, setRespect] = useState(0); const [listened, setListened] = useState(false); const [reaction, setReaction] = useState(''); const [waiting, setWaiting] = useState(false); const [history, setHistory] = useState<string[]>([]);
+  const d = difficultyIndex(difficulty); const story = situations[mission]; const [goal, setGoal] = useMissionState('goal', ''); const [step, setStep] = useMissionState('step', 0); const [calm, setCalm] = useMissionState('calm', [65, 55, 45][d]); const [trust, setTrust] = useMissionState('trust', [60, 50, 40][d]); const [respect, setRespect] = useMissionState('respect', 0); const [listened, setListened] = useMissionState('listened', false); const [reaction, setReaction] = useMissionState('reaction', ''); const [waiting, setWaiting] = useMissionState('waiting', false); const [history, setHistory] = useMissionState<string[]>('history', []);
   function choose(option: Reply) { setCalm(clamp(calm + option.calm)); setTrust(clamp(trust + option.trust)); setRespect(respect + option.respect); setReaction(`${trust < 40 ? 'The conversation is tense, but there is room to reset. ' : ''}${option.reaction}`); setWaiting(true); setHistory([...history, option.text]); }
   function advance() { if (step === 2) { const score = Math.round(clamp(respect / 3 * 0.7 + calm * 0.15 + trust * 0.1 + (listened ? 5 : 0))); onFinish({ score, summary: `You practiced ${goal.toLowerCase()} with ${story.person.split(' · ')[0].toLowerCase()}. ${score >= 60 ? 'Your approach created room for a useful next step.' : 'The reactions show a few places where another approach could help.'}`, lesson: 'Clear boundaries, honest questions, listening, and respectful pauses can all be effective. You do not have to agree or keep talking to be respectful. If a situation feels unsafe, leave and ask a trusted adult for support.', metrics: { 'Respectful communication': `${Math.round(respect / 3)}%`, 'Calm at the end': `${calm}%`, 'Perspective checked': listened ? 'Yes' : 'Not yet' } }); } else { setStep(step + 1); setReaction(''); setWaiting(false); } }
   return <GameLayout kind="talk" title={story.title} description={story.context} paused={paused}>

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
+import { useEffect } from 'react';
 import { clamp, difficultyIndex, type GameProps } from '../data/types';
 import { Action, Counter, GameLayout, Notice, Stat, Stats } from './shared';
 import Icon from '../components/Icon';
@@ -11,7 +12,7 @@ export function robotStep(x: number, y: number, direction: Direction, size: numb
 export default function CodeQuest({ difficulty, mission, paused, onFinish }: GameProps) {
   const d = difficultyIndex(difficulty); const size = [5, 6, 7][d]; const maxCommands = [28, 20, 16][d]; const start = { x: 0, y: size - 1 }; const goal = { x: size - 1, y: 0 };
   const walls = Array.from({ length: size * size }, (_, i) => i).filter(i => Math.floor(i / size) > 0 && Math.floor(i / size) < size - 1 && i % size > 0 && i % size < size - 1 && (i * 3 + mission * 7) % 5 < (d === 0 ? 1 : 2));
-  const [queue, setQueue] = useState<Command[]>([]); const [repeat, setRepeat] = useState(2); const [robot, setRobot] = useState(start); const [running, setRunning] = useState(false); const [cursor, setCursor] = useState(0); const [moves, setMoves] = useState(0); const [collisions, setCollisions] = useState(0); const [runs, setRuns] = useState(0); const [notice, setNotice] = useState('Build a route to the star. The bottom row and right edge are clear, but explore for a shorter program.');
+  const [queue, setQueue] = useMissionState<Command[]>('queue', []); const [repeat, setRepeat] = useMissionState('repeat', 2); const [robot, setRobot] = useMissionState('robot', start); const [running, setRunning] = useMissionState('running', false); const [cursor, setCursor] = useMissionState('cursor', 0); const [moves, setMoves] = useMissionState('moves', 0); const [collisions, setCollisions] = useMissionState('collisions', 0); const [runs, setRuns] = useMissionState('runs', 0); const [notice, setNotice] = useMissionState('notice', 'Build a route to the star. The bottom row and right edge are clear, but explore for a shorter program.');
   const flat = queue.flatMap(c => c.moves.map(direction => ({ direction, conditional: c.conditional })));
   const add = (direction: Direction) => { if (!paused && !running && queue.length < maxCommands) setQueue(q => [...q, { name: symbols[direction], moves: [direction] }]); };
   useEffect(() => { const handle = (e: KeyboardEvent) => { const direction = ({ ArrowUp: 'up', ArrowRight: 'right', ArrowDown: 'down', ArrowLeft: 'left' } as Record<string, Direction>)[e.key]; if (direction && !paused && !running && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLSelectElement)) { e.preventDefault(); setQueue(q => q.length < maxCommands ? [...q, { name: symbols[direction], moves: [direction] }] : q); } }; window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle); }, [maxCommands, paused, running]);

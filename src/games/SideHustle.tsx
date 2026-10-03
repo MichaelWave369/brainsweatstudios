@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { clamp, difficultyIndex, money, type GameProps } from '../data/types';
 import { Action, Counter, GameLayout, Meter, Notice, Stat, Stats, StepDots } from './shared';
 
@@ -12,7 +12,7 @@ export function calculateBusinessDay(price: number, capacity: number, demand: nu
   return { jobs, revenue, expenses, taxReserve, profit: revenue - expenses - taxReserve, reputationChange };
 }
 export default function SideHustle({ difficulty, mission, paused, onFinish }: GameProps) {
-  const d = difficultyIndex(difficulty); const starting = [180, 150, 120][d]; const [tradeIndex, setTradeIndex] = useState(0); const trade = trades[tradeIndex]; const [started, setStarted] = useState(false); const [day, setDay] = useState(0); const [cash, setCash] = useState(starting); const [price, setPrice] = useState(32); const [capacity, setCapacity] = useState(3); const [equipment, setEquipment] = useState(0); const [satisfaction, setSatisfaction] = useState(70); const [totalRevenue, setRevenue] = useState(0); const [totalExpenses, setExpenses] = useState(0); const [taxes, setTaxes] = useState(0); const [served, setServed] = useState(0); const [log, setLog] = useState<string[]>([]);
+  const d = difficultyIndex(difficulty); const starting = [180, 150, 120][d]; const [tradeIndex, setTradeIndex] = useMissionState('tradeIndex', 0); const trade = trades[tradeIndex]; const [started, setStarted] = useMissionState('started', false); const [day, setDay] = useMissionState('day', 0); const [cash, setCash] = useMissionState('cash', starting); const [price, setPrice] = useMissionState('price', 32); const [capacity, setCapacity] = useMissionState('capacity', 3); const [equipment, setEquipment] = useMissionState('equipment', 0); const [satisfaction, setSatisfaction] = useMissionState('satisfaction', 70); const [totalRevenue, setRevenue] = useMissionState('totalRevenue', 0); const [totalExpenses, setExpenses] = useMissionState('totalExpenses', 0); const [taxes, setTaxes] = useMissionState('taxes', 0); const [served, setServed] = useMissionState('served', 0); const [log, setLog] = useMissionState<string[]>('log', []);
   const material = trade.material + (mission === 3 ? d + 3 : d); const demand = conditions[mission].demand[day]; const estimate = calculateBusinessDay(price, capacity, demand, trade.fair, material, trade.time, equipment, satisfaction, d); const reserve = capacity * material + [8, 12, 16][d];
   function runDay(close = false) {
     const outcome = close ? { jobs: 0, revenue: 0, expenses: 0, taxReserve: 0, profit: 0, reputationChange: 0 } : estimate;

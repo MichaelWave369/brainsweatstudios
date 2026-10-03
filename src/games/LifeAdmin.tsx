@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { clamp, difficultyIndex, money, type GameProps } from '../data/types';
 import { Action, GameLayout, Notice, Stat, Stats, StepDots } from './shared';
 
@@ -14,7 +14,7 @@ export default function LifeAdmin({ difficulty, mission, paused, onFinish }: Gam
     { id: 'appointment', name: 'Confirm next week’s appointment', due: 6, cost: 0, info: 'Save the date and time. Ask for a clear confirmation.' },
     { id: 'receipt', name: 'File a receipt and warranty', due: 7, cost: 0, info: 'Keep the receipt, warranty terms, and seller details together before they get lost.' },
   ];
-  const [planning, setPlanning] = useState(true); const [schedule, setSchedule] = useState<Record<string, number>>({}); const [auto, setAuto] = useState<string[]>([]); const [day, setDay] = useState(1); const [cash, setCash] = useState([300, 280, 265][d] + mission * 5); const [used, setUsed] = useState(0); const [done, setDone] = useState<Record<string, number>>({}); const [log, setLog] = useState<string[]>([]); const [notice, setNotice] = useState('');
+  const [planning, setPlanning] = useMissionState('planning', true); const [schedule, setSchedule] = useMissionState<Record<string, number>>('schedule', {}); const [auto, setAuto] = useMissionState<string[]>('auto', []); const [day, setDay] = useMissionState('day', 1); const [cash, setCash] = useMissionState('cash', [300, 280, 265][d] + mission * 5); const [used, setUsed] = useMissionState('used', 0); const [done, setDone] = useMissionState<Record<string, number>>('done', {}); const [log, setLog] = useMissionState<string[]>('log', []); const [notice, setNotice] = useMissionState('notice', '');
   function perform(task: Task) {
     const late = day > task.due ? task.id === 'rent' ? 10 : task.id === 'phone' ? 5 : 0 : 0; const cost = task.cost + late;
     if (cash < cost) { setNotice(`The account has ${money(cash)}, but this task needs ${money(cost)}. Check your other obligations and try the next task.`); return; }

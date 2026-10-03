@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMissionState } from '../systems/MissionSession';
 import { clamp, difficultyIndex, type GameProps } from '../data/types';
 import { Action, GameLayout, Notice, Stat, Stats } from './shared';
 
@@ -22,7 +22,7 @@ const cases: Case[] = [
   ] },
 ];
 export default function MediaDetective({ difficulty, mission, paused, onFinish }: GameProps) {
-  const d = difficultyIndex(difficulty); const mystery = cases[mission]; const [tokens, setTokens] = useState([6, 5, 4][d]); const [opened, setOpened] = useState<number[]>([]); const [pinned, setPinned] = useState<number[]>([]); const [active, setActive] = useState<number | null>(null); const [notice, setNotice] = useState('');
+  const d = difficultyIndex(difficulty); const mystery = cases[mission]; const [tokens, setTokens] = useMissionState('tokens', [6, 5, 4][d]); const [opened, setOpened] = useMissionState<number[]>('opened', []); const [pinned, setPinned] = useMissionState<number[]>('pinned', []); const [active, setActive] = useMissionState<number | null>('active', null); const [notice, setNotice] = useMissionState('notice', '');
   function open(index: number) { if (!opened.includes(index)) { if (tokens <= 0) { setNotice('Research tokens are used. Revisit what you found and build the strongest case you can.'); return; } setTokens(tokens - 1); setOpened([...opened, index]); } setActive(index); setNotice(''); }
   function verdict(value: Case['verdict']) { const relevant = pinned.filter(i => mystery.sources[i].relevance); const irrelevant = pinned.length - relevant.length; const evidence = clamp((relevant.length - irrelevant) / 3, 0, 1); const sourceQuality = relevant.reduce((sum, i) => sum + mystery.sources[i].quality, 0) / 9; const score = Math.round(clamp((value === mystery.verdict ? 45 : 0) + evidence * 40 + Math.min(1, sourceQuality) * 15)); onFinish({ score, summary: `You filed a ${value} verdict with ${relevant.length} useful evidence cards. ${value === mystery.verdict ? 'Your conclusion fits the evidence.' : 'The original sources suggest a different conclusion.'}`, lesson: `${mystery.reason} Popularity, a polished image, or a strong feeling are not a substitute for evidence. “Unproven” leaves room to learn more.`, metrics: { 'Relevant evidence': relevant.length, 'Sources checked': opened.length, 'Tokens left': tokens } }); }
   return <GameLayout kind="media" title={mystery.title} description="Investigate this fictional claim. Spend research tokens on sources, pin evidence that actually bears on the claim, and choose a verdict supported by your board." paused={paused}>

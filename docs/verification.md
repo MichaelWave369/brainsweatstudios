@@ -13,6 +13,8 @@ Verified with the production TypeScript/Vite build, ESLint, Vitest, and Chromium
 - Pausing disables mission controls; leaving a game deletes its WebGL buffers.
 - The production `/brainsweatstudios/` folder prefix, all twelve lazy game routes offline, offline gameplay, and saved progress after an offline refresh passed `scripts/verify-production.mjs` without JavaScript page errors.
 
+Live release verified on October 2, 2026 at https://larrinamsalva.github.io/brainsweatstudios/. GitHub Actions installed the locked dependencies, passed lint and unit tests, built the app, and deployed it successfully. All twelve live game routes loaded their mission controls. A live Money Mission finished with 100/100, awarded XP and three badges, and retained the result after a page refresh. The cloud browser used the vector fallback; WebGL2 rendering and GPU cleanup were verified in the local Chromium checks above. A screenshot of the live home is included in `docs/screenshots/live-1790998805180.jpg`.
+
 These checks validate a smaller first release. They do not replace playtesting with kids and teenagers, screen-reader testing, real low-power phone measurements, or coverage of every possible decision path. Missions 2 and 4 share the same tested loops but were not independently completed in all modes in this check. Exact session durations will need playtesting.
 
 Saves include finished results only. Closing a tab during a mission restarts that unfinished session. There is one anonymous save per browser profile. Daily challenge dates use the device clock and are not an anti-cheat system. Badges and scores are game progress, not certificates or intelligence measurements.

@@ -6,7 +6,7 @@ A free, MIT-licensed React + TypeScript game studio about practical thinking and
 
 Repository: https://github.com/larrinamsalva/brainsweatstudios
 
-GitHub Pages target: https://larrinamsalva.github.io/brainsweatstudios/
+Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 
 ## Playable worlds
 
@@ -106,7 +106,7 @@ Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions,
 
 ## Screenshots
 
-![Studio home](docs/screenshots/studio.png)
+![Verified live studio](docs/screenshots/live-1790998805180.jpg)
 ![Money Mission](docs/screenshots/money.png)
 ![Scam Shield](docs/screenshots/scam.png)
 ![Code Quest](docs/screenshots/code.png)

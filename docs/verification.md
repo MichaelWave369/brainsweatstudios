@@ -15,7 +15,7 @@ Production TypeScript/Vite build and ESLint pass. The unit suite has 79 passing 
 - All 360 checkpoint identifiers roundtrip through validation. Browser reload tests covered Power Grid, Media Detective, Scam Shield, Food & Fuel, Music Maker, Frequency Lab, Botany Garden, and Code Quest. A running robot resumes stopped with its queue, position, and cursor retained.
 - Existing version 1 awards migrate to version 2. Six profile slots isolate saves and settings. Malformed imports leave the active save intact; stale effects cannot write into a different profile. Storage failures show a warning and allow export. A damaged profile bundle can recover the mirrored legacy active save.
 - Local reading chooses an explicitly local voice, stops on mute/navigation, and shows a text fallback when no matching voice exists. Remote voices are excluded. Haptics remain optional and disabled on unsupported devices.
-- Spanish has 1,974 reviewed catalog entries. Browser playtests started all 15 worlds, refreshed the assistant, completed a bot field mission with zero XP, and exercised mobile keyboard controls, with no page errors or React warnings. Long unknown imported text is bounded to avoid expensive template matching. Player nicknames marked `translate="no"` remain verbatim.
+- Spanish has 1,977 reviewed catalog entries. Browser playtests started all 15 worlds, refreshed the assistant, completed a bot field mission with zero XP, and exercised mobile keyboard controls, with no page errors or React warnings. Long unknown imported text is bounded to avoid expensive template matching. Player nicknames marked `translate="no"` remain verbatim.
 - `scripts/verify-production.mjs` passed the actual `/brainsweatstudios/` prefix, service-worker installation, offline reload, all 15 lazy game routes offline, assistant/bot pages, Spanish refresh, offline gameplay, and saved progress after refresh.
 
 ## Continuous checks
@@ -25,6 +25,8 @@ The GitHub browser workflow runs on main pushes and pull requests. It executes t
 After deployment, the Pages workflow runs `scripts/verify-live.mjs` against the public URL. It checks the 15-world catalog, assistant and council, three creative science interfaces, a saved melody after refresh, earned music progress, bot reward isolation, and Spanish after refresh, and captures a live-site screenshot.
 
 [Deployment and live verification run 37099835283](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37099835283) passed against https://larrinamsalva.github.io/brainsweatstudios/. The browser earned 100 XP by completing Music Maker, completed a separate Frequency Lab bot practice without adding rewards, retained a melody after refresh, and retained Spanish after refresh, with zero page errors. The [captured live studio](screenshots/live-v2.png) records the verified public build.
+
+The deployment workflow also checks returning-player upgrades before publishing. It rebuilds the original v1 and pre-fix v2 commits, reproduces a returning player remaining at 12 worlds while a fresh visitor sees 15, then exercises the fixed upgrade with two original tabs open. The regression checks migrated awards, old lazy assets, an English/Spanish refresh notice for a subsequent release fixture, retained melody state, and offline reload. The public homepage identifies the release with **NEW IN VERSION 2**.
 
 ## Scope and limits
 

@@ -60,7 +60,9 @@ In the repository’s **Settings → Pages → Build and deployment**, select **
 
 To fork with another repository name, change the default base in `vite.config.ts` and the workflow’s `VITE_BASE_PATH`, or set that variable for the build. Set `LIVE_SITE_URL` on the published-studio verification step to the fork’s URL. For a root-domain deployment, use `VITE_BASE_PATH=/ npm run build`.
 
-An original service worker precaches the application and all game chunks after the first successful production visit. After installation finishes, the worlds can run offline. It caches only public application assets; progress stays in local storage. A new service worker activates after old controlled tabs close. Use a web server to preview `dist`; opening `index.html` directly from a filesystem is unsupported.
+An original service worker precaches the application and all game chunks after the first successful production visit. After installation finishes, the worlds can run offline. It caches only public application assets; progress stays in local storage. Online reloads request the current page instead of permanently serving an older cached page. Updated workers activate without waiting for every old tab to close and retain the previous build’s assets while those tabs await a refresh. A **Refresh studio** notice lets players choose when to load an update; unfinished checkpoints remain saved. If a tab is still running the original release, close every Brain Sweat tab and reopen the studio once. Use a web server to preview `dist`; opening `index.html` directly from a filesystem is unsupported.
+
+Before publishing, the workflow rebuilds the original v1 and the pre-fix v2, reproduces the stale-page problem, and tests upgrading with two old tabs open. It checks earned progress, old lazy assets, the update notice in English and Spanish, checkpoint refresh, and continued offline play.
 
 ## Progress and privacy
 

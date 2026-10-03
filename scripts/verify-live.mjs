@@ -7,6 +7,7 @@ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_C
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }); const page = await context.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto(base, { timeout: 30000 }); await page.locator('.world-card').last().waitFor(); assert.equal(await page.locator('.world-card').count(), 15);
+  await page.getByText('NEW IN VERSION 2', { exact: true }).waitFor();
   await page.getByRole('link', { name: 'Assistant & council', exact: true }).click(); await page.getByRole('heading', { name: 'Your personal assistant', exact: true }).waitFor();
   for (const role of ['Mentor', 'Benefactor', 'Strategist']) await page.getByRole('heading', { name: role, exact: true }).waitFor();
   await page.getByLabel('Ask your assistant', { exact: true }).fill('Help me plan a garden'); await page.getByRole('button', { name: 'Send to assistant', exact: true }).click(); await page.getByRole('link', { name: 'Botany Garden · Mission 1', exact: false }).waitFor();

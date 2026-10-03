@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
@@ -31,6 +33,21 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /brainsweatstudios/
+      - run: npx playwright install --with-deps chromium
+      - name: Verify returning-player upgrades and offline play
+        run: |
+          legacy_upgrade_dir="$RUNNER_TEMP/studio-upgrade-v1"
+          before_upgrade_dir="$RUNNER_TEMP/studio-upgrade-before-fix"
+          mkdir -p "$legacy_upgrade_dir" "$before_upgrade_dir"
+          git archive b8660fe3222f27888f1a5fcd7c8b4421be72b86f | tar -x -C "$legacy_upgrade_dir"
+          git archive 064551a2cf71595ba05978605fdcd49d102aa0da | tar -x -C "$before_upgrade_dir"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$legacy_upgrade_dir/node_modules"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$before_upgrade_dir/node_modules"
+          npm run build --prefix "$legacy_upgrade_dir"
+          npm run build --prefix "$before_upgrade_dir"
+          LEGACY_DIST="$legacy_upgrade_dir/dist" CURRENT_DIST="$before_upgrade_dir/dist" REPRODUCE_STALE=1 node scripts/verify-upgrade.mjs
+          LEGACY_DIST="$legacy_upgrade_dir/dist" node scripts/verify-upgrade.mjs
+          node scripts/verify-production.mjs
       - name: Upload website
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:

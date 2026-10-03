@@ -1972,5 +1972,8 @@
   "Use Export my progress for a backup. Import my progress can move a save to another device. Reset progress clears the active local profile. Other profiles stay unchanged. Clearing browser data can also erase your save. An exported backup remains wherever you saved it.": "Usa Exportar mi progreso para crear una copia. Importar mi progreso permite llevarla a otro dispositivo. Restablecer progreso borra el perfil local activo; los otros perfiles conservan sus datos. Borrar los datos del navegador también puede borrar tu partida. La copia exportada permanece donde la guardaste.",
   "skill areas explored": "áreas de habilidades exploradas",
   "A planted garden checkpoint needs at least two pots.": "Una partida guardada de un jardín plantado necesita al menos dos macetas.",
-  "A meal-plan checkpoint needs a grocery basket.": "Una partida guardada de un plan de comidas necesita una cesta de alimentos."
+  "A meal-plan checkpoint needs a grocery basket.": "Una partida guardada de un plan de comidas necesita una cesta de alimentos.",
+  "NEW IN VERSION 2": "NOVEDADES EN LA VERSIÓN 2",
+  "A new studio update is ready.": "Hay una nueva actualización del estudio.",
+  "Refresh studio": "Actualizar el estudio"
 }

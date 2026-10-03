@@ -48,6 +48,11 @@ jobs:
         env:
           CROSS_BROWSER: 1
           TEST_PRODUCTION: 1
+      - name: Repeat paused experiment persistence in WebKit
+        run: npm run test:e2e -- tests/e2e/runtime-features.spec.ts --project=webkit --grep 'experiments separate splits' --repeat-each=10 --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
       - name: Agent gameplay and cross-browser accessibility
         run: |
           studio_ui_only=0

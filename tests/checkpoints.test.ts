@@ -89,6 +89,7 @@ describe('checkpoint schemas and migration', () => {
     expect(() => validateSave({ ...save, difficulty: ['explorer'] })).toThrow();
     expect(() => validateSave({ ...save, records: { 'money/explorer/0': { ...save.records['money/explorer/0'], difficulty: ['explorer'] } } })).toThrow();
     expect(() => validateSave({ ...save, settings: { ...save.settings, locale: ['es'] } })).toThrow();
+    expect(() => validateSave({ ...save, settings: { ...save.settings, labPalette: ['amber'] } })).toThrow();
   });
   it.each([
     ['money', 'budget', { rent: 460 }], ['money', 'phase', 'unexpected'], ['money', 'cash', {}],

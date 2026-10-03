@@ -4,10 +4,15 @@ on:
   pull_request:
   push:
     branches: [main]
+    paths-ignore: ['docs/**', 'README.md']
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: browser-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:

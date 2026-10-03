@@ -76,7 +76,7 @@ try {
     await page.getByRole('button', { name: 'Actualizar el estudio', exact: true }).click(); await page.getByRole('button', { name: 'Continuar punto de control', exact: true }).click(); assert.equal(await page.getByLabel('Nota del paso 16', { exact: true }).inputValue(), '2');
     assert.equal(await page.getByText('Hay una nueva actualización del estudio.', { exact: true }).count(), 0);
     await page.getByLabel('Idioma', { exact: true }).selectOption('en'); await page.getByRole('link', { name: 'Play', exact: true }).click(); await context.setOffline(true); await page.reload(); await page.locator('.world-card').last().waitFor(); assert.equal(await page.locator('.world-card').count(), 26);
-    assert.deepEqual(errors, []); console.log('Upgrade verified: two open v1 tabs reach v2, earned progress survives, old lazy assets remain usable, the next update prompts in both languages, melody survives refresh, and offline play works.');
+    assert.deepEqual(errors, []); console.log('Upgrade verified: two open v1 tabs reach v3, earned progress survives, old lazy assets remain usable, the next update prompts in both languages, melody survives refresh, and offline play works.');
   }
   await context.close();
 } catch (error) {

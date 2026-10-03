@@ -3,6 +3,7 @@ name: Verify and deploy Brain Sweat Studio
 on:
   push:
     branches: [main]
+    paths-ignore: ['docs/**', 'README.md']
   workflow_dispatch:
 
 permissions:

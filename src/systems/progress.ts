@@ -89,7 +89,7 @@ export function validateSave(raw: unknown): SaveData {
     next.settings.locale = settings.locale as 'en' | 'es'; next.settings.haptics = settings.haptics; next.settings.botControl = settings.botControl;
     next.checkpoints = validateCheckpoints(raw.checkpoints);
     next.classes = validateClasses(raw.classes);
-    if (settings.labPalette !== undefined && !['green', 'amber'].includes(String(settings.labPalette))) throw new Error('Invalid retro lab palette.');
+    if (settings.labPalette !== undefined && (typeof settings.labPalette !== 'string' || !['green', 'amber'].includes(settings.labPalette))) throw new Error('Invalid retro lab palette.');
     next.settings.labPalette = settings.labPalette === 'amber' ? 'amber' : 'green';
   }
   next.selectedDifficulty = raw.selectedDifficulty === true;

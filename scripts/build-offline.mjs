@@ -1,6 +1,8 @@
 import { readFile, readdir, writeFile, copyFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const files = ['index.html', 'favicon.svg', ...(await readdir('dist/assets')).map(name => `assets/${name}`)];
+import { readCatalogue } from './studio-catalogue.mjs';
+await writeFile('dist/studio-manifest.json', JSON.stringify(await readCatalogue(), null, 2));
+const files = ['index.html', 'favicon.svg', 'studio-manifest.json', ...(await readdir('dist/assets')).map(name => `assets/${name}`)];
 const hash = createHash('sha256'); for (const file of files) hash.update(await readFile(`dist/${file}`));
 const cacheName = `brain-sweat-${hash.digest('hex').slice(0, 12)}`;
 const source = `/* Original Brain Sweat Studio offline worker. MIT licensed. */

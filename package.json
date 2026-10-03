@@ -1,6 +1,6 @@
 {
   "name": "brain-sweat-studio",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lint": "eslint src tests --max-warnings 0",
-    "licenses": "node scripts/licenses.mjs"
+    "licenses": "node scripts/licenses.mjs",
+    "test:headless": "node scripts/headless.mjs"
   },
   "dependencies": {
     "lucide-react": "1.50.0",

@@ -17,7 +17,7 @@ export interface MultiAgentEnvironment<Observation, Action, State> {
 export function dispatchStep(state: DispatchState, action: unknown, members: number) {
   if (!integer(members, 1, 20) || !integer(state.task, 0, 2) || !integer(state.phase, 0, 2) || !integer(state.turn, 0, members - 1) || !integer(state.risks, 0, 100000) || !dispatchActions.includes(action as DispatchAction)) throw new Error('Invalid dispatch state or action.');
   const accepted = action === dispatchActions[state.phase];
-  const next = { ...state };
+  const next = { task: state.task, phase: state.phase, turn: state.turn, risks: state.risks };
   if (!accepted) next.risks++;
   else { next.phase++; next.turn = (next.turn + 1) % members; if (next.phase === 3) { next.phase = 0; next.task++; } }
   return { accepted, state: next };

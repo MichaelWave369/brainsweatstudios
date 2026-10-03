@@ -1,4 +1,5 @@
 import { AGENT_IDS, electricParts, fireExit, fireLayers, isArena, isRungFour, policyActions, policyConditions, roadChecks, truckChecks, waterLayers, type ArenaKind, type PolicyRule, type RungFourId } from './models';
+import { importController } from '../../runtime/packages.ts';
 type Test=(value:unknown)=>boolean;
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
 const number=(min:number,max:number):Test=>v=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
@@ -11,8 +12,8 @@ const shape=(rules:Record<string,Test>):Test=>v=>object(v)&&Object.keys(v).lengt
 const parts=(names:string[]):Test=>v=>array(one(names),names.length)(v)&&new Set(v as string[]).size===(v as string[]).length;
 export const validRules:Test=v=>array(shape({when:one(policyConditions),action:one(policyActions)}),8)(v)&&(v as unknown[]).length>0;
 export function parsePolicy(value:unknown,kind:ArenaKind):PolicyRule[] {
-  if(!shape({version:one([1]),kind:one([kind]),rules:validRules})(value))throw new Error('Choose a version 1 controller for this arena, with 1–8 valid condition/action rules.');
-  return (value as {rules:PolicyRule[]}).rules.map(rule=>({...rule}));
+  try{const pkg=importController(value,kind);if('rules'in pkg.parameters)return pkg.parameters.rules.map(rule=>({...rule}));}catch{ /* Preserve the approachable legacy error. */ }
+  throw new Error('Choose a version 1 policy or compatible controller package for this arena, with 1–8 valid condition/action rules.');
 }
 const road=shape({checks:parts(roadChecks),speed:integer(10,60),reaction:number(1,3),gap:integer(10,150),wet:boolean,phase:integer(0,4),started:boolean,risks:integer(0,100000),feedback:text(600)});
 const truck=shape({checks:parts(truckChecks),faultReported:boolean,cleared:boolean,front:integer(0,30),rear:integer(0,30),secured:boolean,phase:integer(0,4),started:boolean,risks:integer(0,100000),feedback:text(600)});

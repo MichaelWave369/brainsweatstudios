@@ -35,7 +35,7 @@ test('agent editor imports bounded policies, pauses execution, resumes stopped, 
   await page.reload();await expect(page.getByRole('button',{name:'Stop training',exact:true})).toBeDisabled();
   expect((await saved(page)).checkpoints['outpost/explorer/0'].state.model.episode.tick).toBe(tick);
   await page.getByLabel('Import agent controller',{exact:true}).setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({version:1,kind:'outpost',rules:[{when:'always',action:'eval'}]}))});
-  await expect(page.getByText('Choose a version 1 controller for this arena, with 1–8 valid condition/action rules.')).toBeVisible();
+  await expect(page.getByText('Choose a version 1 policy or compatible controller package for this arena, with 1–8 valid condition/action rules.')).toBeVisible();
   expect((await saved(page)).checkpoints['outpost/explorer/0'].state.model.episode.tick).toBe(tick);
   await page.getByRole('button',{name:'Run full episode',exact:true}).click();
   await page.getByText('Inspect and replay the episode trace',{exact:true}).click();

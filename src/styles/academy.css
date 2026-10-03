@@ -55,3 +55,31 @@ fieldset.academy-panel { padding-top:1rem; min-inline-size:0; }
 @media(max-width:1050px) { .academy-heading { flex-wrap:wrap; } .academy-layout { gap:1rem; } .academy-panel { padding:1.1rem; } }
 @media(max-width:850px) { .academy-layout { grid-template-columns:minmax(0,1fr); } .academy-stage { display:grid; grid-template-columns:minmax(0,1fr); } .academy-stage .scene-3d-view { aspect-ratio:1.6; } }
 @media(max-width:520px) { .academy-panel { padding:1rem; } .academy-picker,.academy-picker .lab-select { width:100%; } .academy-heading .button-row { width:100%; } .academy .btn { padding:.7rem .8rem; } .academy-tabs .btn { flex:1; } .champion-rules li { grid-template-columns:auto minmax(0,1fr); } .champion-rules strong { grid-column:2; } .academy .game-stat strong { font-size:1.1rem; } }
+.runtime-lab { margin-top: 1.4rem; }
+.runtime-intro { max-width: 70ch; margin-bottom: 1.5rem; }
+.runtime-lab .academy-work, .runtime-lab .academy-stage { min-width: 0; }
+.runtime-lab .academy-panel { min-width: 0; }
+.runtime-lab fieldset { min-inline-size: 0; }
+.runtime-splits { display: grid; gap: .75rem; }
+.runtime-splits > div { border-left: 3px solid var(--accent, #caff66); padding: .5rem .9rem; background: #151c2a; border-radius: .4rem; }
+.runtime-splits code { display: block; overflow-wrap: anywhere; color: #b7d9ff; }
+.runtime-json { padding: .9rem; border: 1px solid #3b4965; border-radius: .6rem; background: #0d1320; color: #d9e8ff; font-size: .8rem; max-height: 18rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.runtime-table { overflow-x: auto; border-radius: .6rem; border: 1px solid #3b4965; }
+.runtime-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.runtime-table th, .runtime-table td { text-align: left; padding: .65rem; font-size: .85rem; border-bottom: 1px solid #35415a; }
+.runtime-table thead { background: #1a2638; color: #d5edff; }
+.runtime-table tbody tr:last-child { background: #253126; }
+.runtime-map { display: grid; grid-template-columns: repeat(9, 1fr); gap: .18rem; padding: .65rem; border: 1px solid #3b4965; background: #0c1620; border-radius: .6rem; margin-block: .85rem; }
+.runtime-map span { aspect-ratio: 1; display: grid; place-items: center; font-size: 1.2rem; color: #caff66; border-radius: .2rem; background: #192737; }
+.runtime-map .wall { color: #aac3e7; background: #344663; }
+.runtime-map .goal { color: #fff4b0; background: #3f3c22; }
+.runtime-map > p { grid-column: 1 / -1; margin: .5rem; }
+.runtime-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-block: 1rem; }
+.runtime-facts > div { padding: .65rem; border: 1px solid #35415a; border-radius: .5rem; }
+.runtime-facts dt { color: #afbdd3; font-size: .8rem; }
+.runtime-facts dd { margin: .2rem 0 0; overflow-wrap: anywhere; color: #f0f5ff; }
+.runtime-values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .3rem; }
+.runtime-values > div { display: grid; padding: .5rem; background: #213529; border: 1px solid #5b8067; border-radius: .4rem; }
+.runtime-values span, .runtime-values strong { font-size: .8rem; overflow-wrap: anywhere; }
+.runtime-inspector details { margin-block: .6rem; }
+@media (max-width: 460px) { .runtime-facts { grid-template-columns: 1fr; } .runtime-table th, .runtime-table td { padding: .5rem .3rem; font-size: .75rem; } .academy-tabs { flex-wrap: wrap; } }

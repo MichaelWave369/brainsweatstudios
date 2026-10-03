@@ -11,6 +11,9 @@ import { packageRules, packageRover, importController, validatePackage } from '.
 import { inspectTick, recordEpisode, runHeadless, verifyReceipt } from '../src/runtime/receipts';
 import { roverFresh } from '../src/training/models';
 import { ENVIRONMENTS } from '../src/runtime/types';
+import { freshLab, validateLab } from '../src/runtime/notebook';
+import { freshSave, validateSave } from '../src/systems/progress';
+import { parsePolicy } from '../src/games/rung4/validation';
 
 describe('common simulation authority', () => {
   it('matches SHA-256 and canonicalizes equivalent object order', () => {
@@ -69,5 +72,18 @@ describe('common simulation authority', () => {
     expect(a.availableActions('agent-b')).toEqual([]); const initial = a.snapshot(); expect(() => a.step('agent-b', 'observe')).toThrow(); expect(a.snapshot()).toEqual(initial);
     for (let i = 0; i < 9; i++) { const actor = i % 2 ? 'agent-b' : 'agent-a', action = ['observe', 'protect', 'dispatch'][i % 3]; expect(a.step(actor, action)).toEqual(b.step(actor, action)); }
     expect(a.isTerminal()).toBe(true); expect(a.snapshot().task).toBe(3);
+  });
+  it('migrates V5 academy/profile backups, preserves legacy policies, and bounds the new notebook', () => {
+    const save = freshSave(), old = JSON.parse(JSON.stringify(save)); delete old.academy.lab;
+    expect(validateSave(old).academy.lab).toEqual(freshLab()); expect(validateSave({ ...old, version: 1, academy: undefined }).xp).toBe(0);
+    const receipt = recordEpisode(configuration('sports', 1), authoredController('sports')); save.academy.lab.receipt = receipt;
+    expect(validateSave(JSON.parse(JSON.stringify(save))).academy.lab.receipt).toEqual(receipt);
+    expect(parsePolicy(packageRules('sports', workedPolicy('sports')), 'sports')).toEqual(workedPolicy('sports'));
+    expect(() => validateLab({ ...freshLab(), extra: 1 })).toThrow(); expect(() => validateLab({ ...freshLab(), experiments: Array(4).fill({}) })).toThrow();
+    expect(() => validateSave({ ...save, academy: { ...save.academy, lab: { ...save.academy.lab, receipt: { ...receipt, finalHash: '0'.repeat(64) } } } })).toThrow();
+  });
+  it('presentation randomness never enters authoritative dynamics', () => {
+    const a = recordEpisode(configuration('space', 9), authoredController('space')); const random = Math.random;
+    try { Math.random = () => 0.999; expect(recordEpisode(configuration('space', 9), authoredController('space'))).toEqual(a); } finally { Math.random = random; }
   });
 });

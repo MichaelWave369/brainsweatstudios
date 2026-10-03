@@ -24,6 +24,8 @@ The GitHub browser workflow runs on main pushes and pull requests. It executes t
 
 After deployment, the Pages workflow runs `scripts/verify-live.mjs` against the public URL. It checks the 15-world catalog, assistant and council, three creative science interfaces, a saved melody after refresh, earned music progress, bot reward isolation, and Spanish after refresh, and captures a live-site screenshot.
 
+[Deployment and live verification run 37099835283](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37099835283) passed against https://larrinamsalva.github.io/brainsweatstudios/. The browser earned 100 XP by completing Music Maker, completed a separate Frequency Lab bot practice without adding rewards, retained a melody after refresh, and retained Spanish after refresh, with zero page errors. The [captured live studio](screenshots/live-v2.png) records the verified public build.
+
 ## Scope and limits
 
 The optional bots operate actual controls using deterministic authored strategies. They can find broken flows and inspect consequences, but do not measure whether real children understand a game or how an individual screen-reader user experiences it. Automated scans are not an accessibility certification. The CPU/display checks simulate a constrained device; they are not battery or physical-phone measurements. Speech voices and vibration depend on the device. Spanish completion was sampled, not independently replayed for every one of the 360 cases. Not every alternate decision path has been exhausted.

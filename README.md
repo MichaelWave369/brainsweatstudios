@@ -56,9 +56,9 @@ If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1
 
 The production base path is `/brainsweatstudios/`. All application navigation uses hash routes, such as `/#/game/code`, so a refresh asks Pages for the same entry file. Asset URLs use Vite’s production base path.
 
-In the repository’s **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source. The deployment workflow installs the locked packages, runs lint and unit tests, builds the app, and publishes `dist`. Pushes to `main` redeploy it. The browser workflow runs on pushes to main and pull requests, and can also be started manually. It checks all 360 authored bot runs in Chromium, plus accessibility and feature flows in Chromium, Firefox, and WebKit.
+In the repository’s **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source. The deployment workflow installs the locked packages, runs lint and unit tests, builds the app, and publishes `dist`. It then checks the actual public studio and uploads a screenshot. Pushes to `main` redeploy it. The browser workflow runs on pushes to main and pull requests, and can also be started manually. It checks all 360 authored bot runs in Chromium, plus accessibility and feature flows in Chromium, Firefox, and WebKit.
 
-To fork with another repository name, change the default base in `vite.config.ts` and the workflow’s `VITE_BASE_PATH`, or set that variable for the build. For a root-domain deployment, use `VITE_BASE_PATH=/ npm run build`.
+To fork with another repository name, change the default base in `vite.config.ts` and the workflow’s `VITE_BASE_PATH`, or set that variable for the build. Set `LIVE_SITE_URL` on the published-studio verification step to the fork’s URL. For a root-domain deployment, use `VITE_BASE_PATH=/ npm run build`.
 
 An original service worker precaches the application and all game chunks after the first successful production visit. After installation finishes, the worlds can run offline. It caches only public application assets; progress stays in local storage. A new service worker activates after old controlled tabs close. Use a web server to preview `dist`; opening `index.html` directly from a filesystem is unsupported.
 

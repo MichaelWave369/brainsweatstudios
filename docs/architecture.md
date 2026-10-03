@@ -82,5 +82,6 @@ their original counts/version labels.
 
 The frozen V5 commit and extraction evidence are in [the audit](v6-audit.md).
 PR workflows exercise production prefix/offline/upgrade/database/browser checks
-without deploying Pages. V6 publication requires operator approval; actual
-published-site verification follows publication. Public online remains pending.
+without deploying Pages. The operator merged V6 on 2026-10-03; Pages publication
+and actual published-site verification passed. Future publication still
+requires operator approval. Public online remains pending.

@@ -116,7 +116,7 @@ BOT_FULL_SWEEP=1 CROSS_BROWSER=1 TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run 
 
 If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1`. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` can point tests to an installed compatible Chromium executable. Use `TEST_BASE_URL` to test another served build.
 
-Version 6 work is on `v6-agent-runtime`; the published V5 baseline remains at `a5f107b4f8b413d07630858036090c46deb9fa72` until operator approval. Draft PR verification includes the production build, offline/update checks and isolated online tests without deploying Pages. No release tag or paid/secret changes are made by this rung.
+Version 6 is published on GitHub Pages following the operator's merge of PR #1. The frozen V5 baseline remains at `a5f107b4f8b413d07630858036090c46deb9fa72` for regression checks. PR verification builds and tests offline/update behavior and isolated online services without deploying Pages; main-branch deployment also verifies the actual public studio. See the current results in [Version 6 verification](docs/verification-v6.md). No release tag or paid/secret changes are made by this rung.
 
 ## GitHub Pages
 
@@ -185,12 +185,12 @@ Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions,
 
 ## Screenshots
 
-These V6 captures show the verified production build on the review branch. Public publication is pending operator approval; the live site still runs V5. See [the verification report](docs/verification-v6.md).
+These V6 review captures show the verified production build. V6 is now published and its actual public studio has passed live verification. See [the verification report](docs/verification-v6.md).
 
 ![Version 6 studio](docs/screenshots/v6/studio.png)
 ![Version 6 reproducible experiments and verified trace inspector](docs/screenshots/v6/experiments.png)
 
-[Controller search](docs/screenshots/v6/controllers.png) · [Learning rover](docs/screenshots/v6/rover.png) · [Sports arena](docs/screenshots/v6/sports.png) · [Retro space lab](docs/screenshots/v6/space.png) · [Agent class](docs/screenshots/v6/agent-class.png) · [Phone experiment controls](docs/screenshots/v6/mobile-experiment.png) · [Spanish trace inspector](docs/screenshots/v6/spanish-inspector.png)
+[Controller search](docs/screenshots/v6/controllers.png) · [Learning rover](docs/screenshots/v6/rover.png) · [Sports arena](docs/screenshots/v6/sports.png) · [Retro space lab](docs/screenshots/v6/space.png) · [Agent class](docs/screenshots/v6/agent-class.png) · [Phone experiment controls](docs/screenshots/v6/mobile-experiment.png) · [Spanish trace inspector](docs/screenshots/v6/spanish-inspector.png) · [Verified public V6 studio](docs/screenshots/v6/live.png)
 
 ### Preserved Version 5 release evidence
 

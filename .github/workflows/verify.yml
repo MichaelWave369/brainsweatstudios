@@ -33,7 +33,7 @@ jobs:
           studio_ui_only=0
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then
             studio_changed_files=$(git diff --name-only HEAD^ HEAD)
-            if ! printf '%s\n' "$studio_changed_files" | rg -qv '^(src/app/Assistant\.tsx|src/styles/studio\.css|tests/e2e/(accessibility|localization|advanced-features)\.spec\.ts|\.github/workflows/(verify|deploy)\.yml|README\.md|docs/.*)$'; then
+            if ! printf '%s\n' "$studio_changed_files" | grep -Eqv '^(src/app/(Assistant|Online|RetroLab)\.tsx|src/styles/studio\.css|src/i18n/(es|rung4)\.json|src/data/rungFourClasses\.ts|tests/e2e/(accessibility|localization|advanced-features|rung4-features|online-features)\.spec\.ts|README\.md|docs/.*)$'; then
               studio_ui_only=1
             fi
           fi

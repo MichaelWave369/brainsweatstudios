@@ -10,7 +10,8 @@ async function prepare(page:Page){
   await expect(page.getByRole('button',{name:'Create room',exact:true})).toBeVisible();
 }
 async function pair(browser:Browser){
-  const contexts=await Promise.all([browser.newContext({baseURL:process.env.TEST_BASE_URL||'http://127.0.0.1:5173'}),browser.newContext({baseURL:process.env.TEST_BASE_URL||'http://127.0.0.1:5173'})]);
+  const options={baseURL:process.env.TEST_BASE_URL||'http://127.0.0.1:5173',viewport:{width:1440,height:1000}};
+  const contexts=await Promise.all([browser.newContext(options),browser.newContext(options)]);
   const pages=await Promise.all(contexts.map(c=>c.newPage()));await Promise.all(pages.map(prepare));return{contexts,pages};
 }
 const group=(page:Page)=>page.locator('.private-group').first();
@@ -24,9 +25,11 @@ async function join(host:Page,guest:Page,tab:'Rooms'|'Clans'|'Tournaments',creat
 }
 async function start(host:Page,guest:Page){
   await group(host).getByRole('button',{name:'Ready to play',exact:true}).click();
+  await expect(group(host).getByRole('button',{name:'Return to preparing',exact:true})).toBeEnabled();
   const version=await group(host).getAttribute('data-online-version');
   await expect(group(guest)).toHaveAttribute('data-online-version',version!,{timeout:12000});
   await group(guest).getByRole('button',{name:'Ready to play',exact:true}).click();
+  await expect(group(guest).getByRole('button',{name:'Return to preparing',exact:true})).toBeEnabled();
   await expect(group(host).getByRole('button',{name:'Start event',exact:true})).toBeEnabled({timeout:12000});
   await group(host).getByRole('button',{name:'Start event',exact:true}).click();
 }
@@ -45,7 +48,10 @@ test('two separate browser identities cooperate through shared server turns and 
     }
     const scan=await new AxeBuilder({page:host}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze();
     expect(scan.violations).toEqual([]);
-    await host.setViewportSize({width:320,height:844});expect(await host.evaluate(()=>document.documentElement.scrollWidth)).toBe(320);
+    if(test.info().project.name==='chromium')await group(host).screenshot({path:'docs/screenshots/v4/online-room.png'});
+    await host.setViewportSize({width:320,height:844});
+    const layout=await host.evaluate(()=>({width:document.documentElement.scrollWidth,spill:[...document.querySelectorAll('main *')].filter(e=>e.getBoundingClientRect().right>322).slice(0,12).map(e=>({tag:e.tagName,class:e.className,right:e.getBoundingClientRect().right}))}));
+    expect(layout.width,JSON.stringify(layout.spill)).toBe(320);
   }finally{await Promise.all(contexts.map(c=>c.close()));}
 });
 test('clans, host transfer, shared tournament evaluation, reconnect, and deletion work end to end',async({browser})=>{
@@ -61,12 +67,15 @@ test('clans, host transfer, shared tournament evaluation, reconnect, and deletio
     await expect(group(guest).getByRole('button',{name:'Lock and evaluate controller',exact:true})).toBeVisible({timeout:12000});
     await group(guest).getByLabel('Competition controller',{exact:true}).fill(JSON.stringify({version:1,kind:'sports',rules:[{when:'always',action:'coast'}]}));
     await group(guest).getByRole('button',{name:'Lock and evaluate controller',exact:true}).click();
+    await expect(group(guest).getByRole('button',{name:'Lock and evaluate controller',exact:true})).toHaveCount(0);
+    await expect(group(host)).toHaveAttribute('data-online-version',(await group(guest).getAttribute('data-online-version'))!,{timeout:12000});
     await group(host).getByRole('button',{name:'Lock and evaluate controller',exact:true}).click();
     await expect(group(host).getByRole('heading',{name:'Final standings',exact:true})).toBeVisible();
     await expect(group(guest).getByRole('heading',{name:'Final standings',exact:true})).toBeVisible({timeout:12000});
     await expect(group(host).locator('tbody tr').first()).toContainText('100/100');
     await expect(group(host).locator('tbody tr').last()).toContainText('0/100');
     const audit=await new AxeBuilder({page:host}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze();expect(audit.violations).toEqual([]);
+    if(test.info().project.name==='chromium')await group(host).screenshot({path:'docs/screenshots/v4/online-tournament.png'});
     await host.reload();await host.getByRole('button',{name:'Connect online',exact:true}).click();
     await host.getByRole('button',{name:'Tournaments',exact:true}).click();
     await expect(group(host).getByRole('heading',{name:'Final standings',exact:true})).toBeVisible();

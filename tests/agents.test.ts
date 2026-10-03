@@ -4,7 +4,8 @@ import { createGarageWorld, GARAGE_WORLDS, worldConfig } from '../src/runtime/ga
 import { authoredController } from '../src/runtime/controllers';
 import { configuration } from '../src/runtime/environment';
 import { recordEpisode, verifyReceipt } from '../src/runtime/receipts';
-import { AgentError, DEFAULT_BUDGETS, TEMPLATE_VERSION, controllerSpec, freshNotebook, modelObservation, parseProposal, validateBudgets, validateController, validateNotebook, validateRequest, type ControllerSpec, type ProviderAdapter, type ProviderRequest } from '../src/agents/contracts';
+import { packageRover } from '../src/runtime/packages';
+import { AgentError, DEFAULT_BUDGETS, TEMPLATE_VERSION, bytes, controllerSpec, freshNotebook, modelObservation, parseProposal, validateBudgets, validateController, validateNotebook, validateRequest, type ControllerSpec, type ProviderAdapter, type ProviderRequest } from '../src/agents/contracts';
 import { mockAdapter } from '../src/agents/mock';
 import { createAgentSession } from '../src/agents/session';
 import { verifyAgentReceipt } from '../src/agents/receipts';
@@ -31,7 +32,7 @@ describe('model controller boundary', () => {
   it('rejects unknown actions, empty/oversized output and extra controller metadata', () => {
     expect(() => parseProposal('{"action":{"type":"teleport"}}', [{ type: 'east' }], DEFAULT_BUDGETS)).toThrow(/unavailable/);
     expect(() => parseProposal('', [], DEFAULT_BUDGETS)).toThrow(/empty/); expect(() => parseProposal('x'.repeat(4097), [], DEFAULT_BUDGETS)).toThrow(/byte/);
-    expect(() => validateController({ ...controllerSpec(), apiKey: 'secret' })).toThrow(); expect(() => validateRequest({ ...request(), template: 'mission@999' })).toThrow();
+    expect(() => validateController({ ...controllerSpec(), apiKey: 'secret' })).toThrow(); expect(() => validateController({ ...controllerSpec(), observationSchema: 'model-observation@999' })).toThrow(); expect(() => validateRequest({ ...request(), template: 'mission@999' })).toThrow();
     expect(() => validateBudgets({ ...DEFAULT_BUDGETS, retries: 99 })).toThrow(); expect(() => validateNotebook({ ...freshNotebook(), plans: ['x'.repeat(161)] })).toThrow();
   });
   it('records illegal proposals and bounded retries without executing them', async () => {
@@ -98,6 +99,7 @@ describe('model controller boundary', () => {
   it('frozen model experiments preserve split isolation, transfer and deterministic mock reruns', async () => {
     const spec = createModelExperiment('survey', controllerSpec(), controllerSpec('reference'), 'explorer', 3, 'EVENT_SUMMARY', DEFAULT_BUDGETS, 1), before = clone(spec.controllers);
     const output = await runModelExperiment(spec, providers()); expect(output.manifest.report!.trials).toHaveLength(8); expect(spec.controllers).toEqual(before);
+    expect(output.manifest.observationSchema).toBe('model-observation@1'); expect(output.manifest.actionSchema).toBe('model-action@1'); expect(() => validateModelExperiment({ ...spec, actionSchema: 'model-action@999' })).toThrow();
     const rerun = await rerunModelExperiment(output.manifest, providers()); expect(rerun.worldReplayMatch).toBe(true); expect(rerun.modelRegenerationMatch).toBe(true);
     const invalid = clone(output.manifest); invalid.seeds.HOLDOUT[0] = invalid.seeds.TRAIN[0]; expect(() => validateModelExperiment(redigest(invalid))).toThrow();
     const saved = rememberGarage(freshGarage(), output.receipt, output.manifest); expect(validateGarage(saved)).toEqual(saved); expect(validateGarage(undefined)).toEqual(freshGarage());
@@ -108,5 +110,16 @@ describe('model controller boundary', () => {
     const { id: _id, digest: _digest, report: _report, ...identity } = spec; void _id; void _digest; void _report; spec.id = hash(identity).slice(0, 24);
     let calls = 0; const delegate = mockAdapter(), counted: ProviderAdapter = { ...delegate, async propose(r, signal) { calls++; return delegate.propose(r, signal); } };
     await expect(runModelExperiment(redigest(spec), [counted])).rejects.toThrow(/total request limit/); expect(calls).toBe(2);
+  });
+  it('caps whole receipts before large handoffs and preserves legacy receipts by pruning comparison history', async () => {
+    const q = Array.from({ length: 294 }, () => [-99.12345678901235, -98.12345678901235, -97.12345678901235, -96.12345678901235]);
+    const spec = validateController({ ...controllerSpec('q-learning'), package: packageRover(q, 'courier', 0) }), s = session('rover', spec), initial = s.receipt(); let rejected = false;
+    for (let i = 0; i < 32; i++) { const before = s.receipt(); try { s.handoff('pilot', spec); } catch (error) { expect(error).toMatchObject({ code: 'BUDGET' }); expect(s.receipt()).toEqual(before); rejected = true; break; } }
+    expect(rejected).toBe(true); expect(bytes(verifyAgentReceipt(s.receipt()))).toBeLessThanOrEqual(390000);
+    const legacy = clone(s.receipt()); while (legacy.handoffs.length < 32 && bytes(legacy) < 420000) legacy.handoffs.push({ tick: 0, afterRecord: 0, agentId: 'pilot', from: spec, to: spec, reason: 'Previously recorded operator handoff.' });
+    const oldReceipt = verifyAgentReceipt(redigest(legacy)); const a = createModelExperiment('rover', spec, spec), b = createModelExperiment('rover', spec, spec, 'explorer', 4);
+    const history = rememberGarage(rememberGarage(freshGarage(), initial, a), initial, b), restored = rememberGarage(history, oldReceipt);
+    expect(restored.receipt).toEqual(oldReceipt); expect(restored.experiments.length).toBeLessThan(history.experiments.length); expect(bytes(restored)).toBeLessThanOrEqual(500000);
+    for (let i = 0; i < 12 && s.ending !== 'budget'; i++) await s.step(); expect(s.ending).toBe('budget'); expect(bytes(verifyAgentReceipt(s.receipt()))).toBeLessThanOrEqual(390000);
   });
 });

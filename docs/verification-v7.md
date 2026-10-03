@@ -5,9 +5,9 @@ until the operator merges the PR. [Frozen V6 audit](v7-audit.md) identifies the
 baseline and its published green evidence. No release tag, automatic merge,
 paid service, model download or production secret change.
 
-Local checks: locked installation, lint, TypeScript/production build, all 205
+Local checks: locked installation, lint, TypeScript/production build, all 206
 unit tests, original 1,000-episode deterministic runtime sweep and new mock agent
-harness. The focused 43 model/bridge tests cover action authority, all eight
+harness. The focused 44 model/bridge tests cover action authority, all eight
 worlds, illegal/malformed/refusal/oversized/timeout output, bounded retries,
 pause/stop/stale replies, handoffs, cooperation/masks, partial information costs,
 contexts/notebooks, redigested replay tampering, split/transfer manifest reruns,
@@ -15,16 +15,19 @@ loopback origins/Host/bodies/concurrency/deadlines/disconnect and secret project
 Malformed discovery metadata and provider envelopes (including missing or extra
 usage fields) are rejected before presentation or world execution; failed output
 still produces a verifiable rejected-decision receipt.
+Large frozen-table handoffs are rejected atomically before the whole recording
+overflows. A legacy receipt still verifies and restores within its existing
+import bound; older local comparisons are pruned when necessary to preserve it.
 
 The mock harness completes 32 episodes (786 world ticks), verifies 33 replays,
 runs and reruns an eight-trial frozen experiment and recovers six deliberately
-illegal proposals. A recorded local run took 1,535 ms: 41 ms in world steps,
-144 ms awaiting mock controllers and 531 ms verifying receipts. Its largest
-receipt was 202,008 bytes; the four cooperative episodes used 36 ticks total.
+illegal proposals. A recorded local run took 1,464 ms: 36 ms in world steps,
+136 ms awaiting mock controllers and 502 ms verifying receipts. Its largest
+receipt was 208,619 bytes; the four cooperative episodes used 36 ticks total.
 Displayed steps yield for 35 ms; existing render caps remain. Timings are
 machine-specific, not a real-model latency claim. The unchanged V6 sweep checked
 76,766 transitions, 978 goals and 15 receipt replays in 1,166 ms. The shared
-profile-validation bundle is now 542 KB minified (192 KB gzip); Vite reports its
+profile-validation bundle is now 543 KB minified (192 KB gzip); Vite reports its
 500 KB advisory. No build assertion or warning threshold was lowered.
 `npm run qualify:ollama` reports **unavailable**, with zero models/trials on this
 workspace. No real Ollama/model success is claimed. Bridge and browser transport

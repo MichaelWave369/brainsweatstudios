@@ -16,6 +16,9 @@ export interface AgentReceipt {
   ending: 'running' | 'complete' | 'stopped' | 'budget' | 'error'; requestsUsed: number; worldTraceHash: string; modelTraceHash: string; digest: string;
 }
 export interface SessionOptions { config: WorldConfig; controllers: Record<string, ControllerSpec>; providers: ProviderAdapter[]; budgets?: Budgets; context?: ContextStrategy; onChange?: () => void; now?: () => number }
+// Leave room for one bounded comparison in the 500 KB local notebook. Old
+// receipts retain their separate 500 KB import boundary.
+const RECORDING_BYTE_LIMIT = 390000;
 export function contextData(strategy: ContextStrategy, records: readonly AgentRecord[], notebook: Notebook): ContextData {
   const events = records.flatMap(r => r.transition?.events || []), counts = new Map<string, number>();
   events.forEach(e => counts.set(e.type, (counts.get(e.type) || 0) + 1));
@@ -47,6 +50,10 @@ export function createAgentSession(options: SessionOptions) {
     const payload = { schema: 'model-episode@1' as const, agentVersion: '1.0.0' as const, template: TEMPLATE_VERSION, observationSchema: 'model-observation@1' as const, actionSchema: 'model-action@1' as const, episode, config: clone(config), initialControllers: clone(initialControllers), contextStrategy: strategy, budgets: clone(budgets), initialHash, records: clone(records), handoffs: clone(handoffs), result: world.result(), finalHash: world.stateHash(), ending, requestsUsed: requests, ...traceHashes(config, initialHash, records, world.stateHash()) };
     return freeze({ ...payload, digest: hash(payload) });
   };
+  // Count variable data directly, reserving 2 KB for the fixed receipt envelope,
+  // result and hashes. Budget checks must not hash the entire history per step.
+  const recordingBytes = (handoff?: Handoff) => bytes({ config, initialControllers, budgets, records, handoffs: handoff ? [...handoffs, handoff] : handoffs }) + 2000;
+  if (recordingBytes() > RECORDING_BYTE_LIMIT) throw new AgentError('BUDGET', 'Initial controller bindings exceed the recording budget.');
   async function invoke(provider: ProviderAdapter, request: Parameters<ProviderAdapter['propose']>[0], signal: AbortSignal): Promise<ProviderResponse> {
     let timer: ReturnType<typeof setTimeout>;
     let onAbort: () => void = () => {};
@@ -70,7 +77,7 @@ export function createAgentSession(options: SessionOptions) {
       update('OBSERVING'); const o = observation(agentId); currentObservation = o;
       const agentRecords = records.filter(r => r.observation.agent.id === agentId), context = contextData(strategy, agentRecords, notes[agentId]);
       row = { index: records.length, controller: spec, observation: o, context, attempts: [], validated: null, transition: null, stateHash: world.stateHash(), worldMs: 0, notebook: clone(notes[agentId]) };
-      if (records.length >= 240 || bytes(records) + bytes(row) + budgets.observationBytes + budgets.responseBytes + budgets.notebookBytes + 4000 > 440000) { ending = 'budget'; continuous = false; lastError = 'BUDGET'; update('COMPLETE'); return null; }
+      if (records.length >= 240 || recordingBytes() + bytes(row) + budgets.observationBytes + budgets.responseBytes + budgets.notebookBytes + 4000 > RECORDING_BYTE_LIMIT) { ending = 'budget'; continuous = false; lastError = 'BUDGET'; update('COMPLETE'); return null; }
       ending = 'running';
       for (let retry = 0; retry <= (spec.family === 'model' ? budgets.retries : 0); retry++) {
         if (requests >= budgets.maxRequests) { lastError = 'BUDGET'; ending = 'budget'; break; }
@@ -126,8 +133,9 @@ export function createAgentSession(options: SessionOptions) {
     run() { if (!paused && ending !== 'stopped' && !world.result().terminal && controllers[actor()].family !== 'human') { continuous = true; ending = 'running'; update('WAITING'); } },
     handoff(agentId: string, next: ControllerSpec, reason = 'Operator changed the controller.') {
       if (!Object.hasOwn(controllers, agentId) || reason.length > 200 || handoffs.length >= 32) throw new AgentError('MALFORMED', 'Invalid or excessive controller handoff.');
-      const validated = validateController(next); cancelPending();
-      handoffs.push({ tick: world.result().ticks, afterRecord: records.length, agentId, from: controllers[agentId], to: validated, reason });
+      const validated = validateController(next), handoff = { tick: world.result().ticks, afterRecord: records.length, agentId, from: controllers[agentId], to: validated, reason };
+      if (recordingBytes(handoff) > RECORDING_BYTE_LIMIT) throw new AgentError('BUDGET', 'This handoff would exceed the recording budget.');
+      cancelPending(); handoffs.push(handoff);
       controllers[agentId] = validated; paused = false; continuous = false; ending = world.result().terminal ? 'complete' : 'running'; lastError = null; update(world.result().terminal ? 'COMPLETE' : 'WAITING');
     },
   };

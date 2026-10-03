@@ -12,5 +12,8 @@ export function validateGarage(input: unknown): GarageSave {
 }
 export function rememberGarage(save: GarageSave, receipt: AgentReceipt, manifest?: ModelExperiment): GarageSave {
   const result: GarageSave = { schema: 'agent-garage@1', receipt: clone(verifyAgentReceipt(receipt)), experiments: manifest ? [clone(validateModelExperiment(manifest)), ...save.experiments.filter(m => m.id !== manifest.id)].slice(0, 2) : clone(save.experiments) };
+  // Preserve the current receipt and newest completed comparison; imported
+  // legacy receipts may need all older comparison history removed to fit.
+  while (bytes(result) > 500000 && result.experiments.length && (!manifest || result.experiments.length > 1)) result.experiments.pop();
   return validateGarage(result);
 }

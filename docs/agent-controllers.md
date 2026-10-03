@@ -27,8 +27,10 @@ The optional Node bridge is not included in the website or online server bundle.
 
 ## Controllers and registry
 
-`agent-controller@1` contains exactly schema, id, family, provider,
-adapterVersion, model, settings and package. Families: model, human, reference,
+`agent-controller@1` contains exactly schema, id, family, template,
+observationSchema, actionSchema, provider, adapterVersion, model, settings and
+package. Mission/observation/action versions are explicit in controller exports,
+receipts and model manifests. Families: model, human, reference,
 rules and q-learning. Providers: none, mock, ollama. Settings record temperature,
 seed, schema/json output mode and mock behavior; package is null except for
 validated frozen V6 rule/Q packages. Adapter version is 1.0.0. Unknown fields,
@@ -104,6 +106,13 @@ in `validateBudgets`. Comparison default total is 2,000 controller requests,
 maximum 6,000. No unbounded retries, context, trace or history. Pause/resume also
 works during comparisons; stopping keeps completed episode evidence. Monetary
 cost is UNKNOWN; tokens appear only when reported by the provider.
+
+New receipts reserve space before every move or handoff and stop at a 390 KB
+recording budget, counting initial controllers and handoff history as well as
+decisions. A rejected handoff leaves the existing session unchanged. Older valid
+receipts remain importable up to 500 KB. The 500 KB local notebook keeps the
+current receipt and at most two comparisons, pruning older comparisons when
+needed; exports let operators retain evidence beyond this local history.
 
 `npm run test:agents` needs no external AI. `npm run qualify:ollama` is optional;
 without `--model EXACT_INSTALLED_MODEL` it only checks availability/lists models.

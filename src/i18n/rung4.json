@@ -631,5 +631,5 @@
   "Offline worlds and classes need no online connection or account. Clear browser data only after exporting a local backup. Clearing browser storage loses an online device credential; the same generated identity cannot be recovered without it. Official learning references and source-code links open external sites with their own policies.": "Los mundos y las clases locales no requieren conexión ni cuenta. Exporta una copia antes de borrar los datos del navegador. Al borrar el almacenamiento se pierde la credencial en línea; sin ella no se puede recuperar la misma identidad generada. Las referencias oficiales y el código fuente abren sitios externos con sus propias políticas.",
   "Manage my local save": "Gestionar mi guardado local",
   "Manage online play": "Gestionar el juego en línea",
-  "BRAIN SWEAT LAB SYSTEM / 04": "SISTEMA DE LABORATORIO BRAIN SWEAT / 04"
+  "BRAIN SWEAT LAB SYSTEM / {0}": "SISTEMA DE LABORATORIO BRAIN SWEAT / {0}"
 }

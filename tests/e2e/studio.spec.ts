@@ -72,7 +72,7 @@ test('progress survives refresh, export, reset, and import; invalid import prese
   await openGame(page, 'money'); await complete(page, 'money', 0, 0);
   const saved = await page.evaluate(() => localStorage.getItem('brain-sweat-studio:v1'));
   await page.reload(); await page.getByRole('link', { name: 'My progress', exact: true }).click();
-  await expect(page.getByText('1/360', { exact: true })).toBeVisible();
+  await expect(page.getByText('1/624', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Settings', exact: true }).click();
   const downloadPromise = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export my progress' }).click(); const download = await downloadPromise; const path = await download.path(); expect(path).toBeTruthy();
   await page.getByRole('button', { name: 'Reset progress', exact: true }).click(); await page.getByRole('button', { name: 'Reset everything', exact: true }).click();
@@ -85,7 +85,7 @@ test('progress survives refresh, export, reset, and import; invalid import prese
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('brain-sweat-studio:v1')))!)).toEqual(JSON.parse(saved!));
 });
 test('navigation, search, filters, 404 handling, and hash-route refresh work', async ({ page }) => {
-  await page.goto('/'); await expect(page.locator('.world-card')).toHaveCount(15);
+  await page.goto('/'); await expect(page.locator('.world-card')).toHaveCount(26);
   await page.getByPlaceholder('Search worlds or skills').fill('money'); await expect(page.locator('.world-card')).toHaveCount(5);
   await page.getByPlaceholder('Search worlds or skills').fill(''); await page.getByRole('button', { name: 'Digital worlds', exact: true }).click(); await expect(page.locator('.world-card')).toHaveCount(2);
   for (const route of ['progress', 'challenges', 'achievements', 'skills', 'settings', 'privacy', 'adults']) { await page.goto(`/#/${route}`); await expect(page.locator('main h1')).toBeVisible(); await page.reload(); await expect(page.locator('main h1')).toBeVisible(); }
@@ -105,5 +105,5 @@ test('pause freezes controls and leaving games frees WebGL buffers', async ({ pa
   await page.addInitScript(() => { const stats = { created: 0, deleted: 0 }; Object.defineProperty(window, '__gpuStats', { value: stats }); const create = WebGL2RenderingContext.prototype.createBuffer; const remove = WebGL2RenderingContext.prototype.deleteBuffer; WebGL2RenderingContext.prototype.createBuffer = function () { stats.created++; return create.call(this); }; WebGL2RenderingContext.prototype.deleteBuffer = function (buffer) { stats.deleted++; return remove.call(this, buffer); }; });
   await openGame(page, 'code'); await page.getByRole('button', { name: 'Add right command', exact: true }).click(); await page.getByRole('button', { name: 'Pause', exact: true }).click(); await expect(page.getByRole('button', { name: 'Add up command', exact: true })).toBeDisabled(); await page.getByRole('button', { name: 'Resume', exact: true }).first().click(); await expect(page.getByRole('button', { name: 'Add up command', exact: true })).toBeEnabled();
   await page.getByRole('link', { name: 'All worlds', exact: true }).click();
-  await expect(page.locator('.world-card')).toHaveCount(15); await expect.poll(() => page.evaluate(() => { const stats = (window as unknown as { __gpuStats: { created: number; deleted: number } }).__gpuStats; return stats.created === stats.deleted && stats.created > 0; })).toBe(true);
+  await expect(page.locator('.world-card')).toHaveCount(26); await expect.poll(() => page.evaluate(() => { const stats = (window as unknown as { __gpuStats: { created: number; deleted: number } }).__gpuStats; return stats.created === stats.deleted && stats.created > 0; })).toBe(true);
 });

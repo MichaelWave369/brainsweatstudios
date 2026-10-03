@@ -1,3 +1,4 @@
+import { machineStart, robotStart, trailStart, waterStart, isAdvanced } from '../src/games/advanced/models';
 import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
@@ -7,13 +8,22 @@ import { freshSave, recordResult, SAVE_KEY, validateSave } from '../src/systems/
 import { parseSessionKey, validJson, validSlot, validateCheckpoints } from '../src/systems/checkpointValidation';
 import { powerTurn } from '../src/games/PowerGrid';
 
-const files: Record<GameId, string> = { money: 'MoneyMission', hustle: 'SideHustle', scam: 'ScamShield', media: 'MediaDetective', fix: 'FixItLab', code: 'CodeQuest', career: 'CareerForge', food: 'FoodFuel', admin: 'LifeAdmin', talk: 'TalkItOut', power: 'PowerGrid', rescue: 'RealWorldRescue', music: 'MusicMaker', frequency: 'FrequencyLab', botany: 'BotanyGarden' };
+const files: Record<GameId, string> = { money: 'MoneyMission', hustle: 'SideHustle', scam: 'ScamShield', media: 'MediaDetective', fix: 'FixItLab', code: 'CodeQuest', career: 'CareerForge', food: 'FoodFuel', admin: 'LifeAdmin', talk: 'TalkItOut', power: 'PowerGrid', rescue: 'RealWorldRescue', music: 'MusicMaker', frequency: 'FrequencyLab', botany: 'BotanyGarden', math:'advanced/STEMWorlds', geometry:'advanced/STEMWorlds', calculus:'advanced/STEMWorlds', physics:'advanced/STEMWorlds', engine:'advanced/Builders', robot:'advanced/Builders', vm:'advanced/Builders', trail:'advanced/LifeWorlds', water:'advanced/LifeWorlds', kitchen:'advanced/LifeWorlds', creator:'advanced/CreatorStudio' };
 const modes: Difficulty[] = ['explorer', 'builder', 'master'];
 const date = '2026-10-03T03:00:00.000Z';
 const power = powerTurn({ solar: 2, wind: 1, sun: 0.8, breeze: 0.4, demand: 8, stored: 2, capacity: 4, useBattery: true, gridEnabled: true, cash: 38, efficiency: false });
 function states(difficulty: Difficulty): Record<GameId, Record<string, Json>> {
   const d = modes.indexOf(difficulty);
+  const stem={answer:'4',parameter:3,tested:1,correct:true,feedback:'Matched.'};
   return {
+    math:{model:stem},geometry:{model:stem},calculus:{model:stem},physics:{model:stem},
+    engine:{model:{config:{type:'piston',cylinders:4,throttle:65,gear:3,cooling:4,load:20},parts:['Power source'],runs:1,tested:true,history:[1000]}},
+    robot:{model:JSON.parse(JSON.stringify({config:{motor:2,battery:50,sensor:1,wheels:'grip'},parts:['Chassis'],program:['F'],robot:robotStart(50),tests:1}))},
+    vm:{model:JSON.parse(JSON.stringify({config:{ram:4,disk:4,clock:1},parts:['CPU'],program:'SET 2\nOUT\nHALT',machine:machineStart({ram:4,disk:4,clock:1}),boots:1}))},
+    trail:{model:JSON.parse(JSON.stringify(trailStart(d)))},
+    water:{model:JSON.parse(JSON.stringify({config:{filter:true,treatment:true,sealed:true,chemical:false,leak:10,inflow:20},network:waterStart(),notice:''}))},
+    kitchen:{model:{ingredients:['Vegetables'],servings:4,heat:100,stir:true,fridge:3,pot:{temperature:70.35,minutes:10,stirred:10,burned:false},measured:true}},
+    creator:{model:{scenes:['Opening title'],captions:true,privacy:false,moderation:false,voice:-10,music:-24,bitrate:6,fps:30,rehearsals:1}},
     money: { budget: { rent: 460, food: 180, phone: 30, transport: 70, utilities: 65, savings: 160, fun: 70 }, phase: 'month', week: 1, cash: 430, bank: 160, debt: 24, funLeft: 70, log: ['Week 1: compared alternatives.'] },
     hustle: { tradeIndex: 5, started: true, day: 3, cash: 194.5, price: 38, capacity: 3, equipment: 1, satisfaction: 94, totalRevenue: 228, totalExpenses: 112, taxes: 16, served: 6, log: ['Day 1: opened.', 'Day 2: adjusted.', 'Day 3: tried again.'] },
     scam: { index: 3, selected: ['Asks for a password', 'Unexpected request'], review: { bucket: 'suspicious', points: 73.33333333333333 }, total: 273.3333333333333, correct: 3, evidenceFound: 5 },
@@ -44,23 +54,23 @@ beforeEach(() => { vi.resetModules(); storage = memoryStorage(); vi.stubGlobal('
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('checkpoint schemas and migration', () => {
-  it('covers every state field authored in all fifteen worlds and field missions', () => {
+  it('covers every state field authored in all twenty-six worlds and field missions', () => {
     const fixtures = states('master');
     for (const [game, file] of Object.entries(files)) {
       const source = readFileSync(new URL(`../src/games/${file}.tsx`, import.meta.url), 'utf8');
       const names = [...source.matchAll(/useMissionState(?:<[\s\S]*?>)?\('([^']+)'/g)].map(match => match[1]);
-      expect(names.sort(), `${game} fixture must cover all hook fields`).toEqual(Object.keys(fixtures[game as GameId]).sort());
+      expect([...new Set(names)].sort(), `${game} fixture must cover all hook fields`).toEqual(Object.keys(fixtures[game as GameId]).sort());
     }
     const source = readFileSync(new URL('../src/games/FieldMission.tsx', import.meta.url), 'utf8');
     const names = [...source.matchAll(/useMissionState(?:<[\s\S]*?>)?\('([^']+)'/g)].map(match => match[1]);
     expect(names.sort()).toEqual(Object.keys(field).filter(k => k !== 'baseOutcome').sort());
   });
-  it('roundtrips all 360 world/mode/mission checkpoint slots without losing fractional model state', () => {
+  it('roundtrips all 624 world/mode/mission checkpoint slots without losing fractional model state', () => {
     const save = freshSave();
     for (const difficulty of modes) for (const [game, state] of Object.entries(states(difficulty))) for (let mission = 0; mission < 8; mission++) {
-      save.checkpoints[`${game}/${difficulty}/${mission}`] = checkpointEntry({ ...state, ...(mission >= 5 && !['music', 'frequency', 'botany'].includes(game) ? field : {}) }, mission % 2 === 1);
+      save.checkpoints[`${game}/${difficulty}/${mission}`] = checkpointEntry({ ...state, ...(mission >= 5 && !isAdvanced(game) && !['music', 'frequency', 'botany'].includes(game) ? field : {}) }, mission % 2 === 1);
     }
-    expect(Object.keys(save.checkpoints)).toHaveLength(360);
+    expect(Object.keys(save.checkpoints)).toHaveLength(624);
     expect(validateSave(JSON.parse(JSON.stringify(save)))).toEqual(save);
     expect(validSlot('power', 'history', [power])).toBe(true);
     expect(Object.hasOwn(power, 'cash')).toBe(false);

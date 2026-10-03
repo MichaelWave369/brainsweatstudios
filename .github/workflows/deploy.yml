@@ -48,6 +48,21 @@ jobs:
           LEGACY_DIST="$legacy_upgrade_dir/dist" CURRENT_DIST="$before_upgrade_dir/dist" REPRODUCE_STALE=1 node scripts/verify-upgrade.mjs
           LEGACY_DIST="$legacy_upgrade_dir/dist" node scripts/verify-upgrade.mjs
           node scripts/verify-production.mjs
+      - name: Verify advanced learning flows and graphics
+        run: |
+          TEST_PRODUCTION=1 npm run test:e2e -- tests/e2e/advanced-features.spec.ts tests/e2e/low-power.spec.ts --workers=2
+          node scripts/test-server.mjs &
+          studio_server_pid=$!
+          trap 'kill "$studio_server_pid"' EXIT
+          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v3.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: advanced-studio-review
+          path: |
+            docs/screenshots/v3
+            test-results
+          retention-days: 14
       - name: Upload website
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
@@ -83,5 +98,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: live-studio-screenshot
-          path: docs/screenshots/live-v2.png
+          path: docs/screenshots/live-v3.png
           retention-days: 14

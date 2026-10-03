@@ -9,7 +9,7 @@ test('simulated low-power display caps resolution and stops drawing with reduced
     const draw = WebGL2RenderingContext.prototype.drawArrays;
     WebGL2RenderingContext.prototype.drawArrays = function (...args) { stats.frames++; return draw.apply(this, args); };
   });
-  for (const world of ['music', 'frequency', 'botany']) {
+  for (const world of ['music', 'frequency', 'botany', 'engine', 'robot', 'vm', 'calculus']) {
     await page.goto(`/#/game/${world}`); await page.getByRole('button', { name: /Start mission 1|Resume checkpoint/ }).click();
     await expect(page.locator('.game-controls')).toBeVisible();
     const size = await page.locator('canvas').evaluate((node: HTMLCanvasElement) => ({ pixels: node.width, css: node.clientWidth })); expect(size.pixels).toBeLessThanOrEqual(Math.round(size.css * 1.5));

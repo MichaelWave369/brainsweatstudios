@@ -1,3 +1,5 @@
+import { isAdvanced } from '../games/advanced/models';
+import { validateAdvanced } from '../games/advanced/validation';
 import type { Checkpoint, Difficulty, GameId, Json } from '../data/types';
 
 type Validator = (value: unknown) => boolean;
@@ -23,7 +25,7 @@ const powerHistory = shape({ demand: number(), generated: number(), batteryUsed:
 const fieldSlots: Record<string, Validator> = {
   baseOutcome: outcome, extensionStep: integer(0, 2), fieldResources: integer(0, 8), fieldTime: integer(0, 6), fieldTrust: integer(0, 8), fieldLearning: integer(0, 7), extensionWaiting: boolean, extensionFeedback: text, extensionHistory: array(text, 3),
 };
-const slots: Record<GameId, Record<string, Validator>> = {
+const slots: Partial<Record<GameId, Record<string, Validator>>> = {
   money: { budget: map(budgetKeys, number(0, 100000), true), phase: oneOf(['budget', 'month']), week: integer(0, 3), cash: number(), bank: number(), debt: number(), funLeft: number(), log: array(text, 4) },
   hustle: { tradeIndex: integer(0, 5), started: boolean, day: integer(0, 4), cash: number(-1e7), price: integer(10, 90), capacity: integer(1, 6), equipment: integer(0, 1), satisfaction: number(0, 100), totalRevenue: number(), totalExpenses: number(), taxes: number(), served: integer(), log: array(text, 5) },
   scam: { index: integer(0, 7), selected: array(text, 11, undefined, true), review: nullable(shape({ bucket: oneOf(['safe', 'suspicious', 'verify']), points: number(0, 100) })), total: number(0, 800), correct: integer(0, 8), evidenceFound: integer(0, 88) },
@@ -50,12 +52,14 @@ export function validJson(v: unknown, depth = 0): v is Json {
   return object(v) && Object.keys(v).length <= 100 && Object.entries(v).every(([k, val]) => !['__proto__', 'constructor', 'prototype'].includes(k) && validJson(val, depth + 1));
 }
 export function parseSessionKey(key: string): { game: GameId; difficulty: Difficulty; mission: number } | null {
-  const match = /^(money|hustle|scam|media|fix|code|career|food|admin|talk|power|rescue|music|frequency|botany)\/(explorer|builder|master)\/([0-7])$/.exec(key);
+  const match = /^(money|hustle|scam|media|fix|code|career|food|admin|talk|power|rescue|music|frequency|botany|math|geometry|calculus|physics|engine|robot|vm|trail|water|kitchen|creator)\/(explorer|builder|master)\/([0-7])$/.exec(key);
   return match ? { game: match[1] as GameId, difficulty: match[2] as Difficulty, mission: Number(match[3]) } : null;
 }
 export function validSlot(game: string, key: string, value: unknown, difficulty?: string, mission?: number): boolean {
-  if (!Object.hasOwn(slots, game) || !validJson(value)) return false;
-  const rules = slots[game as GameId]; const field = Object.hasOwn(fieldSlots, key);
+  if (!validJson(value)) return false;
+  if (isAdvanced(game)) return key === 'model' && validateAdvanced(game, value, mission);
+  if (!Object.hasOwn(slots, game)) return false;
+  const rules = slots[game as GameId]!; const field = Object.hasOwn(fieldSlots, key);
   if (field) return !['music', 'frequency', 'botany'].includes(game) && (mission === undefined || mission >= 5) && fieldSlots[key](value);
   if (!Object.hasOwn(rules, key) || !rules[key](value)) return false;
   const d = Math.max(0, ['explorer', 'builder', 'master'].indexOf(difficulty || 'master'));
@@ -66,7 +70,7 @@ export function validSlot(game: string, key: string, value: unknown, difficulty?
   return true;
 }
 export function validateCheckpoints(raw: unknown): Record<string, Checkpoint> {
-  if (!object(raw) || Object.keys(raw).length > 360) throw new Error('Invalid mission checkpoints.');
+  if (!object(raw) || Object.keys(raw).length > 624) throw new Error('Invalid mission checkpoints.');
   const result: Record<string, Checkpoint> = {};
   for (const [key, entry] of Object.entries(raw)) {
     const session = parseSessionKey(key);

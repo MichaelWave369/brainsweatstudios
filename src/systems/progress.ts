@@ -1,3 +1,4 @@
+import { validateClasses } from '../data/classes';
 import { validateCheckpoints } from './checkpointValidation';
 import { games, totalMissions } from '../data/games';
 import { clamp } from '../data/types';
@@ -7,9 +8,9 @@ export const SAVE_KEY = 'brain-sweat-studio:v1';
 export const localDate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const dayNumber = (date: string) => Date.parse(`${date}T12:00:00Z`) / 86400000;
 export const freshSave = (): SaveData => ({
-  version: 2, checkpoints: {}, difficulty: 'explorer', xp: 0, points: 0, records: {}, milestones: [], badges: [],
+  version: 2, classes: {}, checkpoints: {}, difficulty: 'explorer', xp: 0, points: 0, records: {}, milestones: [], badges: [],
   unlockedGames: games.map(g => g.id), streak: 0, lastPlayed: '', daily: {},
-  settings: { music: 0, effects: 0.25, muted: false, reducedMotion: false, highContrast: false, tutorials: true, locale: 'en', haptics: false, botControl: false },
+  settings: { music: 0, effects: 0.25, muted: false, reducedMotion: false, highContrast: false, tutorials: true, locale: 'en', haptics: false, botControl: false, labPalette: 'green' },
   selectedDifficulty: false,
 });
 export const completedCount = (save: SaveData) => Object.values(save.records).filter(r => r.completed).length;
@@ -28,7 +29,7 @@ export const badges: Badge[] = [
   { id: 'nine', title: 'Nine Lives Master', description: 'Complete 9 different missions.', icon: 'crown', earned: s => completedCount(s) >= 9 },
   { id: 'all-worlds', title: 'World Wanderer', description: 'Complete a mission in all 12 original worlds.', icon: 'compass', earned: s => games.slice(0, 12).every(g => gameStats(s, g.id).completed > 0) },
   { id: 'level-five', title: 'Brain in Motion', description: 'Reach studio level 5.', icon: 'rocket', earned: s => levelInfo(s.xp).level >= 5 },
-  ...games.map(g => ({ id: `${g.id}-first`, title: ({ money: 'Budget Boss', hustle: 'Business Builder', scam: 'Scam Slammer', media: 'Evidence Explorer', fix: 'Fix-It Rookie', code: 'Debug Detective', career: 'Career Starter', food: 'Basket Builder', admin: 'Deadline Defender', talk: 'Communication Champ', power: 'Power Planner', rescue: 'Calm Navigator', music: 'Rhythm Builder', frequency: 'Wave Explorer', botany: 'Garden Guardian' } as Record<GameId, string>)[g.id], description: `Complete a ${g.title} mission.`, icon: g.icon, earned: (s: SaveData) => gameStats(s, g.id).completed > 0 })),
+  ...games.map(g => ({ id: `${g.id}-first`, title: ({ money: 'Budget Boss', hustle: 'Business Builder', scam: 'Scam Slammer', media: 'Evidence Explorer', fix: 'Fix-It Rookie', code: 'Debug Detective', career: 'Career Starter', food: 'Basket Builder', admin: 'Deadline Defender', talk: 'Communication Champ', power: 'Power Planner', rescue: 'Calm Navigator', music: 'Rhythm Builder', frequency: 'Wave Explorer', botany: 'Garden Guardian', math: 'Equation Explorer', geometry: 'Shape Architect', calculus: 'Change Investigator', physics: 'Motion Modeler', engine: 'Powertrain Builder', robot: 'Robot Engineer', vm: 'Machine Programmer', trail: 'Resilient Traveler', water: 'Water Steward', kitchen: 'Kitchen Creator', creator: 'Studio Producer' } as Record<GameId, string>)[g.id], description: `Complete a ${g.title} mission.`, icon: g.icon, earned: (s: SaveData) => gameStats(s, g.id).completed > 0 })),
   ...games.map(g => ({ id: `${g.id}-mastery`, title: `${g.title} Master`, description: `Score 90 or more in ${g.title}.`, icon: 'star', earned: (s: SaveData) => gameStats(s, g.id).best >= 90 })),
 ];
 export function recordResult(save: SaveData, game: GameId, difficulty: Difficulty, mission: number, rawScore: number, date = localDate()) {
@@ -87,6 +88,9 @@ export function validateSave(raw: unknown): SaveData {
     if ((typeof settings.locale !== 'string' || !['en', 'es'].includes(settings.locale)) || typeof settings.haptics !== 'boolean' || typeof settings.botControl !== 'boolean') throw new Error('Invalid language or practice settings.');
     next.settings.locale = settings.locale as 'en' | 'es'; next.settings.haptics = settings.haptics; next.settings.botControl = settings.botControl;
     next.checkpoints = validateCheckpoints(raw.checkpoints);
+    next.classes = validateClasses(raw.classes);
+    if (settings.labPalette !== undefined && !['green', 'amber'].includes(String(settings.labPalette))) throw new Error('Invalid retro lab palette.');
+    next.settings.labPalette = settings.labPalette === 'amber' ? 'amber' : 'green';
   }
   next.selectedDifficulty = raw.selectedDifficulty === true;
   next.lastPlayed = validDate(raw.lastPlayed) ? raw.lastPlayed : '';

@@ -1,3 +1,4 @@
+import { isAdvanced } from '../games/advanced/models';
 import type { Difficulty, GameId } from '../data/types';
 import { difficultyIndex } from '../data/types';
 export interface BotStep { label: string; kind: 'click' | 'input' | 'select' | 'check' | 'nth' | 'water'; match?: string; selector?: string; value?: string; index?: number; optional?: boolean }
@@ -6,6 +7,7 @@ const nth = (selector: string, index: number): BotStep => ({ kind: 'nth', select
 const input = (selector: string, value: number): BotStep => ({ kind: 'input', selector, value: String(value), label: `Set the model control to ${value}` });
 const select = (selector: string, value: string): BotStep => ({ kind: 'select', selector, value, label: 'Choose the planned option' });
 export async function botPlan(game: GameId, difficulty: Difficulty, mission: number): Promise<BotStep[]> {
+  if (isAdvanced(game)) return (await import('../games/advanced/botPlans')).advancedBotPlan(game, difficulty, mission);
   const d = difficultyIndex(difficulty); const m = mission % 5; const steps: BotStep[] = [];
   if (game === 'money') return [click('Start the month'), ...Array.from({ length: 4 }, () => click('Find another way'))];
   if (game === 'hustle') return [click('Open for business'), ...Array.from({ length: 5 }, () => click('Run this business day|Finish the workweek|Close today and regroup'))];

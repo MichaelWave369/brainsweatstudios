@@ -1,3 +1,4 @@
+import { courseById, lessonScore, type LessonRecord } from '../data/classes';
 import { freshSave, recordResult, SAVE_KEY, validateSave } from './progress';
 import type { Checkpoint, Difficulty, GameId, Json, SaveData, Settings } from '../data/types';
 import { parseSessionKey, validSlot } from './checkpointValidation';
@@ -86,3 +87,8 @@ export function markBotPractice(key: string) { if (!parseSessionKey(key)) return
 export function clearCheckpoint(key: string, notify = true) { const save = currentProfile().save; const checkpoints = { ...save.checkpoints }; delete checkpoints[key]; commitSave({ ...save, checkpoints }, notify); }
 
 export function refreshProfiles() { revision++; listeners.forEach(l => l()); }
+
+export function saveLesson(id:string,parameter:number,answers:number[],submit=false):LessonRecord {
+ const course=courseById(id);if(!course||!Number.isFinite(parameter)||parameter<course.min||parameter>course.max||answers.length!==3||!answers.every((a,i)=>Number.isInteger(a)&&a>=-1&&a<course.questions[i].choices.length))throw new Error('Invalid class activity.');
+ const save=currentProfile().save,previous=save.classes[id];const record={parameter,answers:[...answers],tested:submit,best:Math.max(previous?.best||0,submit?lessonScore(course,answers):0),attempts:(previous?.attempts||0)+(submit?1:0),date:submit?new Date().toISOString():previous?.date||''};commitSave({...save,classes:{...save.classes,[id]:record}},submit);return record;
+}

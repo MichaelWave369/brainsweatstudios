@@ -4,10 +4,10 @@ import { freshSave } from '../../src/systems/progress';
 import { games } from '../../src/data/games';
 
 test.describe.configure({ mode: 'parallel' });
-const routes = ['/', '/progress', '/challenges', '/achievements', '/skills', '/settings', '/assistant', '/bots', '/privacy', '/adults'];
+const routes = ['/', '/progress', '/challenges', '/achievements', '/skills', '/settings', '/classes', '/class/derivatives', '/lab', '/lab/engine', '/assistant', '/bots', '/privacy', '/adults'];
 for (const locale of ['en', 'es'] as const) {
   test(`accessible studio pages and all mission controls: ${locale}`, async ({ page }) => {
-    test.setTimeout(180000);
+    test.setTimeout(300000);
     const save = freshSave(); save.settings.locale = locale; save.settings.tutorials = false; save.settings.reducedMotion = true; save.selectedDifficulty = true;
     await page.addInitScript(value => localStorage.setItem('brain-sweat-studio:v1', JSON.stringify(value)), save);
     for (const route of [...routes, ...games.map(g => g.route)]) {
@@ -20,7 +20,7 @@ for (const locale of ['en', 'es'] as const) {
 }
 test('skip link, keyboard mission controls, reading fallback, and narrow layouts', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: { getVoices: () => [], addEventListener: () => {}, removeEventListener: () => {}, cancel: () => {} } }));
-  await page.goto('/'); await page.keyboard.press('Tab'); await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused(); await page.keyboard.press('Enter'); await expect(page.locator('main')).toBeFocused(); await expect(page.locator('.world-card')).toHaveCount(15);
+  await page.goto('/'); await page.keyboard.press('Tab'); await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused(); await page.keyboard.press('Enter'); await expect(page.locator('main')).toBeFocused(); await expect(page.locator('.world-card')).toHaveCount(26);
   await page.getByRole('button', { name: 'Read aloud', exact: true }).click();
   await expect(page.getByText('No local voice is available for this language on this device.').filter({ visible: true })).toBeVisible();
   for (const width of [320, 390]) {

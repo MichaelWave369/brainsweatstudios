@@ -19,6 +19,7 @@ for (const locale of ['en', 'es'] as const) {
   });
 }
 test('skip link, keyboard mission controls, reading fallback, and narrow layouts', async ({ page }) => {
+  test.setTimeout(180000);
   const save = freshSave(); save.settings.tutorials = false; save.selectedDifficulty = true; save.settings.reducedMotion = true;
   await page.addInitScript(value => localStorage.setItem('brain-sweat-studio:v1', JSON.stringify(value)), save);
   await page.addInitScript(() => Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: { getVoices: () => [], addEventListener: () => {}, removeEventListener: () => {}, cancel: () => {} } }));
@@ -31,6 +32,10 @@ test('skip link, keyboard mission controls, reading fallback, and narrow layouts
       await page.goto(`/?audit=${encodeURIComponent(route)}#${route}`); await expect(page.locator('main h1')).toBeVisible();
       const layout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: window.innerWidth, overflow: [...document.querySelectorAll('main *')].filter(e => e.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 6).map(e => ({ element: e.tagName, class: e.className, text: e.textContent?.slice(0, 80) })) }));
       expect(layout.width, `${route}, ${width}px: ${JSON.stringify(layout.overflow)}`).toBeLessThanOrEqual(layout.viewport);
+      if (route.startsWith('/lab/')) {
+        const clipped = await page.locator('.crt-screen .mission-tabs').evaluate(el => { const bounds = el.getBoundingClientRect(); return [...el.querySelectorAll('button')].filter(button => { const rect = button.getBoundingClientRect(); return rect.left < bounds.left - 1 || rect.right > bounds.right + 1; }).map(button => button.textContent); });
+        expect(clipped, `Every retro mission tab fits at ${width}px`).toEqual([]);
+      }
     }
   }
   await page.setViewportSize({ width: 1440, height: 1000 });

@@ -1,6 +1,6 @@
 import { clone, freeze, hash } from '../runtime/data.ts';
 import { createGarageWorld, type Intent, type WorldConfig, type WorldResult, type WorldTransition } from '../runtime/garageWorlds.ts';
-import { AgentError, DEFAULT_BUDGETS, TEMPLATE_VERSION, bytes, freshNotebook, hostNotebook, modelObservation, parseProposal, validateBudgets, validateController, validateRequest, type Budgets, type ContextData, type ContextStrategy, type ControllerSpec, type ErrorCode, type ModelObservation, type Notebook, type Proposal, type ProviderAdapter, type ProviderResponse } from './contracts.ts';
+import { AgentError, DEFAULT_BUDGETS, TEMPLATE_VERSION, bytes, freshNotebook, hostNotebook, modelObservation, parseProposal, validateBudgets, validateController, validateProviderResponse, validateRequest, type Budgets, type ContextData, type ContextStrategy, type ControllerSpec, type ErrorCode, type ModelObservation, type Notebook, type Proposal, type ProviderAdapter, type ProviderResponse } from './contracts.ts';
 import { referenceAction } from './reference.ts';
 
 export type AgentStatus = 'IDLE' | 'OBSERVING' | 'REQUESTING' | 'RECEIVED' | 'VALIDATING' | 'ACTING' | 'WAITING' | 'PAUSED' | 'COMPLETE' | 'ERROR';
@@ -85,10 +85,10 @@ export function createAgentSession(options: SessionOptions) {
           } else response = { text: JSON.stringify({ action: spec.family === 'human' ? manual : referenceAction(o, spec) }), usage: unknownUsage(), model: spec.model };
           attempt.providerMs = Math.max(0, now() - start);
           if (revision !== generation || paused || world.observe(agentId).tick !== o.tick || controllers[agentId] !== spec) throw new AgentError('STALE', 'A stale response was discarded.');
+          response = validateProviderResponse(response, budgets.responseBytes);
           if (response.model !== spec.model) throw new AgentError('VERSION', 'Provider returned a different model identifier.');
           update('RECEIVED');
           if (bytes(response.text) <= budgets.responseBytes) Object.assign(attempt, proposedSummary(response.text));
-          if (!Object.values(response.usage).every(n => n === null || Number.isInteger(n) && n >= 0 && n <= 10000000)) throw new AgentError('MALFORMED', 'Provider returned invalid usage counts.');
           attempt.usage = response.usage; update('VALIDATING');
           const validated = parseProposal(response.text, world.legalActions(agentId), budgets);
           // The authority validates again. There is no success/score field in a proposal.

@@ -73,6 +73,15 @@ export interface ContextData { strategy: ContextStrategy; recent: { tick: number
 export interface ProviderRequest { schema: 'provider-request@1'; template: typeof TEMPLATE_VERSION; controller: ControllerSpec; observation: ModelObservation; context: ContextData; budgets: Budgets }
 export interface ProviderResponse { text: string; usage: { inputTokens: number | null; outputTokens: number | null }; model: string }
 export interface ModelInfo { id: string; sizeBytes: number | null; contextLength: number | null; capabilities: string[]; digest: string | null; local: boolean }
+export function validateModelInfo(v: unknown): ModelInfo {
+  if (!plain(v) || !exact(v, ['id', 'sizeBytes', 'contextLength', 'capabilities', 'digest', 'local']) || typeof v.id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,127}$/.test(v.id) || v.local !== true || !['sizeBytes', 'contextLength'].every(k => v[k] === null || integer(v[k], 1, Number.MAX_SAFE_INTEGER)) || v.digest !== null && (typeof v.digest !== 'string' || !/^[a-f0-9]{64}$/.test(v.digest)) || !Array.isArray(v.capabilities) || v.capabilities.length > 12 || !v.capabilities.every(s => typeof s === 'string' && s.length > 0 && s.length <= 40)) throw new AgentError('MALFORMED', 'The bridge returned invalid local model metadata.');
+  return freeze(clone(v)) as unknown as ModelInfo;
+}
+export function validateProviderResponse(v: unknown, maxBytes: number): ProviderResponse {
+  if (!plain(v) || !exact(v, ['text', 'model', 'usage']) || typeof v.text !== 'string' || typeof v.model !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,127}$/.test(v.model) || !plain(v.usage) || !exact(v.usage, ['inputTokens', 'outputTokens']) || !Object.values(v.usage).every(n => n === null || integer(n, 0, 10000000))) throw new AgentError('MALFORMED', 'Provider returned an invalid proposal envelope.');
+  if (bytes(v.text) > maxBytes) throw new AgentError('OVERSIZED', 'Provider response exceeded its byte budget.');
+  return freeze(clone(v)) as unknown as ProviderResponse;
+}
 export interface ProviderAdapter { id: 'mock' | 'ollama'; version: typeof AGENT_VERSION; models(signal: AbortSignal): Promise<ModelInfo[]>; propose(request: ProviderRequest, signal: AbortSignal): Promise<ProviderResponse> }
 export function validateRequest(v: unknown): ProviderRequest {
   if (!plain(v) || !exact(v, ['schema', 'template', 'controller', 'observation', 'context', 'budgets']) || v.schema !== 'provider-request@1' || v.template !== TEMPLATE_VERSION) throw new AgentError('VERSION', 'Incompatible provider request.');

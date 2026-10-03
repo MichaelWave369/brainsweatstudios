@@ -141,7 +141,7 @@
   "Bridge connected, but no supported local model is installed. Offline mock remains available.": "Puente conectado, pero no hay un modelo local compatible instalado. El controlador de prueba sigue disponible.",
   "Model metadata is unavailable. The bridge will recheck compatibility before inference.": "Los metadatos del modelo no están disponibles. El puente comprobará la compatibilidad antes de consultar al modelo.",
   "Provider disconnected. Pending responses were cancelled.": "Proveedor desconectado. Se cancelaron las respuestas pendientes.",
-  "Mock regeneration and world traces match. World replay is verified separately.": "La generación de prueba y las ejecuciones coinciden. La reproducción del mundo se verifica por separado.",
+  "Recorded proposals and world traces match. World replay is verified separately.": "Las propuestas registradas y las ejecuciones coinciden. La reproducción del mundo se verifica por separado.",
   "Rerun complete. Model generation differed; each recorded world replay verifies independently.": "Repetición completada. La generación del modelo cambió; cada reproducción registrada se verifica por separado.",
   "Frozen comparison complete. No weights or prompt settings were updated.": "Comparación congelada completada. No se cambiaron pesos ni instrucciones.",
   "World replay verified from recorded actions. Model regeneration was not requested.": "Reproducción verificada con acciones registradas. No se pidió una nueva generación al modelo.",

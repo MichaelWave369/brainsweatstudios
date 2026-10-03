@@ -79,4 +79,13 @@ describe('optional loopback bridge', () => {
     await expect(adapter.models(new AbortController().signal)).rejects.toThrow(/Connect/); await adapter.connect(new AbortController().signal); const models = await adapter.models(new AbortController().signal); expect(models[0].id).toBe(model);
     const result = await adapter.propose(providerRequest(), new AbortController().signal); expect(result.model).toBe(model); adapter.disconnect(); await expect(adapter.propose(providerRequest(), new AbortController().signal)).rejects.toThrow(/Connect/);
   });
+  it('the browser adapter rejects malformed or excessive discovery data before the UI sees it', async () => {
+    const info = { id: model, sizeBytes: 123456, contextLength: 8192, capabilities: ['completion'], digest: null, local: true };
+    for (const variant of ['invalid-model', 'too-many', 'invalid-metadata']) {
+      const fetcher: typeof fetch = async url => Response.json(String(url).endsWith('/health') ? { schema: 'agent-bridge@1', sessionToken: 'a'.repeat(64) } : String(url).endsWith('/metadata') ? { model: { ...info, capabilities: 'unexpected-string' } } : { models: variant === 'too-many' ? Array(65).fill(info) : [variant === 'invalid-model' ? { ...info, local: false, id: '<script>' } : info] });
+      const adapter = ollamaAdapter('http://127.0.0.1:11435', fetcher), signal = new AbortController().signal; await adapter.connect(signal);
+      if (variant === 'invalid-metadata') { await adapter.models(signal); await expect(adapter.metadata(model, signal)).rejects.toThrow(/metadata/); }
+      else await expect(adapter.models(signal)).rejects.toThrow();
+    }
+  });
 });

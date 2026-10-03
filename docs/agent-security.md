@@ -17,7 +17,8 @@ explicit operator choice; browser permissions still apply. See [bridge](agent-br
 
 Tests use a fake upstream and actual loopback HTTP to check discovery/projection,
 private-thinking removal, origins/null/Host/session/routes/methods/preflights,
-malformed/oversized bodies, concurrency/deadlines/client disconnect, model
+malformed/oversized bodies, malformed discovery and provider envelopes,
+concurrency/deadlines/client disconnect, model
 selection and transport failure. This is security regression coverage, not a
 penetration-test certification or real-model qualification. No external AI is CI.
 

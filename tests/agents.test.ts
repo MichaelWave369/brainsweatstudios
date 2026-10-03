@@ -87,11 +87,26 @@ describe('model controller boundary', () => {
     expect(s.notebook().plans).toEqual(notebook.plans); expect(verifyAgentReceipt(s.receipt()).records[0].notebook).toEqual(notebook);
     expect(() => validateNotebook({ ...notebook, facts: ['x'.repeat(160)].concat(Array(8).fill('fact')) })).toThrow();
   });
+  it('rejects malformed provider envelopes before action execution or receipt storage', async () => {
+    const valid = { text: '{"action":{"type":"scan"}}', model: 'mock-policy', usage: { inputTokens: null, outputTokens: null } };
+    for (const output of [{ ...valid, usage: {} }, { ...valid, usage: { ...valid.usage, extra: null } }, { ...valid, claimedSuccess: true }, { ...valid, text: 7 }]) {
+      const adapter: ProviderAdapter = { ...mockAdapter(), async propose() { return output as unknown as Awaited<ReturnType<ProviderAdapter['propose']>>; } };
+      const s = session('survey', controllerSpec(), { providers: [adapter], budgets: { ...DEFAULT_BUDGETS, retries: 0 } }); await s.step();
+      expect(s.lastError).toBe('MALFORMED'); const receipt = verifyAgentReceipt(s.receipt()); expect(receipt.result.ticks).toBe(0); expect(receipt.finalHash).toBe(receipt.initialHash); expect(receipt.records[0].attempts[0].usage).toEqual(valid.usage);
+    }
+  });
   it('frozen model experiments preserve split isolation, transfer and deterministic mock reruns', async () => {
     const spec = createModelExperiment('survey', controllerSpec(), controllerSpec('reference'), 'explorer', 3, 'EVENT_SUMMARY', DEFAULT_BUDGETS, 1), before = clone(spec.controllers);
     const output = await runModelExperiment(spec, providers()); expect(output.manifest.report!.trials).toHaveLength(8); expect(spec.controllers).toEqual(before);
     const rerun = await rerunModelExperiment(output.manifest, providers()); expect(rerun.worldReplayMatch).toBe(true); expect(rerun.modelRegenerationMatch).toBe(true);
     const invalid = clone(output.manifest); invalid.seeds.HOLDOUT[0] = invalid.seeds.TRAIN[0]; expect(() => validateModelExperiment(redigest(invalid))).toThrow();
     const saved = rememberGarage(freshGarage(), output.receipt, output.manifest); expect(validateGarage(saved)).toEqual(saved); expect(validateGarage(undefined)).toEqual(freshGarage());
+  });
+  it('reserves bounded retries before spending the final experiment requests', async () => {
+    const candidate = controllerSpec(); candidate.settings.mockMode = 'alternating';
+    const spec = clone(createModelExperiment('signal-maze', candidate, controllerSpec('reference'), 'explorer', 3, 'STATE_ONLY', DEFAULT_BUDGETS, 1)); spec.maxTotalRequests = 3;
+    const { id: _id, digest: _digest, report: _report, ...identity } = spec; void _id; void _digest; void _report; spec.id = hash(identity).slice(0, 24);
+    let calls = 0; const delegate = mockAdapter(), counted: ProviderAdapter = { ...delegate, async propose(r, signal) { calls++; return delegate.propose(r, signal); } };
+    await expect(runModelExperiment(redigest(spec), [counted])).rejects.toThrow(/total request limit/); expect(calls).toBe(2);
   });
 });

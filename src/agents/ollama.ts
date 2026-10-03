@@ -1,5 +1,5 @@
-import { plain } from '../runtime/data.ts';
-import { AGENT_VERSION, AgentError, type ModelInfo, type ProviderAdapter, type ProviderRequest, type ProviderResponse } from './contracts.ts';
+import { exact, plain } from '../runtime/data.ts';
+import { AGENT_VERSION, AgentError, validateModelInfo, validateProviderResponse, type ModelInfo, type ProviderAdapter, type ProviderRequest, type ProviderResponse } from './contracts.ts';
 export const DEFAULT_BRIDGE = 'http://127.0.0.1:11435';
 export function bridgeAddress(value: string): string {
   const url = new URL(value);
@@ -27,8 +27,8 @@ export function ollamaAdapter(base = DEFAULT_BRIDGE, fetcher: typeof fetch = fet
   return { id: 'ollama', version: AGENT_VERSION,
     async connect(signal) { const value = await request('/health', signal); if (!plain(value) || value.schema !== 'agent-bridge@1' || typeof value.sessionToken !== 'string' || !/^[a-f0-9]{64}$/.test(value.sessionToken)) throw new AgentError('VERSION', 'The bridge version is incompatible.'); token = value.sessionToken; },
     disconnect() { token = null; },
-    async metadata(model, signal) { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/metadata', signal, { model }); if (!plain(value) || !plain(value.model)) throw new AgentError('MALFORMED', 'The bridge returned invalid metadata.'); return value.model as unknown as ModelInfo; },
-    async models(signal) { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/models', signal); if (!plain(value) || !Array.isArray(value.models)) throw new AgentError('MALFORMED', 'The bridge returned an invalid model list.'); return value.models as ModelInfo[]; },
-    async propose(input: ProviderRequest, signal): Promise<ProviderResponse> { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/inference', signal, input); if (!plain(value) || typeof value.text !== 'string' || typeof value.model !== 'string' || !plain(value.usage)) throw new AgentError('MALFORMED', 'The bridge returned an invalid proposal envelope.'); return value as unknown as ProviderResponse; },
+    async metadata(model, signal) { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/metadata', signal, { model }); if (!plain(value) || !exact(value, ['model'])) throw new AgentError('MALFORMED', 'The bridge returned invalid metadata.'); const info = validateModelInfo(value.model); if (info.id !== model) throw new AgentError('VERSION', 'The bridge returned metadata for a different model.'); return info; },
+    async models(signal) { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); const value = await request('/models', signal); if (!plain(value) || !exact(value, ['models']) || !Array.isArray(value.models) || value.models.length > 64) throw new AgentError('MALFORMED', 'The bridge returned an invalid model list.'); const models = value.models.map(validateModelInfo); if (new Set(models.map(m => m.id)).size !== models.length) throw new AgentError('MALFORMED', 'The bridge returned duplicate model identifiers.'); return models; },
+    async propose(input: ProviderRequest, signal): Promise<ProviderResponse> { if (!token) throw new AgentError('DISCONNECTED', 'Connect the bridge first.'); return validateProviderResponse(await request('/inference', signal, input), input.budgets.responseBytes); },
   };
 }

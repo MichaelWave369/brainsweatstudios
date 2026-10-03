@@ -20,7 +20,9 @@ Production TypeScript/Vite build and ESLint pass. The unit suite has 79 passing 
 
 ## Continuous checks
 
-The GitHub browser workflow runs on main pushes and pull requests. It executes the full 360-run agent sweep in Chromium and the accessibility/feature flows in Chromium, Firefox, and WebKit. Test results are attached to the repository’s Actions runs. Local Firefox startup was blocked by this workspace’s process sandbox; local WebKit lacked native libraries. These limitations do not establish a failure in the application. The Actions results are the evidence for those engines.
+The GitHub browser workflow runs on main pushes and pull requests. It executes the full 360-run agent sweep in Chromium and the accessibility/feature flows in Chromium, Firefox, and WebKit. [Release run 37099165783](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37099165783) passed all **432 browser checks**, plus lint, the 79 unit checks, and the production build. Test results are attached to failed runs. Local Firefox startup was blocked by this workspace’s process sandbox; local WebKit lacked native libraries. The successful Actions run supplies verification for both engines.
+
+After deployment, the Pages workflow runs `scripts/verify-live.mjs` against the public URL. It checks the 15-world catalog, assistant and council, three creative science interfaces, a saved melody after refresh, earned music progress, bot reward isolation, and Spanish after refresh, and captures a live-site screenshot.
 
 ## Scope and limits
 

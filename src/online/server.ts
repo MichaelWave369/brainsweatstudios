@@ -108,7 +108,7 @@ export function createOnlineHandler(store:OnlineStore,options:{origins:string[];
           const row=alive(await store.find(`${type}:${code}`));if(!row)fail('That invitation is unavailable.',404);
           const data=structuredClone(row!.data) as unknown as EntityData;
           if(member(data,actor.id))return respond({entity:view(row!,actor.id),session:await snapshot(actor)});
-          if(data.status!=='lobby'&&type!=='clan')fail('This event has already started.');
+          if(data.status==='closed'||data.status!=='lobby'&&type!=='clan')fail('This event has already started.');
           if(data.members.length>=(type==='clan'?20:type==='tournament'?16:4))fail('This private group is full.');
           data.members.push({...actor,ready:false});
           if(await store.cas({...row!,data:data as unknown as Record<string,unknown>,version:row!.version+1},row!.version))return respond({entity:view({...row!,data:data as unknown as Record<string,unknown>,version:row!.version+1},actor.id),session:await snapshot(actor)});
@@ -122,7 +122,7 @@ export function createOnlineHandler(store:OnlineStore,options:{origins:string[];
             const row=alive(await store.get(target.id));if(!row)break;const data=structuredClone(row.data) as unknown as EntityData;
             if(body.op==='leave'&&body.version!==row.version)fail('The group changed. Refresh before leaving.',409);
             data.members=data.members.filter(m=>m.id!==actor.id);delete data.submissions[actor.id];data.log=data.log.filter(l=>l.actor!==actor.id);data.signals=data.signals.filter(s=>s.actor!==actor.id);
-            if(!data.members.length){if(await store.cas({...row,data:data as unknown as Record<string,unknown>,version:row.version+1},row.version)){await store.remove(row.id);break;}}
+            if(!data.members.length){data.status='closed';if(await store.cas({...row,data:data as unknown as Record<string,unknown>,version:row.version+1},row.version)){await store.remove(row.id);break;}}
             else{if(data.owner===actor.id)data.owner=data.members[0].id;if(data.status==='active')data.status='closed';data.turn=0;if(await store.cas({...row,data:data as unknown as Record<string,unknown>,version:row.version+1},row.version))break;}
             if(attempt===5)fail('The group changed. Try leaving again.',409);
           }

@@ -28,6 +28,25 @@ describe('private online authentication and authorization',()=>{
   it('expires groups and rate-limits invitation guesses',async()=>{await connect(0);const e=await create(0);await connect(1);for(let i=0;i<20;i++)expect((await request(1,{op:'join',type:'room',code:'AAAAAAAAAAAA'})).status).toBe(404);expect((await request(1,{op:'join',type:'room',code:e.code})).status).toBe(429);clock+=86400001;expect((await request(0,{op:'list'})).body.entities).toEqual([]);expect((await request(1,{op:'join',type:'room',code:e.code})).status).toBe(404);});
 });
 describe('server-authoritative multiplayer',()=>{
+  it('rejects a join between the final member leaving and the group being removed',async()=>{
+    await connect(0);await connect(1);
+    for(const type of ['room','clan']){
+      const e=await create(0,type,type==='clan'?{name:'Blueprint Guild'}:{}),cas=store.cas.bind(store);
+      let joinStatus=0;
+      store.cas=async(row,expected)=>{
+        const changed=await cas(row,expected);
+        if(changed&&row.id===e.id&&Array.isArray(row.data.members)&&row.data.members.length===0){
+          joinStatus=(await request(1,{op:'join',type,code:e.code})).status;
+        }
+        return changed;
+      };
+      try{
+        expect((await action(0,e.id,'leave')).status).toBe(200);
+        expect(joinStatus).toBe(400);
+        expect((await request(1,{op:'list'})).body.entities).toEqual([]);
+      }finally{store.cas=cas;}
+    }
+  });
   it('requires two ready players, locks a started roster, and prevents stale concurrent updates',async()=>{await connect(0);await connect(1);await connect(2);const e=await create(0);expect((await action(0,e.id,'start')).status).toBe(400);await request(1,{op:'join',type:'room',code:e.code});const snap=await current(0,e.id);const concurrent=await Promise.all([0,1].map(actor=>request(actor,{op:'ready',id:e.id,version:snap.version})));expect(concurrent.map(r=>r.status).sort()).toEqual([200,409]);const after=await current(0,e.id);expect(after.members.filter(m=>m.ready)).toHaveLength(1);for(let actor=0;actor<2;actor++){const s=await current(actor,e.id);if(!s.members.find(m=>m.id===after.members[actor].id)!.ready)await action(actor,e.id,'ready');}expect((await action(0,e.id,'start')).status).toBe(200);expect((await request(2,{op:'join',type:'room',code:e.code})).status).toBe(400);});
   it('rotates real player turns and completes all three cooperative tasks',async()=>{const e=await readyEvent();expect((await action(1,e.id,'dispatch',{action:'observe'})).status).toBe(409);expect((await action(0,e.id,'dispatch',{action:'dispatch'})).status).toBe(200);expect((await current(0,e.id)).phase).toBe(0);for(let step=0;step<9;step++)expect((await action(step%2,e.id,'dispatch',{action:['observe','protect','dispatch'][step%3]})).status).toBe(200);const result=await current(0,e.id);expect(result.status).toBe('complete');expect(result.task).toBe(3);expect(result.risks).toBe(1);expect(result.log.filter(l=>l.accepted)).toHaveLength(9);expect((await action(0,e.id,'dispatch',{action:'observe'})).status).toBe(400);});
   it('evaluates shared seeded rounds on the server and conceals opponents until completion',async()=>{const e=await readyEvent('tournament',{arena:'outpost'});expect(e.seeds).toHaveLength(3);expect((await action(0,e.id,'submit',{rules:workedPolicy('outpost'),score:999})).status).toBe(400);expect((await action(0,e.id,'submit',{rules:workedPolicy('outpost')})).status).toBe(200);const before=await current(1,e.id);expect(Object.keys(before.results)).toEqual([]);expect(before.submitted).toHaveLength(1);expect((await action(0,e.id,'submit',{rules:workedPolicy('outpost')})).status).toBe(400);expect((await action(1,e.id,'submit',{rules:[{when:'always',action:'coast'}]})).status).toBe(200);const result=await current(0,e.id);expect(result.status).toBe('complete');const standings=competitionStandings(result);expect(standings[0].total).toBe(300);expect(standings[0].points).toBe(9);expect(standings[1].total).toBe(0);expect(Object.values(result.results).every(r=>!('rules'in r))).toBe(true);});

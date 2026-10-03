@@ -11,7 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: browser-${{ github.ref }}
+  # Preserve full-game evidence while interface/service follow-ups run separately.
+  group: browser-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -33,7 +34,8 @@ jobs:
           studio_ui_only=0
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then
             studio_changed_files=$(git diff --name-only HEAD^ HEAD)
-            if ! printf '%s\n' "$studio_changed_files" | grep -Eqv '^(src/app/(Assistant|Online|RetroLab)\.tsx|src/styles/studio\.css|src/i18n/(es|rung4)\.json|src/data/rungFourClasses\.ts|tests/e2e/(accessibility|localization|advanced-features|rung4-features|online-features)\.spec\.ts|README\.md|docs/.*)$'; then
+            command -v grep >/dev/null
+            if ! printf '%s\n' "$studio_changed_files" | grep -Eqv '^(src/app/(Assistant|Online|RetroLab)\.tsx|src/styles/studio\.css|src/i18n/(es|rung4)\.json|src/data/rungFourClasses\.ts|src/online/.*\.ts|tests/online\.test\.ts|tests/e2e/(accessibility|localization|advanced-features|rung4-features|online-features)\.spec\.ts|\.github/workflows/(verify|deploy)\.yml|README\.md|docs/.*)$'; then
               studio_ui_only=1
             fi
           fi

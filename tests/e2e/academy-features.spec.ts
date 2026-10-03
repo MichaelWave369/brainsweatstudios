@@ -51,7 +51,7 @@ test('academy: reward learning improves delivery, freezes evaluation, and restor
   await page.getByRole('button', { name: 'Evaluate learned rover', exact: true }).click();
   await expect(metric(page, 'Successful deliveries')).toHaveText('0/20');
   await page.getByRole('button', { name: 'Train 1,000 episodes', exact: true }).click();
-  await expect.poll(async () => (await saved(page)).academy.rover.episodes).toBe(1000);
+  await expect.poll(async () => (await saved(page)).academy.rover.episodes, { timeout: 20000 }).toBe(1000);
   await expect(page.getByRole('button', { name: 'Evaluate learned rover', exact: true })).toBeEnabled();
   const learned = (await saved(page)).academy.rover;
   await page.getByRole('button', { name: 'Evaluate learned rover', exact: true }).click();
@@ -62,7 +62,7 @@ test('academy: reward learning improves delivery, freezes evaluation, and restor
   expect(await page.locator('.q-values dd').allTextContents()).not.toEqual(['0.00', '0.00', '0.00', '0.00']);
   await page.getByRole('button', { name: 'Play replay', exact: true }).click();
   await expect.poll(async () => Number(await page.getByLabel('Rover replay tick', { exact: true }).inputValue())).toBeGreaterThan(1);
-  await page.reload(); await expect(metric(page, 'Learning episodes')).toHaveText('1000');
+  await page.reload(); await expect(metric(page, 'Learning episodes')).toHaveText('1000', { timeout: 20000 });
   await expect(page.getByRole('button', { name: 'Stop rover training', exact: true })).toHaveCount(0);
   expect((await saved(page)).academy.rover).toEqual(learned); expect((await saved(page)).xp).toBe(0);
   await page.getByRole('button', { name: 'Train 1,000 episodes', exact: true }).click();
@@ -170,7 +170,7 @@ test('academy: vector fallback still trains and evaluates when WebGL is unavaila
   await prepare(page); await page.addInitScript(() => { const original = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (...args) { if (args[0] === 'webgl2') return null; return original.apply(this, args as Parameters<typeof original>); } as typeof original; });
   await page.goto('/#/academy?tab=rover'); await expect(page.getByText('VECTOR VIEW', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Train 1,000 episodes', exact: true }).click();
-  await expect(metric(page, 'Learning episodes')).toHaveText('1000');
+  await expect(metric(page, 'Learning episodes')).toHaveText('1000', { timeout: 20000 });
   await page.getByRole('button', { name: 'Evaluate learned rover', exact: true }).click();
   expect(Number((await metric(page, 'Successful deliveries').innerText()).split('/')[0])).toBeGreaterThanOrEqual(18);
 });

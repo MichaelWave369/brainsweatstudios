@@ -15,7 +15,7 @@ node scripts/package-online.mjs
 deno check supabase/functions/brain-sweat-online/index.ts
 ```
 
-The packager copies the canonical, tested handler, store adapter, types, and bounded agent models beside the Edge entrypoint. Deploy all six files, including `index.ts` and `deno.json`, as `brain-sweat-online`. The function's `verify_jwt=false` setting is intentional: every POST is authenticated by the handler's random 256-bit device credential. It also enforces membership, host permissions, capacities, request bounds, rate limits, and atomic version checks. Platform JWT authentication would reject this custom credential.
+The packager copies the canonical, tested handler, store adapter and types beside the Edge entrypoint, plus the shared `runtime/` modules for rules, observations/actions, controllers, receipts and ordered dispatch. Deploy the complete generated directory, including `index.ts` and `deno.json`, as `brain-sweat-online`. The dependency-free runtime is React-free and Deno-checkable; generated copies are ignored by git and must never be edited independently. The function's `verify_jwt=false` setting is intentional: every POST is authenticated by the handler's random 256-bit device credential. It also enforces membership, host permissions, capacities, request bounds, rate limits, and atomic version checks. Platform JWT authentication would reject this custom credential.
 
 The entrypoint reads Supabase's built-in server-side URL and secret-key environment variables, with legacy service-role support. Never add a secret or service-role key to the website, repository, client configuration, logs, or player exports. Only the public publishable key belongs in the client configuration.
 
@@ -57,3 +57,19 @@ The test server's `/__online-test` endpoint exists only when `ONLINE_TEST_SERVER
 | Deletion | Removes the credential and memberships, submissions, signals, and associated action-log entries |
 
 Expiry makes records inaccessible immediately. Cleanup runs periodically during requests. Disconnect keeps the credential for reconnecting; clearing browser storage loses it. Leaving an active event closes that event, preserving a fixed competition roster. Online play never changes local game XP, badges, or class mastery.
+
+## Version 6 authority and replay evidence
+
+Agent Duel and League use `recordEpisode` with server-selected seeds and Builder difficulty. Each bounded round stores its environment version, receipt digest and final state hash beside score/ticks/completion. Full local Academy traces, learner tables and notebooks are not uploaded by this integration. Legacy stored rounds without hashes remain readable. The server does not accept client result/receipt fields. Cooperative dispatch uses the same pure ordered transition as the local multi-agent substrate, then commits only through the existing authenticated CAS handler.
+
+The PR production workflow runs the isolated PostgreSQL grants/RLS/CAS suite and connected browser tests without Pages publication. No production secret, project, billing, or public endpoint is changed by Version 6. Supabase dependency/changelog guidance was checked before packaging; no new remote SDK or platform API is required.
+
+```mermaid
+flowchart TD
+  C["Authenticated member"] -->|"Policy or turn intent"| H["Membership + roster checks"]
+  H --> A["Shared runtime authority"]
+  A -->|"Computed result / transition"| S["Versioned CAS store"]
+  S -->|"Conflicting version"| F["Refresh / retry"]
+  F --> H
+  S -->|"Authorized concealed view"| C
+```

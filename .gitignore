@@ -10,6 +10,7 @@ supabase/functions/brain-sweat-online/server.ts
 supabase/functions/brain-sweat-online/store.ts
 supabase/functions/brain-sweat-online/types.ts
 supabase/functions/brain-sweat-online/models.ts
+supabase/functions/brain-sweat-online/runtime/
 .env
 .env.local
 supabase/functions/.env

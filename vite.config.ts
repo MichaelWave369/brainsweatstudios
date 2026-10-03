@@ -14,7 +14,11 @@ const localRuntime: Plugin = {
 };
 
 export default defineConfig(({ command, isPreview }) => ({
-  plugins: [react({ jsxImportSource: '@studio/i18n' }), localRuntime],
+  plugins: [react({ jsxImportSource: '@studio/i18n' }), localRuntime, { name: 'studio-metadata', async transformIndexHtml(html) {
+    const { readCatalogue, description } = await import('./scripts/studio-catalogue.mjs');
+    const studio = await readCatalogue();
+    return html.replaceAll('__STUDIO_DESCRIPTION__', description(studio)).replaceAll('__STUDIO_VERSION__', studio.version);
+  } }],
   optimizeDeps: { exclude: ['@studio/i18n/jsx-runtime', '@studio/i18n/jsx-dev-runtime'] },
   resolve: { alias: { '@studio': fileURLToPath(new URL('./src', import.meta.url)) } },
   base: command === 'serve' && !isPreview ? '/' : (process.env.VITE_BASE_PATH || '/brainsweatstudios/'),

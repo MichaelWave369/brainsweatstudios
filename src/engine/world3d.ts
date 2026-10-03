@@ -1,5 +1,5 @@
-import { arenaObstacles, fireObstacles } from '../games/rung4/models';
-import { roverWalls } from '../training/models';
+import { arenaObstacles, arenaSupplySites, fireObstacles } from '../games/rung4/models';
+import { roverWalls } from '../runtime/roverRules';
 export type Vec3 = [number,number,number];
 export interface Mesh { vertices:number[]; color:string }
 const colors:Record<string,string>={math:'#98caff',geometry:'#d6b0ff',calculus:'#ffaece',physics:'#ffe096',engine:'#ffb17e',robot:'#97eed8',vm:'#a4b5ff',trail:'#b7dc95',water:'#8fe1ff',kitchen:'#ffd49e',creator:'#dfaeff',driving:'#a4dfc8',cdl:'#ffbf82',trade:'#dfc396',lines:'#afd4ff',electric:'#ffe48e',fire:'#ffb2a0',swim:'#8fe2e7',sports:'#bded90',outpost:'#d5ca9a',scenario:'#b8b4ff',space:'#9edcff'};
@@ -71,7 +71,8 @@ export function build3D(kind:string,data:Record<string,number>={},time=0):Mesh[]
     p.cylinder(-3.3,0.5,-1.5,0.12,1.35,'#c9e1e3');p.box(-3.3,1.7,-1.5,0.6,0.3,0.6,c);p.cylinder(3.3,0.5,1,0.36,0.1,'#ffbb8c');p.cylinder(3.3,0.61,1,0.2,0.02,'#d6c4a2');p.box(0,0.2,2.4,2,0.1,0.4,c);
   }else if(['sports','outpost','scenario','learner'].includes(kind)){
     const learner=kind==='learner',center=learner?3:4;
-    const walls=learner?roverWalls(data.layout||0):arenaObstacles(data.seed||0);
+    const variant=data.variant===2?'transfer':data.variant===1?'constraints':'standard';
+    const walls=learner?roverWalls(data.layout||0,variant):arenaObstacles(data.seed||0,variant);
     for(const [x,z]of walls){p.box(x-center,0,z-3,0.8,0.66,0.8,'#54667b');p.box(x-center,0.66,z-3,0.85,0.08,0.85,'#738aa1');}
     if(kind==='sports'){
       for(const z of[-2.8,2.8])p.box(0,0,z,8.2,0.018,0.035,'#cce3c4');for(const x of[-4,0,4])p.box(x,0,0,0.035,0.018,5.6,'#cce3c4');
@@ -88,11 +89,11 @@ export function build3D(kind:string,data:Record<string,number>={},time=0):Mesh[]
       for(let i=0;i<5;i++){const x=-4+i*2,z=-3.6,h=1.2+i%3*0.7;p.box(x,0,z,1.1,h,0.85,'#596d8b');p.box(x,h,z,1.2,0.08,0.95,'#aac2d5');for(let j=0;j<3;j++)p.box(x-0.32+j*0.32,0.6,z+0.44,0.16,0.22,0.025,'#cee7bd');}
       for(const x of[-4.4,4.4]){p.box(x,0,1.5,0.07,2,0.07,'#94aab5');p.orb(x,2,1.5,0.15,'#f8daa7');}
     }else{
-      p.box(3,0,-3,0.7,0.12,0.7,'#f4c27e');p.box(-3,0,3,0.8,0.12,0.8,'#9eedc9');
+      if(!data.carrying)p.box((data.variant===2?5:6)-center,0,-3,0.7,0.12,0.7,'#f4c27e');p.box(-3,0,3,0.8,0.12,0.8,'#9eedc9');
       for(const x of[-4.4,4.4]){p.box(x,0,-2.6,0.8,1.4,0.8,'#465e7a');p.box(x,1.4,-2.6,0.84,0.12,0.84,'#9cdaec');for(let i=0;i<3;i++)p.box(x,0.2+i*0.35,-2.17,0.5,0.04,0.02,'#b0dfd5');}
       if(data.storm)for(let i=0;i<8;i++){const x=-4.1+i*1.15,z=-2.4+(time*2+i)%5;p.box(x,1.2+(i%3)*0.4,z,0.035,0.15,0.035,'#b9d8e5');}
     }
-    if(kind==='outpost'||kind==='scenario')for(const [i,[x,z]]of [[2,1],[5,5],[8,3],[3,5],[7,1]].entries())if(i>=(data.progress||0)){p.box(x-4,0,z-3,0.38,0.38,0.38,kind==='outpost'?'#e3c89c':'#b8b4ff');p.box(x-4,0.39,z-3,0.08,0.02,0.4,'#eaf2d7');}
+    if(kind==='outpost'||kind==='scenario')for(const [i,[x,z]]of arenaSupplySites(kind,variant).entries())if(i>=(data.progress||0)){p.box(x-4,0,z-3,0.38,0.38,0.38,kind==='outpost'?'#e3c89c':'#b8b4ff');p.box(x-4,0.39,z-3,0.08,0.02,0.4,'#eaf2d7');}
     const gx=(data.goalX??2)-center,gz=(data.goalY??3)-3;
     for(let i=0;i<16;i++){const a=i/16*Math.PI*2;p.box(gx+Math.cos(a)*0.42,0.03,gz+Math.sin(a)*0.42,0.085,0.03,0.085,'#c9f0b4');}
     p.orb(gx,0.95+Math.sin(time*2)*0.07,gz,0.11,'#bfeec6');

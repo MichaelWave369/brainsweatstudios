@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../components/Icon';
+import RuntimeLab from './RuntimeLab';
 import Modal from '../components/Modal';
 import Scene3D from '../engine/Scene3D';
 import { Select, Slider } from '../games/advanced/ui';
@@ -36,9 +37,9 @@ function Curve({ points, label }: { points: number[]; label: string }) {
   return <svg className="training-curve" viewBox="0 0 500 160" role="img" aria-label={label}><path d="M45 25H480M45 77H480M45 130H480" fill="none" stroke="#49617b" strokeWidth="1" /><path d="M45 20V130H480" fill="none" stroke="#92acc3" strokeWidth="1" />{points.length > 0 && <polyline points={path} fill="none" stroke="#caff66" strokeWidth="3" />}<text x="4" y="29" fill="#c3d4e7" fontSize="12">100%</text><text x="12" y="134" fill="#c3d4e7" fontSize="12">0%</text><text x="45" y="151" fill="#c3d4e7" fontSize="12">1</text><text x="465" y="151" fill="#c3d4e7" fontSize="12">{points.length}</text></svg>;
 }
 
-export default function Academy({ arena, rover = false }: { arena?: string; rover?: boolean }) {
+export default function Academy({ arena, rover = false, lab = false }: { arena?: string; rover?: boolean; lab?: boolean }) {
   const { save, profile } = useStudio(), [academy, setAcademy] = useState<AcademySave>(() => save.academy || freshAcademy());
-  const [tab, setTab] = useState(rover ? 'rover' : 'controllers'), [kind, setKind] = useState<ArenaKind>(arena && isArena(arena) ? arena : 'sports');
+  const [tab, setTab] = useState(lab ? 'runtime' : rover ? 'rover' : 'controllers'), [kind, setKind] = useState<ArenaKind>(arena && isArena(arena) ? arena : 'sports');
   const [paused, setPaused] = useState(false), [visible, setVisible] = useState(!document.hidden), [sound, setSound] = useState(false), [notice, setNotice] = useState(''), [revision, setRevision] = useState(0), alive = useRef(true);
   useEffect(() => { saveAcademy(academy, profile.id); }, [academy, profile.id]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
@@ -46,7 +47,7 @@ export default function Academy({ arena, rover = false }: { arena?: string; rove
   const importFile = async (file?: File) => {
     if (!file) return;
     try {
-      if (file.size > 240000) throw new Error('Choose an academy file smaller than 240 KB.');
+      if (file.size > 900000) throw new Error('Choose an academy file smaller than 900 KB.');
       const raw = JSON.parse(await file.text());
       if (!raw || raw.version !== 1 || Object.keys(raw).sort().join(',') !== 'academy,version') throw new Error('Choose a version 1 academy export.');
       const next = validateAcademy(raw.academy); if (!alive.current) return;
@@ -54,9 +55,9 @@ export default function Academy({ arena, rover = false }: { arena?: string; rove
     } catch (error) { if (alive.current) setNotice(error instanceof Error ? error.message : 'The academy file could not be read.'); }
   };
   return <div className="academy"><header className="academy-heading"><div><span className="eyebrow">TRAIN · EVALUATE · UNDERSTAND</span><h1>Agent academy</h1><p>Find a controller that works, then test it on separate trials.</p></div><div className="button-row"><button className="btn secondary" onClick={() => setPaused(p => !p)}>{paused ? 'Resume academy' : 'Pause academy'}</button><label className="academy-sound"><input type="checkbox" checked={sound} onChange={e => { setSound(e.target.checked); if (e.target.checked) playAgentCue('complete', 0); }} />Simulation sound</label></div></header>
-    <div className="academy-tabs" role="tablist" aria-label="Training tools">{[['controllers', 'Controller lab'], ['rover', 'Learning rover']].map(([id, name]) => <button className={`btn ${tab === id ? 'primary' : 'secondary'}`} id={`academy-tab-${id}`} role="tab" tabIndex={tab === id ? 0 : -1} aria-selected={tab === id} aria-controls={`academy-panel-${id}`} key={id} onClick={() => setTab(id)} onKeyDown={e => { if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return; e.preventDefault(); const next = e.key === 'Home' ? 'controllers' : e.key === 'End' ? 'rover' : tab === 'controllers' ? 'rover' : 'controllers'; setTab(next); document.getElementById(`academy-tab-${next}`)?.focus(); }}>{name}</button>)}</div>
-    {['controllers', 'rover'].map(id => <section role="tabpanel" id={`academy-panel-${id}`} aria-labelledby={`academy-tab-${id}`} hidden={tab !== id} key={id}>
-      {tab === id ? id === 'controllers' ? <><div className="academy-picker"><Select label="Training arena" value={kind} options={AGENT_IDS.map(value => ({ value, label: arenaTitles[value] }))} onChange={v => setKind(v as ArenaKind)} /><a className="text-link" href={`#/classes?world=${kind}`}>Study the agent classes</a></div><ControllerLab key={`${kind}-${revision}`} kind={kind} record={academy.controllers[kind] || initialController()} paused={paused || !visible} sound={sound} onChange={record => setAcademy(a => ({ ...a, controllers: { ...a.controllers, [kind]: record } }))} /></> : <LearningRover key={revision} record={academy.rover} paused={paused || !visible} sound={sound} onChange={record => setAcademy(a => ({ ...a, rover: record }))} /> : null}
+    <div className="academy-tabs" role="tablist" aria-label="Training tools">{[['controllers', 'Controller lab'], ['rover', 'Learning rover'], ['runtime', 'Experiment lab']].map(([id, name]) => <button className={`btn ${tab === id ? 'primary' : 'secondary'}`} id={`academy-tab-${id}`} role="tab" tabIndex={tab === id ? 0 : -1} aria-selected={tab === id} aria-controls={`academy-panel-${id}`} key={id} onClick={() => setTab(id)} onKeyDown={e => { if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return; e.preventDefault(); const tools = ['controllers', 'rover', 'runtime'], index = tools.indexOf(tab), next = tools[e.key === 'Home' ? 0 : e.key === 'End' ? 2 : (index + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; setTab(next); document.getElementById(`academy-tab-${next}`)?.focus(); }}>{name}</button>)}</div>
+    {['controllers', 'rover', 'runtime'].map(id => <section role="tabpanel" id={`academy-panel-${id}`} aria-labelledby={`academy-tab-${id}`} hidden={tab !== id} key={id}>
+      {tab === id ? id === 'runtime' ? <RuntimeLab key={revision} academy={academy} paused={paused || !visible} onChange={lab => setAcademy(a => ({ ...a, lab }))} /> : id === 'controllers' ? <><div className="academy-picker"><Select label="Training arena" value={kind} options={AGENT_IDS.map(value => ({ value, label: arenaTitles[value] }))} onChange={v => setKind(v as ArenaKind)} /><a className="text-link" href={`#/classes?world=${kind}`}>Study the agent classes</a></div><ControllerLab key={`${kind}-${revision}`} kind={kind} record={academy.controllers[kind] || initialController()} paused={paused || !visible} sound={sound} onChange={record => setAcademy(a => ({ ...a, controllers: { ...a.controllers, [kind]: record } }))} /></> : <LearningRover key={revision} record={academy.rover} paused={paused || !visible} sound={sound} onChange={record => setAcademy(a => ({ ...a, rover: record }))} /> : null}
     </section>)}
     <footer className="academy-save"><div><strong>Saved with this local profile.</strong><p>Policies, learned values, and training history travel with your progress backup. Academy runs award no game XP.</p></div><div className="button-row"><button className="btn secondary" onClick={() => download('brain-sweat-academy.json', { version: 1, academy })}><Icon name="download" />Export academy</button><label className="btn secondary import-button">Import academy<input type="file" aria-label="Import academy" accept=".json,application/json" onChange={e => { void importFile(e.target.files?.[0]); e.target.value = ''; }} /></label></div></footer>{notice && <Notice>{notice}</Notice>}
   </div>;

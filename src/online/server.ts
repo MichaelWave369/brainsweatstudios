@@ -1,4 +1,8 @@
-import { AGENT_IDS, arenaScore, arenaStart, policyActions, policyConditions, runEpisode, type ArenaKind, type PolicyRule } from '../games/rung4/models.ts';
+import { AGENT_IDS, policyActions, policyConditions, type ArenaKind, type PolicyRule } from '../runtime/arenaRules.ts';
+import { configuration } from '../runtime/environment.ts';
+import { ruleController } from '../runtime/controllers.ts';
+import { recordEpisode } from '../runtime/receipts.ts';
+import { dispatchActions, dispatchStep } from '../runtime/multiAgent.ts';
 import type { EntityData, EntityType, Evaluation, OnlineSession, OnlineStore, OnlineView, StoredRow, TeamSignal } from './types.ts';
 const adjectives=['Copper','Mint','Solar','Indigo','Amber','Silver','Moss','Lunar'];
 const animals=['Otter','Fox','Raven','Orca','Lynx','Owl','Gecko','Hare'];
@@ -16,7 +20,8 @@ function readRules(value:unknown):PolicyRule[] {
   return value.map(r=>({when:r.when,action:r.action}));
 }
 export function evaluateController(arena:ArenaKind,seeds:number[],rules:PolicyRule[]):Evaluation {
-  const rounds=seeds.map(seed=>{const episode=runEpisode(arenaStart(arena,seed,1),rules);return {seed,score:arenaScore(episode),ticks:episode.tick,complete:episode.status==='complete'};});
+  const controller=ruleController(rules);
+  const rounds=seeds.map(seed=>{const episode=recordEpisode(configuration(arena,seed,1),controller);return {seed,score:episode.result.score,ticks:episode.result.ticks,complete:episode.result.success,environmentVersion:episode.config.version,receiptHash:episode.digest,finalHash:episode.finalHash};});
   return {rules:rules.map(r=>({...r})),rounds,total:rounds.reduce((sum,r)=>sum+r.score,0)};
 }
 function view(row:StoredRow,actor:string):OnlineView {
@@ -149,10 +154,9 @@ export function createOnlineHandler(store:OnlineStore,options:{origins:string[];
         if(body.op==='dispatch'){
           if(current.bucket!=='room'||data.mode!=='dispatch')fail('This is not a cooperative dispatch room.');
           if(data.members[data.turn].id!==actor.id)fail('Wait for your team turn.',409);
-          const actions=['observe','protect','dispatch'];if(!actions.includes(String(body.action)))fail('Choose observe, protect, or dispatch.');const accepted=body.action===actions[data.phase];
+          if(!dispatchActions.includes(body.action as typeof dispatchActions[number]))fail('Choose observe, protect, or dispatch.');const next=dispatchStep(data,body.action,data.members.length),accepted=next.accepted;
           data.log=[...data.log,{actor:actor.id,name:actor.name,task:data.task,action:String(body.action),accepted}].slice(-30);
-          if(!accepted){data.risks++;return;}data.phase++;data.turn=(data.turn+1)%data.members.length;
-          if(data.phase===3){data.phase=0;data.task++;}if(data.task===3)data.status='complete';return;
+          Object.assign(data,next.state);if(data.task===3)data.status='complete';return;
         }
         if(body.op==='submit'){
           if(current.bucket==='room'&&data.mode!=='duel')fail('Choose an agent competition for controller submissions.');

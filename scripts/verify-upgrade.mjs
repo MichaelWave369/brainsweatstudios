@@ -11,9 +11,9 @@ const prefix = '/brainsweatstudios/';
 let root = legacy;
 let future = false;
 const index = await readFile(path.join(current, 'index.html'), 'utf8');
-const entry = index.match(/src="([^"]*\/assets\/index[^" ]*\.js)"/)?.[1];
-assert.ok(entry, 'Production module entry exists.');
-const entryFile = `./${entry.slice(prefix.length)}`;
+const stylesheet = index.match(/href="([^"]*\/assets\/index[^" ]*\.css)"/)?.[1];
+assert.ok(stylesheet, 'Production stylesheet exists.');
+const stylesheetFile = `./${stylesheet.slice(prefix.length)}`;
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, 'http://127.0.0.1');
   if (!url.pathname.startsWith(prefix)) { response.writeHead(404); response.end(); return; }
@@ -22,11 +22,12 @@ const server = createServer(async (request, response) => {
   if (!file.startsWith(`${root}/`)) { response.writeHead(404); response.end(); return; }
   try {
     let bytes = await readFile(file);
-    // A second release fixture changes its entry URL, as a hashed Vite build would.
-    if (future && relative === 'index.html') bytes = Buffer.from(bytes.toString().replace(entry, `${entry}?release=next`));
+    // A stylesheet-only release changes its asset URL without duplicating JS modules.
+    if (future && relative === 'index.html') bytes = Buffer.from(bytes.toString().replace(stylesheet, `${stylesheet}?release=next`));
+    if (future && relative === stylesheet.slice(prefix.length)) bytes = Buffer.from(`${bytes.toString()}\n:root{--upgrade-fixture:1}`);
     if (future && relative === 'sw.js') {
       let source = bytes.toString().replace(/const CACHE = "([^"]+)";/, 'const CACHE = "$1-next";');
-      source = source.replace(/const FILES = (\[[^\n]+\]);/, (_match, files) => `const FILES = ${JSON.stringify(JSON.parse(files).map(file => file === entryFile ? `${file}?release=next` : file))};`);
+      source = source.replace(/const FILES = (\[[^\n]+\]);/, (_match, files) => `const FILES = ${JSON.stringify(JSON.parse(files).map(file => file === stylesheetFile ? `${file}?release=next` : file))};`);
       bytes = Buffer.from(source);
     }
     response.writeHead(200, { 'Content-Type': ({ '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' })[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' }); response.end(bytes);
@@ -35,9 +36,11 @@ const server = createServer(async (request, response) => {
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}${prefix}`;
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+let testPage;
 try {
   const context = await browser.newContext();
   const page = await context.newPage(); const errors = [];
+  testPage = page;
   context.on('page', tab => tab.on('pageerror', error => errors.push(error.message)));
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(base); await page.locator('.world-card').last().waitFor(); assert.equal(await page.locator('.world-card').count(), 12);
@@ -76,4 +79,7 @@ try {
     assert.deepEqual(errors, []); console.log('Upgrade verified: two open v1 tabs reach v2, earned progress survives, old lazy assets remain usable, the next update prompts in both languages, melody survives refresh, and offline play works.');
   }
   await context.close();
+} catch (error) {
+  if (testPage) console.error('Upgrade view:', JSON.stringify(await testPage.evaluate(() => ({ language: document.documentElement.lang, heading: document.querySelector('main h1')?.textContent, selects: Array.from(document.querySelectorAll('select'), select => ({ label: select.getAttribute('aria-label'), source: select.getAttribute('data-source-label'), value: select.value })) })).catch(() => 'Page unavailable')));
+  throw error;
 } finally { await browser.close(); await new Promise(resolve => server.close(resolve)); }

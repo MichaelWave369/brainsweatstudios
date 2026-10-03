@@ -7,8 +7,8 @@ export default function StudioUpdate() {
     let disposed = false;
     const worker = navigator.serviceWorker;
     const checkVersion = () => {
-      const script = document.querySelector<HTMLScriptElement>('script[type="module"][src]')?.src;
-      if (script) worker.controller?.postMessage({ type: 'STUDIO_CHECK_VERSION', script });
+      const assets = Array.from(document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>('script[type="module"][src], link[rel="stylesheet"][href]'), element => element instanceof HTMLScriptElement ? element.src : element.href);
+      if (assets.length) worker.controller?.postMessage({ type: 'STUDIO_CHECK_VERSION', assets });
     };
     const receive = (event: MessageEvent) => {
       if (!disposed && event.source === worker.controller && event.data?.type === 'STUDIO_UPDATE_STATUS' && typeof event.data.current === 'boolean') setAvailable(!event.data.current);

@@ -14,8 +14,9 @@ self.addEventListener('activate', event => event.waitUntil((async () => {
   await self.clients.claim();
 })()));
 self.addEventListener('message', event => {
-  if (event.data?.type !== 'STUDIO_CHECK_VERSION' || typeof event.data.script !== 'string') return;
-  event.source?.postMessage({ type: 'STUDIO_UPDATE_STATUS', current: FILES.some(file => new URL(file, self.location.href).href === event.data.script) });
+  const assets = event.data?.assets;
+  if (event.data?.type !== 'STUDIO_CHECK_VERSION' || !Array.isArray(assets) || !assets.length || assets.length > 20 || assets.some(asset => typeof asset !== 'string')) return;
+  event.source?.postMessage({ type: 'STUDIO_UPDATE_STATUS', current: assets.every(asset => FILES.some(file => new URL(file, self.location.href).href === asset)) });
 });
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);

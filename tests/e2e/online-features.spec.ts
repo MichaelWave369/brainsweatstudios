@@ -56,10 +56,15 @@ test('two separate browser identities cooperate through shared server turns and 
     await expect(navigation).toBeVisible();
     await host.getByRole('button',{name:'Close menu',exact:true}).press('Enter');
     await expect(navigation).toBeHidden();
-    await expect.poll(async()=>{
-      const layout=await host.evaluate(()=>({width:document.documentElement.scrollWidth,spill:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>322).slice(0,12).map(e=>({tag:e.tagName,class:e.className,right:e.getBoundingClientRect().right}))}));
-      return layout.width===320?'fits':JSON.stringify(layout);
-    },{message:'The connected commons fits the phone viewport after resize',timeout:5000}).toBe('fits');
+    try{
+      await expect.poll(async()=>{
+        const layout=await host.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth,scrollX,client:document.documentElement.clientWidth,bodyWidth:document.body.scrollWidth,spill:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right+scrollX>innerWidth+1||e.scrollWidth>e.clientWidth+1).slice(0,18).map(e=>({tag:e.tagName,class:e.className,right:e.getBoundingClientRect().right+scrollX,scroll:e.scrollWidth,client:e.clientWidth,text:e.textContent?.slice(0,80)}))}));
+        return layout.width===320?'fits':JSON.stringify(layout);
+      },{message:'The connected commons fits the phone viewport after resize',timeout:5000}).toBe('fits');
+    }catch(error){
+      await test.info().attach('connected-phone-layout',{body:await host.screenshot({fullPage:true}),contentType:'image/png'});
+      throw error;
+    }
   }finally{await Promise.all(contexts.map(c=>c.close()));}
 });
 test('clans, host transfer, shared tournament evaluation, reconnect, and deletion work end to end',async({browser})=>{

@@ -61,6 +61,9 @@ try {
     await other.goto(`${base}#/game/code`); await other.getByRole('button', { name: 'Start mission 1', exact: true }).click(); await other.locator('.game-controls').waitFor();
     await page.reload(); await page.getByRole('link', { name: 'All worlds', exact: true }).click(); await page.locator('.world-card').last().waitFor(); assert.equal(await page.locator('.world-card').count(), 15);
     await page.getByText('NEW IN VERSION 2', { exact: true }).waitFor();
+    // Migration is initially in memory; the next normal save writes the v2 bundle.
+    await page.getByRole('link', { name: 'My progress', exact: true }).click(); await page.getByText('1/360', { exact: true }).waitFor();
+    await page.getByLabel('Difficulty', { exact: true }).selectOption('builder'); await page.getByLabel('Difficulty', { exact: true }).selectOption('explorer');
     const migrated = await page.evaluate(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1'))); assert.equal(migrated.version, 2); assert.equal(migrated.xp, prior.xp); assert.deepEqual(migrated.records, prior.records);
     await other.reload(); await other.getByRole('link', { name: 'All worlds', exact: true }).click(); await other.locator('.world-card').last().waitFor(); assert.equal(await other.locator('.world-card').count(), 15);
     await page.goto(`${base}#/game/music`); await page.getByRole('button', { name: 'Start mission 1', exact: true }).click(); await page.getByLabel('Pitch step 16', { exact: true }).selectOption('2');

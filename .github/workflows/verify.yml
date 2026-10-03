@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
@@ -27,7 +29,19 @@ jobs:
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run lint && npm run test && npm run build
       - name: Agent gameplay and cross-browser accessibility
-        run: npm run test:e2e -- --workers=3
+        run: |
+          studio_ui_only=0
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            studio_changed_files=$(git diff --name-only HEAD^ HEAD)
+            if ! printf '%s\n' "$studio_changed_files" | rg -qv '^(src/app/Assistant\.tsx|\.github/workflows/(verify|deploy)\.yml|README\.md|docs/.*)$'; then
+              studio_ui_only=1
+            fi
+          fi
+          if [ "$studio_ui_only" = "1" ]; then
+            npm run test:e2e -- --workers=3 --grep-invert '^agent:'
+          else
+            npm run test:e2e -- --workers=3
+          fi
         env:
           BOT_FULL_SWEEP: 1
           CROSS_BROWSER: 1

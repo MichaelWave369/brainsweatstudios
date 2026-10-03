@@ -185,7 +185,14 @@ Original code, geometry, and procedural sound: [MIT](LICENSE). Package versions,
 
 ## Screenshots
 
-V6 review captures will be linked from [the verification report](docs/verification-v6.md). The images below are the preserved V5 release evidence.
+These V6 captures show the verified production build on the review branch. Public publication is pending operator approval; the live site still runs V5. See [the verification report](docs/verification-v6.md).
+
+![Version 6 studio](docs/screenshots/v6/studio.png)
+![Version 6 reproducible experiments and verified trace inspector](docs/screenshots/v6/experiments.png)
+
+[Controller search](docs/screenshots/v6/controllers.png) · [Learning rover](docs/screenshots/v6/rover.png) · [Sports arena](docs/screenshots/v6/sports.png) · [Retro space lab](docs/screenshots/v6/space.png) · [Agent class](docs/screenshots/v6/agent-class.png) · [Phone experiment controls](docs/screenshots/v6/mobile-experiment.png) · [Spanish trace inspector](docs/screenshots/v6/spanish-inspector.png)
+
+### Preserved Version 5 release evidence
 
 ![Version 5 agent academy](docs/screenshots/v5/controllers.png)
 ![Learned delivery rover](docs/screenshots/v5/rover.png)

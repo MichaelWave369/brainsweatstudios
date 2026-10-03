@@ -69,6 +69,8 @@ export const machinePrograms = [
   'SET 12\nWRITE 4\nREAD 4\nADD 6\nSTORE 7\nLOAD 7\nOUT\nHALT',
 ];
 export const machineTargets=[10,21,12,0,25,64,20,18];
+export const machineTarget=(mission:number,difficulty:number)=>machineTargets[mission]+difficulty*10;
+export const workedMachineProgram=(mission:number,difficulty:number)=>difficulty?machinePrograms[mission].replace('OUT',`ADD ${difficulty*10}\nOUT`):machinePrograms[mission];
 export interface TrailState { step:number; food:number; water:number; cash:number; energy:number; battery:number; distance:number; trust:number; log:string[]; }
 export const trailStart=(difficulty:number):TrailState=>({step:0,food:14-difficulty,water:14-difficulty,cash:60-difficulty*5,energy:90,battery:80,distance:0,trust:0,log:[]});
 export function trailTurn(s:TrailState,choice:'transit'|'cycle'|'walk'|'community',mission:number):TrailState {

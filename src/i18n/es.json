@@ -2449,5 +2449,7 @@
   "Speed {0} m/s; constant braking acceleration magnitude {1} m/s². Find stopping distance.": "Velocidad: {0} m/s; frenado constante: {1} m/s². Encuentra la distancia de parada.",
   "Length {0} m, small oscillations, g=9.81. Find the period.": "Longitud: {0} m; oscilaciones pequeñas; g=9.81. Encuentra el período.",
   "Mass {0} kg and velocity {1} m/s. Find momentum.": "Masa: {0} kg; velocidad: {1} m/s. Encuentra el momento lineal.",
-  "Lift {0} kg by {1} m. Find the increase in energy; g=9.81.": "Eleva {0} kg por {1} m. Encuentra el aumento de energía; g=9.81."
+  "Lift {0} kg by {1} m. Find the increase in energy; g=9.81.": "Eleva {0} kg por {1} m. Encuentra el aumento de energía; g=9.81.",
+  "Use at least {0} scenes, captions, privacy and moderation checks, music at least 6 dB below narration, a mix below −1 dBFS, and at least {1} Mbps.": "Usa al menos {0} escenas, subtítulos, revisión de privacidad y moderación, música 6 dB por debajo de la voz, mezcla menor de −1 dBFS y al menos {1} Mbps.",
+  "Cloudy input must pass the clarity filter before this model’s verified treatment stage.": "El agua turbia debe pasar por el filtro de claridad antes del tratamiento verificado del modelo."
 }

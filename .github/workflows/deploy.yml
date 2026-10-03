@@ -51,6 +51,9 @@ jobs:
       - name: Verify advanced learning flows and graphics
         run: |
           TEST_PRODUCTION=1 npm run test:e2e -- tests/e2e/advanced-features.spec.ts tests/e2e/low-power.spec.ts --workers=2
+      - name: Capture review graphics
+        if: always()
+        run: |
           node scripts/test-server.mjs &
           studio_server_pid=$!
           trap 'kill "$studio_server_pid"' EXIT

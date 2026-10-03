@@ -25,7 +25,7 @@ export function build3D(kind:string,data:Record<string,number>={},time=0):Mesh[]
     else {pillar(-2.7,1,0.7);pillar(2.7,1,0.7);const phase=(time*0.4)%1;const x=-2.6+phase*5.2;const y=kind==='physics'?0.6+4*phase*(1-phase)*2:0.6;p.orb(x,y,0.8,0.28,c);for(let i=0;i<8;i++)p.box(-2.4+i*0.65,0,2,0.48,0.3+i*0.11,0.6,c);}
   }else if(kind==='engine'){
     p.box(0,0,0,3,0.5,2.2,'#637585');const moving=data.rpm?Math.sin(time*5):0;
-    for(let i=0;i<(data.cylinders||4);i++){const x=-1.1+(i%4)*0.72;const z=Math.floor(i/4)*0.8;p.cylinder(x,0.5,z,0.27,1.35,'#45566d');p.cylinder(x,0.95+moving*0.22,z,0.22,0.2,c);p.box(x,0.7,z,0.06,0.7+moving*0.2,0.06,'#bdd2df');}
+    for(let i=0;i<(data.cylinders||4);i++){const x=-1.1+(i%4)*0.72;const z=Math.floor(i/4)*0.8;p.cylinder(x,0.5,z,0.29,0.5,'#45566d');p.box(x-0.28,0.5,z,0.055,1.35,0.055,'#91a5b4');p.box(x+0.28,0.5,z,0.055,1.35,0.055,'#91a5b4');p.cylinder(x,0.95+moving*0.22,z,0.22,0.2,c);p.box(x,0.7,z,0.06,0.7+moving*0.2,0.06,'#bdd2df');}
     p.cylinder(2.1,0,0,0.85,0.35,'#32485b');for(let i=0;i<8;i++){const angle=i/8*Math.PI*2+time*(data.rpm?2:0);p.orb(2.1+Math.cos(angle)*0.65,0.42,Math.sin(angle)*0.65,0.11,c);}for(let i=0;i<4;i++)p.box(-2.6,0.4+i*0.3,0,0.7,0.07,1.4,'#a5c1c7');
   }else if(kind==='robot'){
     for(const [x,z]of [[2,1],[2,2],[2,3],[4,4],[1,4]])p.box(x-3,0,z-3,0.8,0.8,0.8,'#59637b');
@@ -35,7 +35,7 @@ export function build3D(kind:string,data:Record<string,number>={},time=0):Mesh[]
   }else if(kind==='trail'){
     p.box(0,0,0,8,0.02,1.1,'#192e3c');for(let i=-3;i<=3;i++)p.box(i,0.05,0,0.45,0.02,0.04,'#e5d5aa');for(let i=0;i<5;i++){const x=-3+i*1.5;p.box(x,0,-2.2,1,0.8+i%3*0.5,0.9,'#667f8a');p.box(x,0.2,-1.72,0.25,0.35,0.04,c);p.cylinder(x,0,2,0.12,0.8,'#93795e');p.orb(x,1.2,2,0.65,'#829f71');}p.box(-3+(data.step||0)*1.1,0.1,0,0.85,0.35,0.5,c);
   }else if(kind==='water'){
-    for(let i=0;i<3;i++){const x=-2.2+i*2.1;p.cylinder(x,0,0,0.75,2.3,'#4b657a');p.cylinder(x,0.04,0,0.69,clampHeight((data.stored||40)/100*2.2),'#56bad6');p.box(x,2.3,0,1.5,0.12,1.5,c);if(i<2)p.box(x+1,0.55,0,1,0.16,0.16,'#cad5d9');}p.box(0,0,2.3,2,0.55,0.5,'#425f70');
+    for(let i=0;i<3;i++){const x=-2.2+i*2.1;p.cylinder(x,0,0,0.75,0.18,'#4b657a');for(const dx of[-0.7,0.7])for(const dz of[-0.7,0.7])p.box(x+dx,0,dz,0.055,2.3,0.055,'#8ca8b7');p.cylinder(x,0.04,0,0.69,clampHeight((data.stored||40)/100*2.2),'#56bad6');p.box(x,2.3,0,1.5,0.12,1.5,c);if(i<2)p.box(x+1,0.55,0,1,0.16,0.16,'#cad5d9');}p.box(0,0,2.3,2,0.55,0.5,'#425f70');
   }else if(kind==='kitchen'){
     p.box(0,0,-1.3,6,1.1,1.3,'#5c697d');p.box(0,1.1,-1.3,6.2,0.12,1.5,'#e0d3ba');p.cylinder(-1,1.22,-1.2,0.7,0.5,'#8899a2');p.cylinder(-1,1.73,-1.2,0.6,0.04,c);for(let i=0;i<6;i++)p.orb(-1+Math.sin(i)*0.45,1.79,-1.2+Math.cos(i)*0.4,0.1,'#b5d88c');for(let i=0;i<4;i++)p.orb(-1+Math.sin(time+i)*0.3,1.9+(time*0.3+i*0.22)%1,-1.2,0.05,'#c2d4df');p.box(2,0,1,1.3,2.4,1.1,'#c3d1d3');p.box(2,1.35,1.58,1.1,0.045,0.04,'#4e7189');
   }else if(kind==='creator'){
@@ -49,3 +49,5 @@ export function cameraMatrix(angle:number,zoom:number,aspect:number){
   const eye:Vec3=[Math.sin(angle)*zoom,zoom*0.62,Math.cos(angle)*zoom];const target:Vec3=[0,0.8,0];const norm=(v:number[])=>{const l=Math.hypot(...v);return v.map(x=>x/l);};const cross=(a:number[],b:number[])=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];const z=norm(eye.map((v,i)=>v-target[i])),x=norm(cross([0,1,0],z)),y=cross(z,x);const dot=(a:number[],b:number[])=>a.reduce((s,v,i)=>s+v*b[i],0);const view=[x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1];const f=1/Math.tan(Math.PI/7),near=0.1,far=80;const proj=[f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0];const matrix=Array(16).fill(0);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)matrix[c*4+r]+=proj[k*4+r]*view[c*4+k];return {matrix:new Float32Array(matrix),eye};
 }
 export function projectMesh(mesh:Mesh,angle=0.65){const {matrix}=cameraMatrix(angle,12,1.78);const points=[];for(let i=0;i<mesh.vertices.length;i+=6){const v=[...mesh.vertices.slice(i,i+3),1],p=[0,0,0,0];for(let r=0;r<4;r++)for(let k=0;k<4;k++)p[r]+=matrix[k*4+r]*v[k];points.push([360+p[0]/p[3]*360,200-p[1]/p[3]*200]);}return points.map(p=>p.map(x=>x.toFixed(1)).join(',')).join(' ');}
+
+export function shadedColor(mesh:Mesh){const normal=mesh.vertices.slice(3,6),light=[-0.32,0.75,0.54];const factor=0.45+Math.max(0,normal.reduce((sum,v,i)=>sum+v*light[i],0))*0.55;return '#'+rgb(mesh.color).map(v=>Math.round(v*factor*255).toString(16).padStart(2,'0')).join('');}

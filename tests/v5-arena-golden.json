@@ -1,0 +1,290 @@
+[
+  {
+    "kind": "sports",
+    "seed": 0,
+    "difficulty": 0,
+    "hash": "45c34ee6f676a17541587b0e1175cd98d94e02ec428341304fb8d75a7c5ede2e"
+  },
+  {
+    "kind": "sports",
+    "seed": 7,
+    "difficulty": 0,
+    "hash": "b2702c3539a2fc2dffa7901682c140361fc32232cc47602213f2e7da9bc97053"
+  },
+  {
+    "kind": "sports",
+    "seed": 42,
+    "difficulty": 0,
+    "hash": "ea754eb9d5c682a8c88c14d00b5768ecc912c1adf4c0e4d94cc020b7f821bcc7"
+  },
+  {
+    "kind": "sports",
+    "seed": 20101,
+    "difficulty": 0,
+    "hash": "36e3963ceef7957d4b895bf9489ee9efc0577c35ee36fa237f66fd3f5df121ac"
+  },
+  {
+    "kind": "sports",
+    "seed": 0,
+    "difficulty": 1,
+    "hash": "d3eed41f38d6bbad2913294973ea83c5b6a55081077ed82504a8ca6ece8764e4"
+  },
+  {
+    "kind": "sports",
+    "seed": 7,
+    "difficulty": 1,
+    "hash": "8e9381c47fdf80e5921cef509d35069c1490ba05dd2cacb507c8aead6a5565e3"
+  },
+  {
+    "kind": "sports",
+    "seed": 42,
+    "difficulty": 1,
+    "hash": "e7ba1dcd265821ef700ee15dac9135793ce9a02091ee2ce8b271fb3300cf04ae"
+  },
+  {
+    "kind": "sports",
+    "seed": 20101,
+    "difficulty": 1,
+    "hash": "65017dcd96b0bff3557d61f51fedef9eefb95cd3ee297096153b64ea30acb08d"
+  },
+  {
+    "kind": "sports",
+    "seed": 0,
+    "difficulty": 2,
+    "hash": "a461f9daca772db392f951ff2d3315d559ad304cbd18d8a7a2c7bc85257800c2"
+  },
+  {
+    "kind": "sports",
+    "seed": 7,
+    "difficulty": 2,
+    "hash": "0f15212e3c8bf7c280abdb48aab8666314dfc9beeec35f640d558100ef790f05"
+  },
+  {
+    "kind": "sports",
+    "seed": 42,
+    "difficulty": 2,
+    "hash": "885b70a9ec8de0c7d353e486fcad9d6bc0af7efca7161d892f6158df8b55ee31"
+  },
+  {
+    "kind": "sports",
+    "seed": 20101,
+    "difficulty": 2,
+    "hash": "6bb0cbc4332ef7159216f059662acbfb7283599f76183289519bf28d65d93152"
+  },
+  {
+    "kind": "outpost",
+    "seed": 0,
+    "difficulty": 0,
+    "hash": "a484d45887502890e1581a309b10631190077b171ab8c5d747521512e4b58430"
+  },
+  {
+    "kind": "outpost",
+    "seed": 7,
+    "difficulty": 0,
+    "hash": "51353352f897905bc7292f8d1796199ca2fa9bb4edd42d9860840d34debc825e"
+  },
+  {
+    "kind": "outpost",
+    "seed": 42,
+    "difficulty": 0,
+    "hash": "93c3c0bfc3e0000e64e4bf19291326509b0585c4cb9bacc525fac59497de6ee3"
+  },
+  {
+    "kind": "outpost",
+    "seed": 20101,
+    "difficulty": 0,
+    "hash": "fc89f53e3b3f6aae6f50cb36dd6cc9cb862eabcde117d9a55365ccc4838eef7f"
+  },
+  {
+    "kind": "outpost",
+    "seed": 0,
+    "difficulty": 1,
+    "hash": "2bbc8e35f98b2f3771aa033bdd9b9f484795720269d48759d6c377e6d386f0ee"
+  },
+  {
+    "kind": "outpost",
+    "seed": 7,
+    "difficulty": 1,
+    "hash": "5e30208fe06a564bad5b149791cc93ff02c0019b1ca92e53017fbe29010278f5"
+  },
+  {
+    "kind": "outpost",
+    "seed": 42,
+    "difficulty": 1,
+    "hash": "3f8261f3444738c2195df203d9906837e2f456938feec8d5521bca22618bb1c9"
+  },
+  {
+    "kind": "outpost",
+    "seed": 20101,
+    "difficulty": 1,
+    "hash": "c8d7518f8829bd94b12296a74c2b25c7d8769952c2a320ff3577b45bc3c2b564"
+  },
+  {
+    "kind": "outpost",
+    "seed": 0,
+    "difficulty": 2,
+    "hash": "a8bc28e17b8f8b21d12dccd3c0c326149a10e08bc013d24755a87a8e88c47d36"
+  },
+  {
+    "kind": "outpost",
+    "seed": 7,
+    "difficulty": 2,
+    "hash": "b920d51329c288fe8d3aba183021d4c14f6b2ade43b381670889e5a042b9cab5"
+  },
+  {
+    "kind": "outpost",
+    "seed": 42,
+    "difficulty": 2,
+    "hash": "f69066ee639fafe42f9183bc07795b606cebf47d5895fe3b62b450c8debf703e"
+  },
+  {
+    "kind": "outpost",
+    "seed": 20101,
+    "difficulty": 2,
+    "hash": "1718bcbbf145fe28ae0cb41175c2d127596647d43e7d8f423325f4077422f0e5"
+  },
+  {
+    "kind": "scenario",
+    "seed": 0,
+    "difficulty": 0,
+    "hash": "8b0719b5065f5003af56cf4d56102cb4df1bc2e32931d40627a8bd566182c409"
+  },
+  {
+    "kind": "scenario",
+    "seed": 7,
+    "difficulty": 0,
+    "hash": "a81738d78e612a344e07b6b46ebeffb583d0ffcb16985c59968c2c532a0459f0"
+  },
+  {
+    "kind": "scenario",
+    "seed": 42,
+    "difficulty": 0,
+    "hash": "aabaabff92cd7aead3ce69a1bfe220811ae954e11e662515925bdb2a5edc5774"
+  },
+  {
+    "kind": "scenario",
+    "seed": 20101,
+    "difficulty": 0,
+    "hash": "242f8b29304586672d6b7e041a460172cab68904488d2393a76af3db69dbf557"
+  },
+  {
+    "kind": "scenario",
+    "seed": 0,
+    "difficulty": 1,
+    "hash": "8168e79935cc5d5f0424959f3c18c6745da2839178c61c7af897a5b46825717b"
+  },
+  {
+    "kind": "scenario",
+    "seed": 7,
+    "difficulty": 1,
+    "hash": "6d7181bd9e7aba3f176cfd2cf141c4c8d7602df2fb7b3348379907887b4e1c4a"
+  },
+  {
+    "kind": "scenario",
+    "seed": 42,
+    "difficulty": 1,
+    "hash": "2b227793cc0f690e00449c0ff28b83d36e21bf778a21d6bc2a7d1091d68afae8"
+  },
+  {
+    "kind": "scenario",
+    "seed": 20101,
+    "difficulty": 1,
+    "hash": "e2e72e540b4cdd7beb9ce5b05aee2f9219a9a8ecb7d2f32c8d7c049f34818eb2"
+  },
+  {
+    "kind": "scenario",
+    "seed": 0,
+    "difficulty": 2,
+    "hash": "06523c03a095f917a59c1673794e90612da2d1ccb9c5c12394df9a6214c7130e"
+  },
+  {
+    "kind": "scenario",
+    "seed": 7,
+    "difficulty": 2,
+    "hash": "9e7e820f0802bdad8b8569eb3e519c03b16a7d1a4af36011e06bb1c7652297e4"
+  },
+  {
+    "kind": "scenario",
+    "seed": 42,
+    "difficulty": 2,
+    "hash": "ac43087074e92b3e53a5e7704ef62882111467650c6b40c7fd136da0c3ffc558"
+  },
+  {
+    "kind": "scenario",
+    "seed": 20101,
+    "difficulty": 2,
+    "hash": "f1140442d926ce8206a7d87f64c04a1697dc57c4fd03327d52231ffbdcbda0ae"
+  },
+  {
+    "kind": "space",
+    "seed": 0,
+    "difficulty": 0,
+    "hash": "8775b2cccbdbf3fcdffad03919f2b395b454393b6b849b87a8f4859035e6c450"
+  },
+  {
+    "kind": "space",
+    "seed": 7,
+    "difficulty": 0,
+    "hash": "1e0bbd5efbaf78b0faa35f5f4247045b57f81cb3ac50d3c72f5b8f8929ba93f5"
+  },
+  {
+    "kind": "space",
+    "seed": 42,
+    "difficulty": 0,
+    "hash": "1622ee1119b67b5bd9d3cf33236c276fc6b4af04042b11cd39a9bcb75fecdbf8"
+  },
+  {
+    "kind": "space",
+    "seed": 20101,
+    "difficulty": 0,
+    "hash": "4b4699d8400fb444e4f91108a61217db29d581deec391a2e667970ed3c13fb7a"
+  },
+  {
+    "kind": "space",
+    "seed": 0,
+    "difficulty": 1,
+    "hash": "d7598067b60a23f45aaaaaf5bbfaf44e495be8507a1d3b1d9493f9a33e9cfe62"
+  },
+  {
+    "kind": "space",
+    "seed": 7,
+    "difficulty": 1,
+    "hash": "e888083d70c083fb977aaade6f787357832cc27adda740a9c8cc90fb2bab4d3d"
+  },
+  {
+    "kind": "space",
+    "seed": 42,
+    "difficulty": 1,
+    "hash": "24107d8dd9fc7575fafc0e5fab745ec27c2b1a183c086b0b6036007244b7b927"
+  },
+  {
+    "kind": "space",
+    "seed": 20101,
+    "difficulty": 1,
+    "hash": "f8c7ab1c11dbbb85d719df809bd987793076a115673a847d32181160f1600bfa"
+  },
+  {
+    "kind": "space",
+    "seed": 0,
+    "difficulty": 2,
+    "hash": "67287f71167da554925eaac2305a8e1c81bacf9f2c9b3ee5ac693384292187f5"
+  },
+  {
+    "kind": "space",
+    "seed": 7,
+    "difficulty": 2,
+    "hash": "403c66b6ae68fb913e729ad785d12e8edb6897bc4658540531bb035327fbd5db"
+  },
+  {
+    "kind": "space",
+    "seed": 42,
+    "difficulty": 2,
+    "hash": "619bdf0f19ec439f7f0ddd0574d6333abbdd0d699d65cdb666dee71d069464bd"
+  },
+  {
+    "kind": "space",
+    "seed": 20101,
+    "difficulty": 2,
+    "hash": "10bd97c400d65bc013a2f23c13949c69899b500cdf68beb7251c3389fa46731c"
+  }
+]

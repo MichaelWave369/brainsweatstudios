@@ -91,3 +91,4 @@ export function waterSafetyEvent(mission: number, stage: number): RoadEvent {
 
 
 export * from '../../runtime/arenaRules.ts';
+export { stepArenaEpisode as arenaStep, runArenaEpisode as runEpisode } from '../../runtime/legacy.ts';

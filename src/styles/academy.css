@@ -26,8 +26,9 @@ fieldset.academy-panel { padding-top:1rem; min-inline-size:0; }
 .academy .btn { font-size:.875rem; white-space:normal; }
 .academy .game-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; }
 .academy .game-stat { padding:.85rem; min-width:0; }
+.academy .game-stat > div { min-width:0; width:100%; }
 .academy .game-stat strong { overflow-wrap:anywhere; font-size:1.25rem; }
-.academy .game-stat span { font-size:.8125rem; }
+.academy .game-stat span { font-size:.8125rem; white-space:normal; overflow-wrap:anywhere; }
 .academy .code-editor { font-size:.875rem; }
 .academy .code-editor textarea { box-sizing:border-box; width:100%; padding:.9rem; font-size:.875rem; }
 .telemetry-strip { display:flex; justify-content:space-between; gap:.6rem; flex-wrap:wrap; border:1px solid #405c75; border-top:0; padding:.8rem; margin:0 0 1.25rem; color:#bcd2e5; font:.75rem/1.5 ui-monospace,monospace; border-radius:0 0 10px 10px; background:#101e2d; }

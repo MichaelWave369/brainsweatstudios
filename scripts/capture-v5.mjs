@@ -28,6 +28,7 @@ try {
   }
   await page.setViewportSize({ width: 390, height: 844 }); await page.goto(base + '#/academy?tab=rover');
   await page.getByRole('button', { name: 'Evaluate learned rover', exact: true }).click();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: 'docs/screenshots/v5/mobile-rover.png' });
   await page.getByLabel('Language', { exact: true }).selectOption('es');
   await page.locator('.evaluation-report').scrollIntoViewIfNeeded(); await page.screenshot({ path: 'docs/screenshots/v5/spanish-evaluation.png' });

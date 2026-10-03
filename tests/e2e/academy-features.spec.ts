@@ -89,7 +89,7 @@ test('academy: profile isolation and strict backups preserve learning without pl
   await page.goto('/#/academy');
   await page.getByLabel('Import academy', { exact: true }).setInputFiles({ name: 'academy.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ version: 1, academy })) });
   await expect(page.getByText('Academy imported. Training and replays resume stopped.', { exact: true })).toBeVisible();
-  expect((await saved(page)).academy).toEqual(academy); expect((await saved(page)).xp).toBe(0);
+  await expect.poll(async () => (await saved(page)).academy).toEqual(academy); expect((await saved(page)).xp).toBe(0);
   await page.goto('/#/settings'); await page.getByLabel('Active profile', { exact: true }).selectOption(original);
   expect((await saved(page)).academy).toEqual(academy);
 });

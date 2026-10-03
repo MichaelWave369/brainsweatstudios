@@ -12,13 +12,13 @@ describe('agent academy', () => {
     }
   });
   it('search discovers a successful controller from an incomplete policy without regressing training results', () => {
-    for (const kind of AGENT_IDS) {
-      let rules: PolicyRule[] = [{ when: 'always', action: 'approach' }], previous = assess(kind, rules, 1, splitSeeds(3));
+    for (const kind of AGENT_IDS) for (let stage = 0; stage < 3; stage++) {
+      let rules: PolicyRule[] = [{ when: 'always', action: 'approach' }], previous = assess(kind, rules, stage, splitSeeds(3));
       for (let i = 0; i < 6; i++) {
-        const next = searchGeneration(kind, rules, 1, 3);
+        const next = searchGeneration(kind, rules, stage, 3);
         expect(better(previous, next.report)).toBe(false); rules = next.champion; previous = next.report;
       }
-      expect(previous.successes, kind).toBe(8); expect(assess(kind, rules, 1, splitSeeds(3, true)).successes, kind).toBe(8);
+      expect(previous.successes, `${kind} stage ${stage}`).toBe(8); expect(assess(kind, rules, stage, splitSeeds(3, true)).successes, kind).toBe(8);
     }
   });
   it.each(['courier', 'storm'] as const)('Q-learning improves %s through reward updates; evaluation does not change its learned values', mode => {

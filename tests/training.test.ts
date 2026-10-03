@@ -21,8 +21,8 @@ describe('agent academy', () => {
       expect(previous.successes, kind).toBe(8); expect(assess(kind, rules, 1, splitSeeds(3, true)).successes, kind).toBe(8);
     }
   });
-  it('Q-learning improves a courier through reward updates; evaluation does not change its learned values', () => {
-    let rover = roverFresh(); const baseline = evaluateRover(rover);
+  it.each(['courier', 'storm'] as const)('Q-learning improves %s through reward updates; evaluation does not change its learned values', mode => {
+    let rover = roverFresh(mode); const baseline = evaluateRover(rover);
     for (let i = 0; i < 40; i++) rover = trainRover(rover, 25);
     const before = JSON.stringify(rover), result = evaluateRover(rover);
     expect(result.successes).toBeGreaterThan(baseline.successes); expect(result.successes).toBeGreaterThanOrEqual(18);

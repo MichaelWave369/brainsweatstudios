@@ -107,7 +107,8 @@ test('academy: Spanish learning classes, populated reports, keyboard tabs, and n
   await page.getByRole('button', { name: 'Evaluar campeón', exact: true }).click();
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    const layout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: window.innerWidth, overflow: [...document.querySelectorAll('main *')].filter(e => e.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 8).map(e => ({ element: e.tagName, class: e.className, text: e.textContent?.slice(0, 80) })) }));
+    expect(layout.width, JSON.stringify(layout.overflow)).toBeLessThanOrEqual(layout.viewport);
   }
   await audit(page);
   const controllerTab = page.getByRole('tab', { name: 'Laboratorio de controladores', exact: true });
@@ -158,7 +159,7 @@ test('academy: real shadow rendering and stereo audio work, mute, and release gr
   await page.goto('/#/academy'); await page.getByLabel('Simulation sound', { exact: true }).check();
   const level = () => page.evaluate(() => { const a = (window as unknown as { __academyAudio: { analyzer?: AnalyserNode; starts: number; pans: StereoPannerNode[]; gains: GainNode[] } }).__academyAudio; const bytes = new Uint8Array(2048); a.analyzer?.getByteTimeDomainData(bytes); return { peak: Math.max(...Array.from(bytes, n => Math.abs(n - 128))), starts: a.starts, pans: a.pans.map(n => n.pan.value), master: a.gains[0].gain.value }; });
   await expect.poll(async () => (await level()).peak).toBeGreaterThan(1);
-  expect((await level()).starts).toBeGreaterThan(3); expect((await level()).pans.some(n => n !== 0)).toBe(true);
+  expect((await level()).starts).toBeGreaterThan(3); await expect.poll(async () => (await level()).pans.some(n => n !== 0)).toBe(true);
   await page.goto('/#/settings'); await page.getByRole('switch', { name: /^Mute all/ }).check();
   await expect.poll(async () => (await level()).master).toBeLessThan(0.001);
   await expect.poll(async () => (await level()).peak).toBeLessThanOrEqual(1);

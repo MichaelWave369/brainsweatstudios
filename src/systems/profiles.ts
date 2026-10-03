@@ -36,7 +36,10 @@ export function getBundle(): Bundle {
     const legacy = localStorage.getItem(SAVE_KEY);
     if (legacy) save = validateSave(JSON.parse(legacy));
   } catch { warning = 'A saved file could not be read. Import a backup in Settings if needed.'; }
-  const id = newId(); bundle = { version: 2, active: id, profiles: [{ id, label: 'Explorer 1', save }] }; return bundle;
+  const id = newId(); bundle = { version: 2, active: id, profiles: [{ id, label: 'Explorer 1', save }] };
+  // Persist the slot identity before a player first joins online play. Otherwise
+  // a reload before any game/settings mutation creates a different local slot.
+  persist(false); return bundle;
 }
 export const currentProfile = () => { const b = getBundle(); return b.profiles.find(p => p.id === b.active)!; };
 export const getRevision = () => revision;

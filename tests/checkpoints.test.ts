@@ -140,6 +140,15 @@ describe('checkpoint schemas and migration', () => {
 });
 
 describe('profile checkpoint storage', () => {
+  it('keeps a fresh profile identity across reload before the first game or settings change', async () => {
+    const initial = await import('../src/systems/profiles');
+    const profile = initial.currentProfile();
+    vi.resetModules();
+    const reloaded = await import('../src/systems/profiles');
+    expect(reloaded.currentProfile().id).toBe(profile.id);
+    expect(reloaded.currentProfile().save).toEqual(profile.save);
+    expect(reloaded.currentProfile().save.xp).toBe(0);
+  });
   it('loads an existing v1 active save and preserves it when a second profile is added', async () => {
     const old = recordResult(freshSave(), 'code', 'master', 3, 94, '2026-10-02').save;
     storage.setItem(SAVE_KEY, JSON.stringify({ ...old, version: 1 }));

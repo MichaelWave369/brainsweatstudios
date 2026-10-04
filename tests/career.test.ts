@@ -11,7 +11,7 @@ import { careerCommand } from '../src/career/cli';
 const locker = () => addAgent(freshCareer(), 'iris', 'Iris');
 const note = (overrides: Partial<PublicNote> = {}): PublicNote => ({ id: 'public-reserve', scope: 'CAREER', worldId: null, episode: null, sourceRun: null, partition: 'CAREER', text: 'Preserve a public reserve.', ...overrides });
 async function run(save: CareerSave, world = 'reserve-lesson', episode = 'test-one', condition: 'FRESH' | 'FROZEN' | 'PRIOR' = 'FRESH') {
-    const input = evaluationInput(save, 'iris', world, episode, 'CAREER', condition), session = createCareerSession(save.agents[0], world, input);
+    const input = evaluationInput(save, 'iris', world, episode, 'CAREER', condition), session = createCareerSession(save.agents[0], world, input, save);
     while (!session.result().terminal)
         expect(await session.step()).toBe(true);
     return session.receipt();
@@ -83,6 +83,25 @@ describe('operational passports and verified evidence', () => {
     });
 });
 describe('memory firewall and artifact admission', () => {
+    it('continues a paused V7 snapshot without resetting identity or stopping the native session permanently', async () => {
+        const save = locker(), input = evaluationInput(save, 'iris', 'survey', 'partial'), session = createCareerSession(save.agents[0], 'survey', input);
+        await session.step();
+        expect(session.receipt().receipt.result.terminal).toBe(false);
+        await session.step();
+        const second = session.receipt();
+        expect(second.receipt.schema === 'model-episode@1' && second.receipt.result.ticks).toBe(2);
+        expect(second.agentId).toBe('iris');
+    });
+    it('rejects wrong world/episode scopes before any controller executes', () => {
+        const save = writeNote(locker(), 'iris', note({ scope: 'WORLD', worldId: 'town-zero' }));
+        const permitted = evaluationInput(save, 'iris', 'town-zero', 'one', 'CAREER', 'PRIOR');
+        expect(() => createCareerSession(save.agents[0], 'reserve-lesson', permitted, save)).toThrow(/before execution/);
+        const old = writeNote(locker(), 'iris', note({ scope: 'EPISODE', worldId: 'reserve-lesson', episode: 'one' }));
+        const admitted = evaluationInput(old, 'iris', 'reserve-lesson', 'one', 'CAREER', 'FROZEN');
+        const { snapshotHash: _hash, ...value } = { ...admitted, episode: 'two' };
+        void _hash;
+        expect(() => createCareerSession(old.agents[0], 'reserve-lesson', { ...value, snapshotHash: inputHash(value) }, old)).toThrow(/before execution/);
+    });
     it('defaults benchmark inputs to fresh and declares the partition', () => {
         const save = writeNote(locker(), 'iris', note());
         const input = evaluationInput(save, 'iris', 'reserve-lesson', 'benchmark', 'HOLDOUT');
@@ -153,9 +172,13 @@ describe('memory firewall and artifact admission', () => {
         expect(toLesson.artifacts).toHaveLength(0);
         const admission = handoffRecord(save, 'iris', 'reserve-lesson', 'town-zero', toTown);
         expect(admission.accepted).toEqual(['reserve-plan']);
-        const native = createCareerSession(save.agents[0], 'town-zero', toTown);
+        expect(() => createCareerSession(save.agents[0], 'town-zero', toTown)).toThrow(/verified Locker/);
+        const native = createCareerSession(save.agents[0], 'town-zero', toTown, save);
         await native.step();
-        save = rememberRun(save, native.receipt(), admission);
+        const carried = native.receipt();
+        expect('context' in carried.controller && carried.controller.context).toBe('BOUNDED_NOTEBOOK');
+        expect(carried.receipt.schema === 'world-episode@1' && carried.receipt.artifacts.some(a => a.kind === 'memory' && 'plans' in a.value && a.value.plans.length > 0)).toBe(true);
+        save = rememberRun(save, carried, admission);
         expect(validateCareer(JSON.parse(JSON.stringify(save)))).toEqual(save);
     });
     it('rejects forged artifact provenance and executable or altered content', async () => {

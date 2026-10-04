@@ -20,7 +20,7 @@ export async function careerCommand(command: string, args: string[], file: strin
             throw new Error('Agent is absent.');
         const world = args[0] || 'reserve-lesson';
         const input = evaluationInput(save, agent.id, world, `cli-${save.runs.length + 1}`);
-        const session = createCareerSession(agent, world, input);
+        const session = createCareerSession(agent, world, input, save);
         let steps = 0;
         while (!session.result().terminal && steps++ < 1000) {
             if (!await session.step())

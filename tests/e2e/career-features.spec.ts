@@ -4,6 +4,7 @@ import { freshSave } from '../../src/systems/progress';
 import { validateCareer } from '../../src/career/validation';
 import { productionOrigin } from './productionOrigin';
 test.describe.configure({ mode: 'parallel' });
+test.use({ screenshot: 'only-on-failure' });
 async function prepare(page: Page, locale: 'en' | 'es' = 'en') {
     const save = freshSave();
     save.selectedDifficulty = true;
@@ -11,8 +12,10 @@ async function prepare(page: Page, locale: 'en' | 'es' = 'en') {
     save.settings.muted = true;
     save.settings.reducedMotion = true;
     save.settings.locale = locale;
-    await page.addInitScript(v => { if (!localStorage.getItem('brain-sweat-studio:v1'))
-        localStorage.setItem('brain-sweat-studio:v1', JSON.stringify(v)); }, save);
+    await page.addInitScript(v => {
+        if (!localStorage.getItem('brain-sweat-studio:v1'))
+            localStorage.setItem('brain-sweat-studio:v1', JSON.stringify(v));
+    }, save);
 }
 const saved = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')!).academy.career);
 async function agent(page: Page) { await page.getByRole('button', { name: 'Create passport', exact: true }).click(); await expect(page.getByLabel('Selected agent', { exact: true })).toHaveValue('studio-agent'); }
@@ -60,23 +63,31 @@ test('career: scoped notes, verified plan handoffs, fresh holdout and invalid im
 });
 test('career: hidden and paused episodes stop; offline cached Locker imports and replay require no provider', async ({ page, context }) => {
     await prepare(page);
-    await page.goto('/#/academy?tab=locker');
-    await productionOrigin(page);
-    await agent(page);
-    await page.getByLabel('Destination world', { exact: true }).selectOption('town-zero');
-    await page.getByRole('button', { name: 'Prepare handoff', exact: true }).click();
-    await page.getByRole('button', { name: 'Run episode', exact: true }).click();
-    await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
-    await expect(page.getByRole('status').filter({ hasText: 'Execution status' })).toContainText('PAUSED');
-    const before = await saved(page);
-    await page.waitForTimeout(250);
-    expect(await saved(page)).toEqual(before);
-    await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: false }); document.dispatchEvent(new Event('visibilitychange')); });
-    await context.setOffline(true);
-    await page.reload();
-    await expect(page.getByRole('heading', { name: 'Agent Locker', exact: true })).toBeVisible();
-    await expect(page.getByRole('status').filter({ hasText: 'Execution status' })).toContainText('STOPPED');
-    validateCareer(await saved(page));
+    const origin = await productionOrigin();
+    try {
+        await page.goto(`${origin.url}#/academy?tab=locker`);
+        await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+        await page.reload();
+        await agent(page);
+        await page.getByLabel('Destination world', { exact: true }).selectOption('town-zero');
+        await page.getByRole('button', { name: 'Prepare handoff', exact: true }).click();
+        await page.getByRole('button', { name: 'Run episode', exact: true }).click();
+        await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
+        await expect(page.getByRole('status').filter({ hasText: 'Execution status' })).toContainText('PAUSED');
+        const before = await saved(page);
+        await page.waitForTimeout(250);
+        expect(await saved(page)).toEqual(before);
+        await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: false }); document.dispatchEvent(new Event('visibilitychange')); });
+        await origin.close();
+        await context.setOffline(true);
+        await page.reload();
+        await expect(page.getByRole('heading', { name: 'Agent Locker', exact: true })).toBeVisible();
+        await expect(page.getByRole('status').filter({ hasText: 'Execution status' })).toContainText('STOPPED');
+        validateCareer(await saved(page));
+    }
+    finally {
+        await origin.close();
+    }
 });
 test('career: Spanish keyboard and 320/390 layouts remain accessible', async ({ page }) => {
     await prepare(page, 'es');
@@ -84,7 +95,8 @@ test('career: Spanish keyboard and 320/390 layouts remain accessible', async ({ 
     await expect(page.getByRole('heading', { name: 'Casillero de agentes', exact: true })).toBeVisible();
     for (const width of [320, 390]) {
         await page.setViewportSize({ width, height: 844 });
-        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        const bounds = await page.evaluate(() => ({ width: window.innerWidth, scroll: document.documentElement.scrollWidth, overflow: Array.from(document.querySelectorAll('.career *')).filter(e => e.getBoundingClientRect().right > window.innerWidth + 1).map(e => ({ tag: e.tagName, class: e.className, text: e.textContent?.slice(0, 60), right: Math.round(e.getBoundingClientRect().right) })).slice(0, 12) }));
+        expect(bounds.scroll, JSON.stringify(bounds)).toBeLessThanOrEqual(bounds.width);
     }
     await page.getByLabel('Identificador operativo', { exact: true }).fill('iris');
     await page.getByLabel('Nombre visible', { exact: true }).fill('Iris');

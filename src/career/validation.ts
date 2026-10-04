@@ -2,14 +2,16 @@ import { controllerSpec, validateController } from '../agents/contracts.ts';
 import { verifyAgentReceipt } from '../agents/receipts.ts';
 import { clone, exact, freeze, hash, plain } from '../runtime/data.ts';
 import { assertData, dataBytes } from '../worlds/compiler.ts';
-import { baselineController, validatePlan, validateWorldController, verifyWorldReceipt } from '../worlds/receipts.ts';
+import { baselineController, freshMemory, validatePlan, validateWorldController, verifyWorldReceipt } from '../worlds/receipts.ts';
 import { CAREER_LIMITS, type AgentPassport, type CareerRun, type CareerSave, type EvaluationInput, type PortableArtifact, type PublicNote, type WorldHandoffRecord } from './types.ts';
 export const identifier = (v: unknown): v is string => typeof v === 'string' && /^[a-z][a-z0-9-]{0,63}$/.test(v);
 export const digest = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
 const text = (v: unknown, n = 160): v is string => typeof v === 'string' && v.length <= n && !Array.from(v).some(c => c.charCodeAt(0) < 32 && ![9, 10, 13].includes(c.charCodeAt(0)));
 export const ids = (v: unknown, n: number): v is string[] => Array.isArray(v) && v.length <= n && v.every(identifier) && new Set(v).size === v.length;
-export function demand(ok: unknown, message: string): asserts ok { if (!ok)
-    throw new Error(message); }
+export function demand(ok: unknown, message: string): asserts ok {
+    if (!ok)
+        throw new Error(message);
+}
 export const freshCareer = (): CareerSave => ({ schema: 'agent-locker@1', agents: [], notes: {}, runs: [], artifacts: [], handoffs: [] });
 export function createPassport(id: string, displayName: string): AgentPassport {
     return validatePassport({ schema: 'agent-passport@1', id, displayName, createdLocally: true,
@@ -25,7 +27,7 @@ export function validatePassport(input: unknown): AgentPassport {
 }
 export function validateNote(input: unknown): PublicNote {
     assertData(input, 1000, 30, 3);
-    demand(plain(input) && exact(input, ['id', 'scope', 'worldId', 'episode', 'sourceRun', 'partition', 'text']) && identifier(input.id) && ['EPISODE', 'WORLD', 'CAREER'].includes(String(input.scope)) && (input.worldId === null || identifier(input.worldId)) && (input.episode === null || identifier(input.episode)) && (input.sourceRun === null || digest(input.sourceRun)) && ['CAREER', 'TRAIN', 'HOLDOUT', 'TRANSFER'].includes(String(input.partition)) && text(input.text) && input.text.trim().length > 0, 'Invalid bounded public note.');
+    demand(plain(input) && exact(input, ['id', 'scope', 'worldId', 'episode', 'sourceRun', 'partition', 'text']) && identifier(input.id) && ['EPISODE', 'WORLD', 'CAREER'].includes(String(input.scope)) && (input.worldId === null || identifier(input.worldId)) && (input.episode === null || identifier(input.episode)) && (input.sourceRun === null || digest(input.sourceRun)) && ['CAREER', 'TRAIN', 'HOLDOUT', 'TRANSFER'].includes(String(input.partition)) && text(input.text, 120) && input.text.trim().length > 0, 'Invalid bounded public note.');
     demand(input.scope === 'CAREER' ? input.worldId === null && input.episode === null : input.scope === 'WORLD' ? identifier(input.worldId) && input.episode === null : identifier(input.worldId) && identifier(input.episode), 'Memory scope needs its explicit world/episode.');
     return freeze(clone(input)) as unknown as PublicNote;
 }
@@ -49,6 +51,9 @@ export function validateEvaluation(input: unknown): EvaluationInput {
     demand(input.snapshotHash === inputHash(value), 'Frozen memory snapshot differs.');
     return freeze({ ...value, snapshotHash: input.snapshotHash }) as EvaluationInput;
 }
+export function publicWorldMemory(input: EvaluationInput) {
+    return { ...freshMemory(), facts: input.notes.map(n => n.text), plans: input.artifacts.flatMap(a => [a.content.goal, ...a.content.steps, ...a.content.fallbacks]).slice(0, 6) };
+}
 const verifiedRuns = new WeakSet<object>();
 export const runDigest = (r: Omit<CareerRun, 'digest'>) => hash(r);
 export function verifyCareerRun(input: unknown): CareerRun {
@@ -70,12 +75,10 @@ export function verifyCareerRun(input: unknown): CareerRun {
     else {
         // Exactly these initial public inputs must appear before any native decision.
         const initial = receipt.artifacts.filter(a => a.actor === input.actor && a.index === 0);
-        const noteFacts = evaluation.notes.map(n => n.text);
-        demand(initial.filter(a => a.kind === 'memory').length === (noteFacts.length ? 1 : 0), 'Initial memory evidence differs.');
-        if (noteFacts.length) {
-            const value = initial.find(a => a.kind === 'memory')!.value;
-            demand('facts' in value && hash(value.facts) === hash(noteFacts) && Object.entries(value).every(([k, v]) => k === 'schema' || k === 'facts' || Array.isArray(v) && v.length === 0), 'Initial public memory differs.');
-        }
+        const memory = publicWorldMemory(evaluation), hasMemory = evaluation.notes.length > 0 || evaluation.artifacts.length > 0;
+        demand(initial.filter(a => a.kind === 'memory').length === (hasMemory ? 1 : 0), 'Initial memory evidence differs.');
+        if (hasMemory)
+            demand(hash(initial.find(a => a.kind === 'memory')!.value) === hash(memory), 'Initial public memory differs.');
         demand(initial.filter(a => a.kind === 'plan').length === evaluation.artifacts.length, 'Initial artifact evidence differs.');
         evaluation.artifacts.forEach((a, i) => demand(hash(initial.filter(n => n.kind === 'plan')[i].value) === a.contentHash, 'Admitted plan differs.'));
     }
@@ -105,10 +108,15 @@ export function validateCareer(input: unknown): CareerSave {
     demand(Object.keys(noteLists).length === agents.length && agents.every(a => Array.isArray(noteLists[a.id]) && (noteLists[a.id] as unknown[]).length <= 12), 'Every passport needs its bounded public note list.');
     const notes = Object.fromEntries(agents.map(a => [a.id, (noteLists[a.id] as unknown[]).map(validateNote)]));
     const agentById = new Map(agents.map(a => [a.id, a])), runById = new Map(runs.map(r => [r.digest, r]));
-    runs.forEach(r => { demand(agentById.has(r.agentId), 'Evidence agent is absent.'); r.evaluation.notes.forEach(n => { if (n.sourceRun) {
-        const source = runById.get(n.sourceRun);
-        demand(source && source.agentId === r.agentId && source.evaluation.partition === n.partition, 'Admitted memory source/partition differs.');
-    } }); });
+    runs.forEach(r => {
+        demand(agentById.has(r.agentId), 'Evidence agent is absent.');
+        r.evaluation.notes.forEach(n => {
+            if (n.sourceRun) {
+                const source = runById.get(n.sourceRun);
+                demand(source && source.agentId === r.agentId && source.evaluation.partition === n.partition, 'Admitted memory source/partition differs.');
+            }
+        });
+    });
     runs.forEach(r => r.evaluation.artifacts.forEach(a => { const origin = runById.get(a.creationRun); demand(origin && origin.agentId === a.creator && ['CAREER', 'TRAIN'].includes(origin.evaluation.partition) && origin.receipt.schema === 'world-episode@1' && origin.receipt.artifacts.some(p => p.actor === origin.actor && p.kind === 'plan' && hash(p.value) === a.contentHash), 'Admitted artifact lacks eligible provenance.'); }));
     artifacts.forEach(a => { const origin = runById.get(a.creationRun); demand(origin && origin.agentId === a.creator && origin.receipt.schema === 'world-episode@1' && origin.receipt.artifacts.some(p => p.actor === origin.actor && p.kind === 'plan' && hash(p.value) === a.contentHash), 'Artifact lacks verified creator/creation evidence.'); demand(origin.evaluation.partition === 'CAREER' || origin.evaluation.partition === 'TRAIN', 'Holdout artifacts cannot enter a career inventory.'); });
     for (const a of agents) {
@@ -116,10 +124,12 @@ export function validateCareer(input: unknown): CareerSave {
         demand(hash(a.roleHistory) === hash(runs.filter(r => r.agentId === a.id).map(r => ({ runId: r.digest, worldId: r.worldId, role: r.actor }))), 'Role history is unsupported.');
         demand(hash(a.inventory) === hash(artifacts.filter(p => p.creator === a.id).map(p => p.id)), 'Inventory references differ.');
         demand(new Set(notes[a.id].map(n => n.id)).size === notes[a.id].length, 'Repeated memory id.');
-        notes[a.id].forEach(n => { if (n.sourceRun) {
-            const source = runById.get(n.sourceRun);
-            demand(source && source.agentId === a.id && source.evaluation.partition === n.partition, 'Memory source/partition differs.');
-        } });
+        notes[a.id].forEach(n => {
+            if (n.sourceRun) {
+                const source = runById.get(n.sourceRun);
+                demand(source && source.agentId === a.id && source.evaluation.partition === n.partition, 'Memory source/partition differs.');
+            }
+        });
     }
     handoffs.forEach(h => demand(agentById.has(h.agentId), 'Handoff agent is absent.'));
     return freeze({ schema: 'agent-locker@1', agents, notes, runs, artifacts, handoffs });

@@ -1,25 +1,35 @@
 import { createProvider } from '../agents/registry.ts';
 import { createAgentSession } from '../agents/session.ts';
+import { hash } from '../runtime/data.ts';
 import { worldConfig } from '../runtime/garageWorlds.ts';
-import { freshMemory } from '../worlds/receipts.ts';
+import type { WorldController } from '../worlds/receipts.ts';
 import { WorldSession } from '../worlds/session.ts';
 import { townPack } from '../worlds/townZero.ts';
-import { type AgentPassport, type CareerRun, type EvaluationInput } from './types.ts';
-import { demand, validateEvaluation, validatePassport } from './validation.ts';
+import { type AgentPassport, type CareerRun, type CareerSave, type EvaluationInput } from './types.ts';
+import { demand, publicWorldMemory, validateCareer, validateEvaluation, validatePassport } from './validation.ts';
 import { sealRun } from './operations.ts';
 // All controller proposals pass the existing native validators. This layer
 // binds operational identity and admits public inputs; it owns no world state.
-export function createCareerSession(passport: AgentPassport, worldId: string, input: EvaluationInput) {
+export function createCareerSession(passport: AgentPassport, worldId: string, input: EvaluationInput, source?: CareerSave) {
     const agent = validatePassport(passport), evaluation = validateEvaluation(input);
     demand(agent.compatibleWorlds.includes(worldId), 'Agent/world compatibility is absent.');
+    demand(evaluation.notes.every(n => n.scope === 'CAREER' || n.worldId === worldId && (n.scope !== 'EPISODE' || n.episode === evaluation.episode)), 'Public memory crossed its declared scope before execution.');
+    demand(evaluation.artifacts.every(a => a.creator === agent.id && a.compatibleWorlds.includes(worldId)), 'Artifact admission is incompatible before execution.');
+    if (evaluation.artifacts.length || evaluation.notes.some(n => n.sourceRun)) {
+        demand(source, 'Provide the verified Locker to admit source-backed inputs.');
+        const provenance = validateCareer(source);
+        evaluation.artifacts.forEach(a => demand(provenance.artifacts.some(p => hash(p) === hash(a)), 'Artifact provenance is absent before execution.'));
+        evaluation.notes.forEach(n => { if (n.sourceRun)
+            demand(provenance.runs.some(r => r.digest === n.sourceRun && r.agentId === agent.id && r.evaluation.partition === n.partition), 'Memory provenance differs before execution.'); });
+    }
     if (['town-zero', 'reserve-lesson'].includes(worldId)) {
         const pack = townPack(), spec = pack.worlds.find(w => w.id === worldId)!;
         const actor = spec.roles[0].id;
-        const controller = agent.controller.world;
+        const controller: WorldController = { ...agent.controller.world, context: evaluation.notes.length || evaluation.artifacts.length ? 'BOUNDED_NOTEBOOK' : agent.controller.world.context };
         demand(controller.provider !== 'ollama', 'Connect a local model explicitly in the Agent Garage; the Locker does not auto-connect providers.');
         const session = new WorldSession(pack, worldId, 369, { [actor]: controller });
-        if (evaluation.notes.length)
-            session.setMemory(actor, { ...freshMemory(), facts: evaluation.notes.map(n => n.text) });
+        if (evaluation.notes.length || evaluation.artifacts.length)
+            session.setMemory(actor, publicWorldMemory(evaluation));
         evaluation.artifacts.forEach(a => session.setPlan(actor, a.content));
         return {
             actor, kind: 'world' as const,

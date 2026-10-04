@@ -224,5 +224,9 @@
   "Inspect frozen trial": "Inspeccionar ensayo congelado",
   "Frozen trial reproduced. Inspection is stopped.": "Ensayo congelado reproducido. La inspección está detenida.",
   "Keep a fictional town supplied, compare controller teams, and inspect delayed consequences in the Academy. Local models remain optional.": "Mantén abastecido un pueblo ficticio, compara equipos de controladores e inspecciona consecuencias diferidas en la Academia. Los modelos locales son opcionales.",
-  "Explore Town Zero": "Explorar Town Zero"
+  "Explore Town Zero": "Explorar Town Zero",
+  "Recorded role observations": "Observaciones registradas por rol",
+  "Causal ledger table": "Tabla del registro causal",
+  "Individual frozen trials table": "Tabla de ensayos congelados individuales",
+  "Frozen comparison distributions": "Distribuciones de comparación congelada"
 }

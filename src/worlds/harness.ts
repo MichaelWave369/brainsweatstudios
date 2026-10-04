@@ -114,7 +114,7 @@ export async function runWorldHarness() {
       instances: hundred.instances.length,
       milliseconds: generateMs,
     },
-    realModel: "UNAVAILABLE",
+    realModel: "NOT_RUN",
     claims:
       "Machine-specific descriptive measurements; no IQ, certification, real-model or arbitrary-scale claim.",
   };

@@ -316,7 +316,9 @@ export default function WorldLab({
       s.handoff(
         role,
         {
-          ...baselineController(`${family}-replacement`),
+          ...baselineController(
+            `${role.slice(0, 16)}-${family}-${s.recorder.handoffs.length}`,
+          ),
           family,
           provider: family === "model" ? (local ? "ollama" : "mock") : "none",
           model:
@@ -975,7 +977,9 @@ export default function WorldLab({
             ) : null}
             {current.world.spec.turnMode === "simultaneous" && (
               <div className="button-row">
-                <pre translate="no">{JSON.stringify(humanIntents)}</pre>
+                <pre translate="no" tabIndex={0}>
+                  {JSON.stringify(humanIntents)}
+                </pre>
                 <button
                   className="btn secondary"
                   disabled={
@@ -1035,7 +1039,7 @@ export default function WorldLab({
               >
                 Record public plan
               </button>
-              <pre translate="no">
+              <pre translate="no" tabIndex={0}>
                 {JSON.stringify(
                   receipt?.artifacts.filter((a) => a.actor === actor),
                   null,
@@ -1045,7 +1049,9 @@ export default function WorldLab({
             </details>
             <details>
               <summary>Role observation and public memory</summary>
-              <pre translate="no">{JSON.stringify(view, null, 2)}</pre>
+              <pre translate="no" tabIndex={0}>
+                {JSON.stringify(view, null, 2)}
+              </pre>
               <button
                 className="btn secondary"
                 onClick={() =>
@@ -1205,7 +1211,12 @@ export default function WorldLab({
                 onChange={(e) => setFilter(e.target.value)}
               />
             </label>
-            <div className="world-table-wrap">
+            <div
+              className="world-table-wrap"
+              tabIndex={0}
+              role="region"
+              aria-label="Causal ledger table"
+            >
               <table>
                 <thead>
                   <tr>
@@ -1233,8 +1244,25 @@ export default function WorldLab({
             </div>
             <details>
               <summary>Team proposals and action validation</summary>
-              <pre translate="no">
+              <pre translate="no" tabIndex={0}>
                 {JSON.stringify(inspection?.record, null, 2)}
+              </pre>
+            </details>
+            <details>
+              <summary>Recorded role observations</summary>
+              <pre translate="no" tabIndex={0}>
+                {JSON.stringify(
+                  inspection
+                    ? Object.fromEntries(
+                        inspection.environment.actors.map((a) => [
+                          a.id,
+                          inspection.environment.observe(a.id),
+                        ]),
+                      )
+                    : {},
+                  null,
+                  2,
+                )}
               </pre>
             </details>
           </section>
@@ -1298,7 +1326,12 @@ export default function WorldLab({
               Inspect recreates the selected offline trial and verifies its
               recorded hash.
             </p>
-            <div className="world-table-wrap">
+            <div
+              className="world-table-wrap"
+              tabIndex={0}
+              role="region"
+              aria-label="Individual frozen trials table"
+            >
               <table>
                 <thead>
                   <tr>
@@ -1340,7 +1373,12 @@ export default function WorldLab({
           </details>
         ) : null}
         {saved.comparison ? (
-          <div className="world-table-wrap">
+          <div
+            className="world-table-wrap"
+            tabIndex={0}
+            role="region"
+            aria-label="Frozen comparison distributions"
+          >
             <table>
               <thead>
                 <tr>
@@ -1387,7 +1425,9 @@ export default function WorldLab({
         </label>
         <details>
           <summary>Inspect data-only WorldSpec JSON</summary>
-          <pre translate="no">{JSON.stringify(spec, null, 2)}</pre>
+          <pre translate="no" tabIndex={0}>
+            {JSON.stringify(spec, null, 2)}
+          </pre>
         </details>
         <p>
           Saved campaigns restore stopped. Local models stay disconnected until

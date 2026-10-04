@@ -323,6 +323,7 @@ describe("long receipts and controller interoperability", () => {
       s = WorldSession.restore(v);
     expect(s.status).toBe("STOPPED");
     expect(s.env.stateHash()).toBe(v.finalHash);
+    expect(s.receipt().digest).toBe(v.digest);
     expect(verifyWorldReceipt(s.receipt()).result).toEqual(v.result);
   });
   it.each(["event", "snapshot", "actor", "state", "chain", "rules"])(

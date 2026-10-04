@@ -81,6 +81,7 @@ export class WorldSession {
   private generation = 0;
   private pending = new Set<AbortController>();
   private lastDecision: Record<string, number> = {};
+  private restoredEnding: WorldReceipt["ending"] | null = null;
   constructor(
     packInput: unknown,
     worldId = "town-zero",
@@ -128,6 +129,7 @@ export class WorldSession {
     if (adapter && (to.family !== "model" || adapter.id !== to.provider))
       throw new Error("Replacement provider differs from its controller.");
     this.recorder.handoff(actor, to, note);
+    this.restoredEnding = null;
     this.pause();
     if (adapter) this.adapters[actor] = adapter;
     else if (this.adapters[actor]?.id !== to.provider)
@@ -266,6 +268,7 @@ export class WorldSession {
           "Supply a legal human intent for every active human role.",
         );
     const token = this.generation;
+    this.restoredEnding = null;
     this.status = "REQUESTING";
     const decisions = await Promise.all(
       actors.map(async (a) => {
@@ -394,22 +397,25 @@ export class WorldSession {
     if (!this.memories[actor]) throw new Error("Unknown memory owner.");
     const memory = validateMemory(value);
     this.recorder.artifact(actor, "memory", memory);
+    this.restoredEnding = null;
     this.memories[actor] = memory;
   }
   setPlan(actor: string, value: unknown) {
     const plan = validatePlan(value);
     this.recorder.artifact(actor, "plan", plan);
+    this.restoredEnding = null;
     this.plans[actor] = plan;
   }
   receipt(): WorldReceipt {
     const r = this.recorder.finish(
-      this.status === "COMPLETE"
-        ? "complete"
-        : this.status === "ERROR"
-          ? "error"
-          : this.status === "BUDGET"
-            ? "budget"
-            : "stopped",
+      this.restoredEnding ??
+        (this.status === "COMPLETE"
+          ? "complete"
+          : this.status === "ERROR"
+            ? "error"
+            : this.status === "BUDGET"
+              ? "budget"
+              : "stopped"),
     );
     const { digest: _digest, ...base } = r;
     void _digest;
@@ -454,6 +460,7 @@ export class WorldSession {
       });
     }
     Object.assign(s.spent, r.requests);
+    s.restoredEnding = r.ending;
     s.status = "STOPPED";
     return s;
   }

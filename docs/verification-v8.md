@@ -112,9 +112,12 @@ itself starts STOPPED.
 A WebKit hidden-tab regression exposed a pause acknowledgment/save race: the
 board showed PAUSED before its last completed burst was persisted. Visibility
 now aborts at the synchronous browser event boundary, stops the worker and
-publishes the completed receipt before acknowledging pause. The shared paused
-effect also persists completed evidence. The same existing stability assertions
-remain, with ten additional WebKit visibility/outage executions and no retries.
+publishes the completed receipt at pause. Academy commits that receipt to local
+storage in the layout phase: its former passive save effect could still lag
+behind the PAUSED board after the session had stopped. The shared paused effect
+also publishes completed evidence. The same existing stability assertions
+remain, with ten additional WebKit visibility/outage executions and no retries;
+verification of this final ordering change is pending.
 
 Playwright 1.63 WebKit rejects service-worker reload with its offline-emulation
 flag, also reproduced [upstream](https://github.com/microsoft/playwright/issues/42775).

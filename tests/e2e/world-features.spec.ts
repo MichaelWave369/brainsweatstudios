@@ -365,6 +365,9 @@ test("worlds: hidden and paused sessions stop advancing; origin outage replay an
       .click();
     await expect(page.locator(".world-status")).toHaveText("PAUSED");
     const tick = (await saved(page)).academy.worlds.receipt.result.tick;
+    expect(
+      await page.locator(".world-summary").getByText(/^Tick \d+$/).textContent(),
+    ).toBe(`Tick ${tick}`);
     await page.waitForTimeout(200);
     expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(tick);
     await page
@@ -379,6 +382,9 @@ test("worlds: hidden and paused sessions stop advancing; origin outage replay an
     });
     await expect(page.locator(".world-status")).toHaveText("PAUSED");
     const hiddenTick = (await saved(page)).academy.worlds.receipt.result.tick;
+    expect(
+      await page.locator(".world-summary").getByText(/^Tick \d+$/).textContent(),
+    ).toBe(`Tick ${hiddenTick}`);
     await page.waitForTimeout(200);
     expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(
       hiddenTick,

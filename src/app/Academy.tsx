@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../components/Icon';
 import RuntimeLab from './RuntimeLab';
 import AgentGarage from './AgentGarage';
@@ -43,7 +43,9 @@ export default function Academy({ arena, rover = false, lab = false, garage = fa
   const { save, profile } = useStudio(), [academy, setAcademy] = useState<AcademySave>(() => save.academy || freshAcademy());
   const [tab, setTab] = useState(worlds ? 'worlds' : garage ? 'garage' : lab ? 'runtime' : rover ? 'rover' : 'controllers'), [kind, setKind] = useState<ArenaKind>(arena && isArena(arena) ? arena : 'sports');
   const [paused, setPaused] = useState(false), [visible, setVisible] = useState(!document.hidden), [sound, setSound] = useState(false), [notice, setNotice] = useState(''), [revision, setRevision] = useState(0), alive = useRef(true);
-  useEffect(() => { saveAcademy(academy, profile.id); }, [academy, profile.id]);
+  // Commit the local receipt before the board can acknowledge a pause. A
+  // passive effect left PAUSED visible while storage still held an older burst.
+  useLayoutEffect(() => { saveAcademy(academy, profile.id); }, [academy, profile.id]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => { const visibility = () => setVisible(!document.hidden); document.addEventListener('visibilitychange', visibility); return () => document.removeEventListener('visibilitychange', visibility); }, []);
   const importFile = async (file?: File) => {

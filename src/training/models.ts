@@ -1,3 +1,6 @@
+import { freshCareer, validateCareer } from '../career/validation.ts';
+import type { CareerSave } from '../career/types.ts';
+import { assertData } from '../worlds/compiler.ts';
 import { freshWorldSave, validateWorldSave, type WorldSave } from '../worlds/notebook';
 import { freshGarage, validateGarage, type GarageSave } from '../agents/notebook.ts';
 import { freshLab, validateLab, type LabSave } from '../runtime/notebook.ts';
@@ -17,7 +20,7 @@ export interface SearchPoint { generation: number; successes: number; score: num
 export interface ControllerRecord { draft: PolicyRule[]; champion: PolicyRule[]; stage: number; seed: number; history: SearchPoint[] }
 export interface RoverPoint { episode: number; successes: number; reward: number }
 export interface RoverRecord { mode: 'courier' | 'storm'; episodes: number; random: number; q: number[][]; history: RoverPoint[] }
-export interface AcademySave { controllers: Partial<Record<ArenaKind, ControllerRecord>>; rover: RoverRecord; lab: LabSave; garage: GarageSave; worlds: WorldSave }
+export interface AcademySave { controllers: Partial<Record<ArenaKind, ControllerRecord>>; rover: RoverRecord; lab: LabSave; garage: GarageSave; worlds: WorldSave; career: CareerSave }
 
 export function splitSeeds(seed: number, heldOut = false) { return Array.from({ length: 8 }, (_, i) => (heldOut ? 20000 : 1000) + seed * 101 + i * 17); }
 export function assess(kind: ArenaKind, rules: PolicyRule[], stage: number, seeds: number[], variant: Variant = 'standard'): Assessment {
@@ -96,14 +99,16 @@ export function evaluateRover(record: RoverRecord) {
   const trials = Array.from({ length: 20 }, (_, i) => runRover(record, 20000 + i * 19));
   return { trials, successes: trials.filter(e => e.status === 'complete').length, ticks: trials.reduce((s, e) => s + e.tick, 0) / trials.length, collisions: trials.reduce((s, e) => s + e.collisions, 0) / trials.length };
 }
-export const freshAcademy = (): AcademySave => ({ controllers: {}, rover: roverFresh(), lab: freshLab(), garage: freshGarage(), worlds: freshWorldSave() });
+export const freshAcademy = (): AcademySave => ({ controllers: {}, rover: roverFresh(), lab: freshLab(), garage: freshGarage(), worlds: freshWorldSave(), career: freshCareer() });
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
 const integer = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
 const finite = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
 const keys = (v: Record<string, unknown>, names: string[]) => Object.keys(v).length === names.length && names.every(k => Object.hasOwn(v, k));
 export function validateAcademy(value: unknown): AcademySave {
   if (value === undefined) return freshAcademy();
-  if (!object(value) || !(keys(value, ['controllers', 'rover']) || keys(value, ['controllers', 'rover', 'lab']) || keys(value, ['controllers', 'rover', 'lab', 'garage']) || keys(value, ['controllers', 'rover', 'lab', 'garage', 'worlds']) || keys(value, ['controllers', 'rover', 'worlds']) || keys(value, ['controllers', 'rover', 'lab', 'worlds'])) || !object(value.controllers) || Object.keys(value.controllers).some(k => !(AGENT_IDS as readonly string[]).includes(k))) throw new Error('Invalid academy save.');
+  assertData(value, 3000000, 900000, 34);
+  const old = object(value) ? Object.fromEntries(Object.entries(value).filter(([k]) => k !== 'career')) : value;
+  if (!object(value) || !object(old) || !(keys(old, ['controllers', 'rover']) || keys(old, ['controllers', 'rover', 'lab']) || keys(old, ['controllers', 'rover', 'lab', 'garage']) || keys(old, ['controllers', 'rover', 'lab', 'garage', 'worlds']) || keys(old, ['controllers', 'rover', 'worlds']) || keys(old, ['controllers', 'rover', 'lab', 'worlds'])) || !object(value.controllers) || Object.keys(value.controllers).some(k => !(AGENT_IDS as readonly string[]).includes(k))) throw new Error('Invalid academy save.');
   const controllers: AcademySave['controllers'] = {};
   for (const kind of AGENT_IDS) {
     const c = value.controllers[kind]; if (c === undefined) continue;
@@ -112,5 +117,5 @@ export function validateAcademy(value: unknown): AcademySave {
   }
   const r = value.rover;
   if (!object(r) || !keys(r, ['mode', 'episodes', 'random', 'q', 'history']) || !['courier', 'storm'].includes(String(r.mode)) || !integer(r.episodes, 0, 100000) || !integer(r.random, 0, 2 ** 32 - 1) || !Array.isArray(r.q) || r.q.length !== Q_ROWS || !r.q.every(row => Array.isArray(row) && row.length === 4 && row.every(v => finite(v, -100, 100))) || !Array.isArray(r.history) || r.history.length > 80 || !r.history.every(p => object(p) && keys(p, ['episode', 'successes', 'reward']) && integer(p.episode, 1, r.episodes as number) && finite(p.successes, 0, 100) && finite(p.reward, -200, 100))) throw new Error('Invalid learned rover record.');
-  return { controllers, lab: validateLab(value.lab), garage: validateGarage(value.garage), worlds: validateWorldSave(value.worlds), rover: { mode: r.mode as RoverRecord['mode'], episodes: r.episodes as number, random: r.random as number, q: (r.q as number[][]).map(row => [...row]), history: r.history.map(p => ({ ...p })) as RoverPoint[] } };
+  return { controllers, career: validateCareer(value.career), lab: validateLab(value.lab), garage: validateGarage(value.garage), worlds: validateWorldSave(value.worlds), rover: { mode: r.mode as RoverRecord['mode'], episodes: r.episodes as number, random: r.random as number, q: (r.q as number[][]).map(row => [...row]), history: r.history.map(p => ({ ...p })) as RoverPoint[] } };
 }

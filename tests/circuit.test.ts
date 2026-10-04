@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
 import v11Native from './fixtures/v11-native-receipts.json';
-import { clone, hash } from '../src/runtime/data';
+import { canonical, clone, freeze, hash, sha256 } from '../src/runtime/data';
 import { freshCircuit, validateCircuit, verifyCircuitEvent } from '../src/circuit/evidence';
 import { addCircuitSeason, importCircuitWorldPack, rememberCircuitEvent, reviewCircuitPerformance, shareCircuitAsset, starterCircuit, writeCircuitNote } from '../src/circuit/operations';
 import { makeSeason, validateSeason } from '../src/circuit/specs';
@@ -166,6 +167,26 @@ describe('versioned V12 native authority and frozen comparisons', () => {
 });
 
 describe('immutable V11 native compatibility', () => {
+    it('immutable hash reuse preserves canonical bytes and never trusts a shallow freeze or accessor', () => {
+        const data = freeze({ z: [{ role: 'driver', signals: ['ready', 'pit'] }], a: 'original' });
+        const bytes = '{"a":"original","z":[{"role":"driver","signals":["ready","pit"]}]}';
+        expect(canonical(data)).toBe(bytes); expect(hash(data)).toBe(sha256(bytes)); expect(hash(data)).toBe(sha256(bytes));
+        const mutable = { score: 1 }, shallow = Object.freeze({ values: Object.freeze([mutable]) }), first = hash(shallow);
+        mutable.score = 2; expect(hash(shallow)).not.toBe(first);
+        let score = 1;
+        const accessor = Object.freeze(Object.defineProperty({}, 'score', { enumerable: true, get: () => score }));
+        const prior = hash(accessor); score = 2; expect(hash(accessor)).not.toBe(prior);
+        for (const prefix of ['a'.repeat(8192), 'ñ'.repeat(8191) + '🎵', 'x'.repeat(8191) + '🎵']) {
+            for (const suffix of ['first', 'second', 'second changed', '🎶']) {
+                const text = prefix + suffix + 'z'.repeat(8192);
+                expect(sha256(text)).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
+            }
+        }
+        const env = createFamilyEnvironment(familyConfig('cache-quest')), before = env.observe('explorer'), result = env.result();
+        expect(env.observe('explorer')).toBe(before); expect(env.result()).toBe(result); expect(Object.isFrozen(before.state)).toBe(true);
+        env.step({ explorer: 'inspect', navigator: 'wait' });
+        expect(env.observe('explorer')).not.toBe(before); expect(env.result()).not.toBe(result); expect(before.tick).toBe(0); expect(env.observe('explorer').tick).toBe(1);
+    });
     for (const fixture of v11Native.cases) it(`replays the merged V11 ${fixture.family} authority without rewriting its digest`, async () => {
         expect(v11Native.sourceCommit).toBe('14f50dd88fe5a46257b846ac512c28b13a89c01b');
         const receipt = verifyFamilyReceipt(fixture.receipt), session = new FamilySession(receipt.config, receipt.initialControllers, receipt.inputs);

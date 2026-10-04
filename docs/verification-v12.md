@@ -42,12 +42,19 @@ retain their original digests.
 | Local production preview | Pages-prefix/offline production verifier passes. The complete production preview verifier passes existing 30-day Town Zero, Locker, family, synthetic audio and new six-event Circuit flows with zero page errors. This is preview evidence; the public site remains V11. |
 | License inventory | 195 packages, no unspecified licenses, no new application dependency. |
 
-The final local unit suite passed all 362 tests: 337 retained cases plus 25 Circuit/immutable-V11 cases. Lint, TypeScript and the production build passed. GitHub source gates and legacy upgrade/SQL evidence will be recorded after the exact candidate source is verified. Existing
+The final local unit suite passed all 363 tests: 337 retained cases plus 26 Circuit/immutable-V11 cases. Lint, TypeScript and the production build passed. The exact tested review head and immutable GitHub run links are recorded in [PR #7](https://github.com/larrinamsalva/brainsweatstudios/pull/7). Its production, three-browser campaign and full gameplay gates must all succeed before the candidate is ready for review. Existing
 tests, assertions, deadlines, retries, skips and earlier specialist stages are
 retained. New browser stories exercise actual season execution, native artifact
 carry, stopped restoration after an origin outage, EN/ES/keyboard/320/390/axe,
 human role attribution, atomic imports, frozen worker evidence and twelve-event
 profile persistence.
+
+Cold restoration retains full native replay validation. Bounded exact SHA-256
+prefix reuse and immutable canonical/turn-view reuse reduce repeated work;
+shallow freezes and accessors cannot authorize cached hashes. SHA results match
+Node's independent implementation, including Unicode prefix boundaries, and the
+frozen V10/V11 receipts retain every original digest. The five-second stopped
+restoration assertion is unchanged.
 
 ## Limits
 

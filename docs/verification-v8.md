@@ -14,23 +14,26 @@ V6/V7 individual schemas and their original validators remain independent.
 
 ## Current evidence
 
-Local source has 257 passing unit cases (the original 206 plus 51 V8 cases),
-lint, TypeScript and production build. The prior complete CI regression passed 256 unit cases and all browser checks.
-The final behavior-diagnostic addition is checked locally; its fresh browser
-regression remains pending. Pending checks are not passes.
+Source `58060394a9ce96ae4cf2cbed285c7056a911fe3f` passes 257 unit cases
+(the original 206 plus 51 V8 cases), lint, TypeScript and production build in CI.
+Its production workflow passes all 59 advanced Chromium cases. Its gameplay
+workflow passes all 18 World Lab cases in three browsers and ten additional
+WebKit visibility/outage executions. The same gameplay workflow records the
+complete authored-mission and accessibility regression; its immutable result is
+linked below. Actual Pages/live V8 verification still requires a reviewed merge.
 
 | Check | Recorded result |
 |---|---|
 | Locked install, lint, TypeScript and production build | Passed locally / in CI |
-| Full unit suite | 257 passed locally; original assertions retained |
+| Full unit suite | 257 passed locally and in CI; original assertions retained |
 | Original headless runtime | 1,000 episodes; 76,766 steps; 978 successes; 15 verified replays |
 | Existing deterministic mock sweep | 32 successes; 786 ticks; 33 verified replays; eight frozen trials; six recoveries |
 | Town Zero headless | Full 7- and 30-day campaigns and 20-/100-world batches passed |
 | New world validation/authority/receipts/family tests | Passed |
-| Existing Academy/runtime/Garage browser cases | Passed in complete V8 CI |
-| New World Lab browser cases | 18 passed in Chromium/Firefox/WebKit; fresh behavior-profile rerun pending |
-| Production upgrade/offline/online SQL checks | Passed in V8 CI |
-| Full 888-mission and broader accessibility suite | 1,050 passed, including all 888 authored missions; final source rerun pending |
+| Existing Academy/runtime/Garage browser cases | Passed in three browsers on the visibility-fix source |
+| New World Lab browser cases | 18 passed in Chromium/Firefox/WebKit; ten repeated WebKit visibility/outage cases passed |
+| Production upgrade/offline/online SQL checks | Passed on the visibility-fix source |
+| Full 888-mission and broader accessibility suite | Complete prior V8 run: 1,050 passed, including all 888 authored missions; visibility-fix result in the linked gameplay workflow |
 | Actual Pages V8 / live verification | Pending reviewed merge |
 | Actual installed Ollama | UNAVAILABLE; no models or trials |
 
@@ -42,12 +45,14 @@ keyboard/aXe/narrow layouts, hidden/pause lifecycle and production outage recove
 Local browser execution was blocked by missing executables and an unsuccessful
 browser download; browser evidence comes from the actual production CI build.
 
-The complete three-browser/gameplay result is recorded in
-[37171733914](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37171733914),
-code `048d5612c81981189507e2d0ff295796add70e6e`. Production checks and 59
-Chromium advanced flows also pass on `66783bf82044d0503a3caee177e451d888fe5dd9` in
-[37172403745](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37172403745).
-Its 18 World Lab cases pass in all three browsers.
+The visibility-fix source is `58060394a9ce96ae4cf2cbed285c7056a911fe3f`:
+[production evidence](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37175585974)
+and [gameplay evidence](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37175585963).
+The complete prior V8 gameplay run passed all 1,050 cases on
+`66783bf82044d0503a3caee177e451d888fe5dd9` in
+[37172403751](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37172403751).
+Evidence links identify the tested code independently of later documentation-only
+commits. A running or failed check is never counted as a pass.
 
 ## Boundaries exercised
 
@@ -116,8 +121,8 @@ publishes the completed receipt at pause. Academy commits that receipt to local
 storage in the layout phase: its former passive save effect could still lag
 behind the PAUSED board after the session had stopped. The shared paused effect
 also publishes completed evidence. The same existing stability assertions
-remain, with ten additional WebKit visibility/outage executions and no retries;
-verification of this final ordering change is pending.
+remain, with immediate board/storage tick equality checks, ten passing additional
+WebKit visibility/outage executions and no retries.
 
 Playwright 1.63 WebKit rejects service-worker reload with its offline-emulation
 flag, also reproduced [upstream](https://github.com/microsoft/playwright/issues/42775).
@@ -134,12 +139,17 @@ real UI screenshots of fictional baselines, not generated mockups or model resul
 
 
 These permanent review captures come from passing production workflow
-[37171733912](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37171733912),
-code `048d5612c81981189507e2d0ff295796add70e6e`. Their displayed state is an
+[37175585974](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37175585974),
+code `58060394a9ce96ae4cf2cbed285c7056a911fe3f`. Their displayed state is an
 intermediate baseline run, not a claim that the campaign finished at that frame.
 
 ![Fictional district operations](screenshots/v8/operations.png)
 
 ![Recorded causal ledger](screenshots/v8/causal-timeline.png)
 
+![Frozen controller comparisons](screenshots/v8/comparison.png)
+
 ![Spanish authoring on a narrow viewport](screenshots/v8/spanish-authoring.png)
+
+[Authoring overview](screenshots/v8/authoring.png) ·
+[Narrow operations controls](screenshots/v8/mobile-operations.png)

@@ -53,4 +53,6 @@ test('circuit: twelve-event evidence imports, persists without quota loss and re
     test.setTimeout(180000); const source = addCircuitSeason(starterCircuit(freshCircuit()), makeSeason(['comet', 'aurora'], 12)), archive = await runCircuitSeason(source, 'first-circuit');
     await prepare(page); await page.goto('/#/academy?tab=circuit'); await page.getByLabel('Import Circuit', { exact: true }).setInputFiles({ name: 'twelve.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(archive)) }); await expect(page.getByRole('heading', { name: 'Season complete', exact: true })).toBeVisible({ timeout: 45000 });
     expect((await saved(page)).events).toHaveLength(12); await expect(page.getByRole('alert').filter({ hasText: 'cannot keep a local save' })).toHaveCount(0); await page.reload(); await expect(page.getByTestId('circuit-status')).toHaveText('STOPPED'); expect((await saved(page)).events.at(-1)?.digest).toBe(archive.events.at(-1)?.digest);
+    await expect(page.getByRole('heading', { name: 'Season complete', exact: true })).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Team Circuit standings' })).toContainText(standings(archive.seasons[0], archive.events)[0].points.toFixed(2));
 });

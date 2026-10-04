@@ -55,6 +55,12 @@ shallow freezes and accessors cannot authorize cached hashes. SHA results match
 Node's independent implementation, including Unicode prefix boundaries, and the
 frozen V10/V11 receipts retain every original digest. The five-second stopped
 restoration assertion is unchanged.
+Saved profiles now finish native validation during startup, before React's first
+render. With Chromium CPU throttled to 2×, a twelve-event cold load took 6.88
+seconds in total and the Paddock appeared 0.42 seconds after the browser's loaded
+page. Large archives still require full replay work; no saved score becomes
+available before validation. The reload story also checks the visible completed
+season and its restored official standings at the original assertion deadline.
 
 ## Limits
 

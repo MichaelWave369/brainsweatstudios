@@ -7,7 +7,7 @@ was V8; the earlier V11 draft was not present. This implementation reconstructs
 the reported V11 checkpoint on `codex/v11-synthetic-performance`.
 
 V11 is a review branch. The public studio remains V10. No merge, tag, release,
-paid service, production secret, microphone access or external publication is
+paid service, production secret, microphone access or public-site deployment is
 part of this checkpoint.
 
 ## Implemented and verified locally
@@ -39,15 +39,22 @@ part of this checkpoint.
 | Immutable V10 replay | Ensemble, Stunt Show and Stream Studio fixtures captured from main retain their exact original digests. |
 | Chromium native family flows | Four existing stories passed, including six episodes, human controls, EN/ES/axe, pause and real-origin outage. |
 | Chromium V11 browser flows | Four stories passed: real WAV/MIDI downloads, bundle import/reload, listening-note persistence, mute/real playback/hidden stop, atomic rejection, voice edits, Spanish keyboard/320/390/axe, offline worker after real origin outage. |
+| Local production verification | Full verifier passed against the production preview: Town Zero/replays, 37 worlds, 48 classes, six native families, stopped restoration, V11 worker/WAV download, and zero page errors. This is local preview evidence, not a public V11 deployment. |
+| Advanced GitHub campaign | [Run 37222880091](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37222880091) passed all 36 career/family/performance stories across Chromium, Firefox and WebKit, including all 12 new V11 browser cases. |
+| GitHub production gates | [Run 37222880084](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37222880084) passed build/lint/337 unit tests, all headless sweeps, isolated PostgreSQL RLS/concurrency, legacy service-worker upgrade recovery, offline production routes, and 71 Chromium advanced stories. Deployment and actual-live jobs are correctly skipped on this PR. |
+| GitHub full gameplay | [Run 37222880088](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37222880088) passed all 1,062 gameplay/accessibility cases (1,050 existing plus 12 V11), all earlier specialist stages, and ten repeated WebKit visibility/origin-outage cases. |
 | Headless original choir export | Mock performance replay verified; 18.278 seconds, 403,030 frames, 1,612,164-byte stereo PCM WAV and MIDI written locally. |
 
 Local browser evidence used Chromium 153.0.8010.0 with intact assertions and
 deadlines. The standard browser download was unavailable in this workspace;
 a packaged Chromium executable supplied real Playwright browser execution.
 The agent-browser daemon did not start, so its visual-check path was unavailable;
-the Playwright captures were inspected directly. Firefox/WebKit, the full
-1,050-case authored gameplay/accessibility sweep, PostgreSQL, service-worker
-upgrade gates and production checks remain required in GitHub Actions.
+the Playwright captures were inspected directly. All three GitHub source gates passed for
+`1ec8503d2a8f83d33c84bfc61c736597f4722f37`. This final evidence update changes
+only this document; the verified application, workflows, dependencies and tests
+are unchanged. [PR #6](https://github.com/larrinamsalva/brainsweatstudios/pull/6)
+is held for operator review. No existing assertions, deadlines, retries or skips
+were weakened.
 
 All existing CI coverage is retained. The advanced campaign now includes the
 four V11 stories in Chromium/Firefox/WebKit, and the production workflow includes

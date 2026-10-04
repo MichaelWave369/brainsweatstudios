@@ -1,4 +1,4 @@
-# Version 8 architecture
+# Brain Sweat architecture
 
 Brain Sweat remains a human educational studio. The 37 ordinary worlds, classes,
 assistant/council, checkpoints, progress, retro lab, sound and offline shell are
@@ -165,3 +165,29 @@ at 1.1 MB, pruning comparison history when needed. Standalone long receipts have
 an 8 MB verification bound. Every 96 records a checkpoint speeds already-verified
 inspection; raw snapshots are never accepted as verified episode history. See
 [WorldSpec](world-spec.md), [receipts](receipts.md) and [V8 evidence](verification-v8.md).
+
+
+## V11 synthetic performance
+
+The new `src/performance/` layer uses native family receipts rather than a second
+controller path. `family-config@2` explicitly chooses the V11 ensemble authority
+or scored media wrapper. `family-config@1` continues to use the original V10
+kernels and request fingerprints; immutable V10 fixtures verify those digests.
+
+The ensemble advances a logical beat only after all role proposals settle. Entry,
+dynamics and cutoff are conductor actions; each part proposes its own note/rest.
+Authored targets and actually performed notes remain distinct. Mechanical
+completion is not a listening judgment.
+
+A bounded performance bundle binds a replay-verified native recording, explicit
+synthetic voice profiles and render settings. An offline worker synthesizes
+original vowel harmonics and instruments into stereo PCM. WAV and MIDI exports
+reflect performed actions, including mistakes. Audio receipts bind score,
+recording, voices, settings and output-byte hashes. Score replay does not promise
+bit-identical audio across different JavaScript engines.
+
+The UI stops the worker/playback on visibility change and unmount, respects
+studio mute, invalidates exports after voice edits, and restores playback stopped.
+A separate `PerformanceBus` contract is available to operator-supplied synthetic
+adapters. No Commonline endpoint or external provider is connected automatically.
+See [performance contracts](performance.md) and [V11 evidence](verification-v11.md).

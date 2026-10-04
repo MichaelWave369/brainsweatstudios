@@ -98,7 +98,7 @@ export function validateWorldRequest(input: unknown): WorldProviderRequest {
     ]) ||
     o.schema !== "model-observation@2" ||
     o.actionSchema !== "model-action@1" ||
-    o.environmentVersion !== "1.0.0" ||
+    (o.environmentVersion !== "1.0.0" && !(o.environmentVersion === "2.0.0" && ["ensemble-lab", "stunt-show", "stream-studio"].includes(String(o.world)) && plain(o.state) && plain(o.state.familyPublic) && o.state.familyPublic.family === o.world)) ||
     typeof o.world !== "string" ||
     !/^[a-z][a-z0-9-]{0,31}$/.test(o.world) ||
     typeof o.episode !== "string" ||

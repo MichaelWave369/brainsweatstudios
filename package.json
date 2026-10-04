@@ -1,6 +1,6 @@
 {
   "name": "brain-sweat-studio",
-  "version": "10.0.0",
+  "version": "11.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -34,8 +34,11 @@
     "family:run": "node scripts/family.mjs run",
     "race:run": "node scripts/family.mjs run auto-circuit",
     "cache:run": "node scripts/family.mjs run cache-quest",
-    "performance:run": "node scripts/family.mjs run ensemble-lab",
-    "test:families": "node scripts/test-families.mjs"
+    "performance:run": "node scripts/performance.mjs run",
+    "test:families": "node scripts/test-families.mjs",
+    "performance:compose": "node scripts/performance.mjs compose",
+    "performance:render": "node scripts/performance.mjs render",
+    "performance:verify": "node scripts/performance.mjs verify"
   },
   "dependencies": {
     "lucide-react": "1.50.0",

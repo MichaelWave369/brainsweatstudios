@@ -19,7 +19,7 @@ export type FamilyArtifactType = 'vehicle-setup' | 'track-notes' | 'performance-
 export type FamilyContent = VehicleSpec | TrackNotes | PerformancePlan | CacheRoute | ResearchDossier | ShowRundown | ScoreSpec;
 export interface FamilyArtifactInput { type: FamilyArtifactType; contentHash: string; content: FamilyContent }
 export interface FamilyPublicInput { snapshotHash: string; notes: string[]; artifacts: FamilyArtifactInput[] }
-export interface FamilyConfig { schema: 'family-config@1'; family: FamilyId; seed: number; maxTicks: number; race: { mode: 'solo' | 'head-to-head' | 'multi-car' | 'endurance'; laps: number; vehicles: VehicleSpec[]; track: TrackSpec } | null; score: ScoreSpec | null }
+export interface FamilyConfig { schema: 'family-config@1' | 'family-config@2'; family: FamilyId; seed: number; maxTicks: number; race: { mode: 'solo' | 'head-to-head' | 'multi-car' | 'endurance'; laps: number; vehicles: VehicleSpec[]; track: TrackSpec } | null; score: ScoreSpec | null }
 export interface FamilyObservation { family: FamilyId; role: string; tick: number; state: Record<string, unknown>; legal: string[]; input: FamilyPublicInput }
 export interface FamilyResult { terminal: boolean; success: boolean; ticks: number; reason: 'running' | 'complete' | 'budget'; measures: Record<string, number>; public: Record<string, unknown> }
 export interface FamilyOutput { actor: string; type: FamilyArtifactType; content: FamilyContent; contentHash: string }

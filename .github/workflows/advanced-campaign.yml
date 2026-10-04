@@ -4,6 +4,12 @@ on:
     paths:
       - 'src/career/**'
       - 'src/families/**'
+      - 'src/performance/**'
+      - 'src/app/Performance*.tsx'
+      - 'src/i18n/performance.json'
+      - 'tests/performance.test.ts'
+      - 'tests/fixtures/v10-family-receipts.json'
+      - 'tests/e2e/performance-features.spec.ts'
       - 'src/app/FamilyTelemetry.tsx'
       - 'src/i18n/families.json'
       - 'tests/families.test.ts'
@@ -34,7 +40,7 @@ jobs:
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run build && npm run test:career && npm run test:families
       - name: Verify scoped identity and evidence in three browsers
-        run: npm run test:e2e -- tests/e2e/career-features.spec.ts tests/e2e/family-features.spec.ts --workers=3
+        run: npm run test:e2e -- tests/e2e/career-features.spec.ts tests/e2e/family-features.spec.ts tests/e2e/performance-features.spec.ts --workers=3
         env:
           CROSS_BROWSER: 1
           TEST_PRODUCTION: 1

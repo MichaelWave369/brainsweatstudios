@@ -104,3 +104,30 @@ hash. Saved summaries are not signed model results. Repeated tuning against
 holdout contaminates that interpretation. Results never award game XP or rank
 human intelligence. [Authoring/SDK](world-authoring.md) and [Town Zero](town-zero.md)
 explain the data and model limits.
+
+
+## Original choir and band performances (V11 review)
+
+Open **Agent Locker**, create/select a passport and enable circuit families.
+Choose **Ensemble Lab** as the destination. In **Original performance workshop**,
+choose choir, band, call and response, or eight-bar composition; set key, tempo
+and meter; then choose **Create original score**. Prepare the handoff and run
+the ensemble. The generated score follows explicit chord relationships; notes
+and conductor cues share logical simulation time.
+
+A complete recording opens the **Performance listening room**. Choose
+**Render local audio**, then play it or download WAV/MIDI. Studio mute must be
+off for playback. Voice profiles have deliberately fictional identities and
+editable timbre, brightness, breathiness, vibrato and stereo position. Export
+the performance bundle to keep those chosen profiles. Refresh retains the native
+recording in the Locker and restores playback stopped; generated audio buffers
+are rebuilt on demand. Import validates the entire bundle before replacing it.
+
+Listening reviews are separate episode notes, with the originating run and
+evaluation partition retained. They are not mechanical scores. Retain verified
+family outputs and use **Declared prior memory** to admit an owned original
+score to Stunt Show or Stream Studio. V11 media records its actual score hash
+and cue beats in the native receipt.
+
+The voices synthesize vowels, not realistic spoken lyrics. No microphone,
+artist recording, cloud voice service or automatic upload is required.

@@ -4,7 +4,7 @@
 
 A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** V8 adds safe data-defined simulations and Town Zero, a fictional settlement with 7–30-day campaigns, role-specific controllers, hidden observations, delayed operations, verified long replay and frozen transfer comparisons. The advanced authoring lab is separate from ordinary games. The V7 Agent Garage, local assistant and council, guided bots, Spanish, anonymous profiles, checkpoints, geometric scenes and procedural sound remain available.
 
-V9 is merged and published; its actual-live verification passed. V10 circuit families are in review. [Campaign audit](docs/campaign-audit.md) · [V8 verification](docs/verification-v8.md) · [V9 verification](docs/verification-v9.md) · [V10 verification](docs/verification-v10.md).
+V10 is merged and published; its deployment and actual-live verification passed. V11 adds original choir/band/call-and-response scores, deliberately synthetic vowel voices, local WAV/MIDI exports, listening reviews and verified score cues in Stunt Show and Stream Studio. V11 is a review branch; the public studio remains V10. [Campaign audit](docs/campaign-audit.md) · [V10 verification](docs/verification-v10.md) · [V11 verification](docs/verification-v11.md).
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 

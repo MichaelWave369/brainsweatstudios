@@ -3,7 +3,7 @@ const studio = await readCatalogue();
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
-const base = process.env.LIVE_SITE_URL || 'https://larrinamsalva.github.io/brainsweatstudios/';
+const base = process.env.LIVE_SITE_URL || 'https://michaelwave369.github.io/brainsweatstudios/';
 await mkdir('docs/screenshots', { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 try {

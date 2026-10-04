@@ -191,3 +191,10 @@ studio mute, invalidates exports after voice edits, and restores playback stoppe
 A separate `PerformanceBus` contract is available to operator-supplied synthetic
 adapters. No Commonline endpoint or external provider is connected automatically.
 See [performance contracts](performance.md) and [V11 evidence](verification-v11.md).
+
+
+## V12 Agent Circuit
+
+`src/circuit/` coordinates native FamilySession and WorldSession authorities. Frozen manifests and passport/team snapshots determine phase order, role attribution, seeds and policies. Source-backed public admissions precede each native phase. A verifier reconstructs those plans, validates all native receipts and scheduled Town handoffs, recomputes results and rejects missing provenance or forged points.
+
+Paddock, replay theater, worker batch and headless commands reuse that substrate. Optional public presentation packets have no action or scoring channel. Circuit profile encoding is lossless and storage-only; native exports remain ordinary replay-verifiable JSON. The original Academy fields retain their old aggregate bounds, and the new Circuit archive has a separate bounded extension. See [Circuit contracts](agent-circuit.md) and [V12 evidence](verification-v12.md).

@@ -22,4 +22,6 @@ Receipt verification proves the recorded simulation can replay. Operational iden
 
 V9 is merged at `0ec973702c6e3eca187ab622699a22d2584fdb6c` and published, with deployment and actual-live feature verification passed; see [V9 evidence](verification-v9.md).
 
-V10 runtime `8b6eb0caa45cd14d47d61aec7520d08004c52a3d` passed 316 unit tests, shared family/career hosts, all 24 advanced three-browser cases, 67 production browser cases, the 1,050-case full gameplay regression, and repeated WebKit visibility/outage checks. See [V10 evidence](verification-v10.md) for immutable CI links. V10 remains an operator-reviewed PR. V11 can now begin without weakening the earlier gates.
+V10 runtime `8b6eb0caa45cd14d47d61aec7520d08004c52a3d` passed 316 unit tests, shared family/career hosts, all 24 advanced three-browser cases, 67 production browser cases, the 1,050-case full gameplay regression, and repeated WebKit visibility/outage checks. See [V10 evidence](verification-v10.md) for immutable CI links. V10 subsequently merged and published at `21fde5d76431e62184a53417b1eec41b0a6692ac`.
+
+V11 PR #6 merged at `14f50dd88fe5a46257b846ac512c28b13a89c01b`. Its build, deployment, actual-live verification and full gameplay checks all passed. See [V11 evidence](verification-v11.md). V12 implements the final authorized rung on its own review branch; see [Circuit guide](agent-circuit.md) and [V12 evidence](verification-v12.md). Publishing and merges remain operator-controlled.

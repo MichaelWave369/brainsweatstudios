@@ -3,6 +3,9 @@ import { freshSave, recordResult, SAVE_KEY, validateSave } from './progress';
 import type { Checkpoint, Difficulty, GameId, Json, SaveData, Settings } from '../data/types';
 import { parseSessionKey, validSlot } from './checkpointValidation';
 import { validateAcademy, type AcademySave } from '../training/models';
+import { decodeCircuitStorage, encodeCircuitStorage } from '../circuit/storage';
+import { plain } from '../runtime/data';
+import type { CircuitSave } from '../circuit/types';
 export const PROFILE_KEY = 'brain-sweat-studio:profiles:v2';
 export interface Profile { id: string; label: string; save: SaveData }
 interface Bundle { version: 2; active: string; profiles: Profile[] }
@@ -10,6 +13,17 @@ let bundle: Bundle | undefined;
 let revision = 0;
 let warning = '';
 const listeners = new Set<() => void>();
+const circuitStorage = new WeakMap<CircuitSave, ReturnType<typeof encodeCircuitStorage>>();
+function storageText(value: unknown) {
+  return JSON.stringify(value, (key, v: unknown) => {
+    if (key !== 'circuit' || !plain(v) || v.schema !== 'circuit-save@1' || !(v.agents as unknown[])?.length) return v;
+    const circuit = v as unknown as CircuitSave;
+    let encoded = circuitStorage.get(circuit); if (!encoded) { encoded = encodeCircuitStorage(circuit); circuitStorage.set(circuit, encoded); } return encoded;
+  });
+}
+function storageRead(text: string) {
+  return JSON.parse(text, (key, value: unknown) => key === 'circuit' && plain(value) && value.schema === 'circuit-storage@1' ? decodeCircuitStorage(value) : value) as unknown;
+}
 const newId = () => globalThis.crypto?.randomUUID?.() || `slot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 export function validateBundle(raw: unknown): Bundle {
   const b = raw as Bundle;
@@ -27,7 +41,7 @@ export function getBundle(): Bundle {
   try {
     const saved = localStorage.getItem(PROFILE_KEY);
     if (saved) {
-      try { bundle = validateBundle(JSON.parse(saved)); return bundle; }
+      try { bundle = validateBundle(storageRead(saved)); return bundle; }
       catch {
         warning = 'A saved file could not be read. Import a backup in Settings if needed.';
         // Retain the unreadable bundle before a future save replaces it, and try the active-slot backup.
@@ -35,7 +49,7 @@ export function getBundle(): Bundle {
       }
     }
     const legacy = localStorage.getItem(SAVE_KEY);
-    if (legacy) save = validateSave(JSON.parse(legacy));
+    if (legacy) save = validateSave(storageRead(legacy));
   } catch { warning = 'A saved file could not be read. Import a backup in Settings if needed.'; }
   const id = newId(); bundle = { version: 2, active: id, profiles: [{ id, label: 'Explorer 1', save }] };
   // Persist the slot identity before a player first joins online play. Otherwise
@@ -47,7 +61,14 @@ export const getRevision = () => revision;
 export const getWarning = () => warning;
 export function subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }
 function persist(notify = true) {
-  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(getBundle())); localStorage.setItem(SAVE_KEY, JSON.stringify(currentProfile().save)); }
+  try {
+    localStorage.setItem(PROFILE_KEY, storageText(getBundle()));
+    const save = currentProfile().save;
+    // Keep the migration backup small once a Circuit archive exists. The full
+    // compressed archive is committed atomically with its profile above.
+    const backup = save.academy.circuit.agents.length ? { ...save, academy: { ...save.academy, circuit: undefined } } : save;
+    localStorage.setItem(SAVE_KEY, JSON.stringify(backup));
+  }
   catch { warning = 'This browser cannot keep a local save right now. Keep playing and export your progress in Settings.'; }
   if (notify) { revision++; listeners.forEach(l => l()); }
 }

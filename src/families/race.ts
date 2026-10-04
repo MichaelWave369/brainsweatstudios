@@ -1,19 +1,23 @@
 import { clone, hash } from '../runtime/data.ts';
 import type { FamilyConfig, FamilyMachine, FamilyOutput, TrackNotes } from './types.ts';
 export function raceMachine(config:FamilyConfig):FamilyMachine {
-    const race=config.race!,track=race.track,length=track.segments.reduce((a,s)=>a+s.length,0);
-    const cars=race.vehicles.map(v=>({id:v.id,position:0,speed:0,energy:v.capacity,grip:100,temperature:0,damage:0,lane:0,pit:0,pits:0,incidents:0,recoveries:0,finished:false,finishTick:0,lapTicks:[] as number[],sectorTicks:[] as {sector:number;ticks:number}[],lastLapTick:0,lastSectorTick:0,spent:0}));
-    const roles=cars.flatMap((_,i)=>[`driver-${i}`,`crew-${i}`]);let tick=0,yellow=0;
+    const race=config.race!,track=race.track,length=track.segments.reduce((a,s)=>a+s.length,0),circuit=config.schema==='family-config@3';
+    const cars=race.vehicles.map(v=>({id:v.id,position:0,speed:0,energy:v.capacity,grip:100,temperature:0,damage:0,lane:0,pit:0,pits:0,incidents:0,recoveries:0,finished:false,finishTick:0,lapTicks:[] as number[],sectorTicks:[] as {sector:number;ticks:number}[],lastLapTick:0,lastSectorTick:0,spent:0,...(circuit?{gridSlot:race.grid!.indexOf(v.id),coordination:0}:{})}));
+    const roles=cars.flatMap((_,i)=>circuit?[`driver-${i}`,`crew-${i}`,`strategist-${i}`,`pit-${i}`]:[`driver-${i}`,`crew-${i}`]);let tick=0,yellow=0;
+    const pitOpen=()=>!circuit||tick>=race.pitWindow![0]&&tick<=race.pitWindow![1];
     function segment(position:number){let within=position%length;let index=0;while(index<track.segments.length-1&&within>=track.segments[index].length){within-=track.segments[index].length;index++;}return {index,...track.segments[index]};}
     const limit=(i:number)=>{const s=segment(cars[i].position),v=race.vehicles[i];return yellow?24:Math.max(20,Math.min(85,66-s.curvature*7+v.grip*2+v.setup.wing-3-Math.floor((100-cars[i].grip)/15)-(track.weather==='rain'?12:0)-s.risk*3));};
     const index=(role:string)=>Number(role.split('-')[1]);
-    return {roles,observe(role){const i=index(role),c=cars[i];return {units:'fictional normalized units',vehicle:race.vehicles[i],trackHash:hash(track),segment:segment(c.position),safeSpeed:limit(i),weather:track.weather,yellow,laps:race.laps,telemetry:clone(c),traffic:cars.map(n=>({id:n.id,position:n.position,lane:n.lane,finished:n.finished}))};},legal(role){const c=cars[index(role)];if(c.finished)return ['wait'];return role.startsWith('crew')?(c.pit?['wait','refuel','replace-grip','cool']:['wait','strategy-conserve']):c.pit?['wait']:['accelerate','coast','brake','turn-left','turn-right','hold-line','conserve','attack','recover',...(segment(c.position).pit?['pit']:[])];},advance(intents){
+    return {roles,observe(role){const i=index(role),c=cars[i];return {units:'fictional normalized units',vehicle:race.vehicles[i],trackHash:hash(track),segment:segment(c.position),safeSpeed:limit(i),weather:track.weather,yellow,laps:race.laps,telemetry:clone(c),traffic:cars.map(n=>({id:n.id,position:n.position,lane:n.lane,finished:n.finished})),...(circuit?{authority:'race-authority@3',grid:race.grid,pitWindow:race.pitWindow,pitWindowOpen:pitOpen()}: {})};},legal(role){const c=cars[index(role)];if(c.finished||circuit&&tick<(c.gridSlot??0))return ['wait'];if(circuit&&role.startsWith('pit'))return c.pit?['wait','refuel','replace-grip','cool']:['wait'];if(circuit&&role.startsWith('strategist'))return ['wait','strategy-conserve'];if(circuit&&role.startsWith('crew'))return c.pit?['wait','call-service']:['wait','strategy-conserve'];return role.startsWith('crew')?(c.pit?['wait','refuel','replace-grip','cool']:['wait','strategy-conserve']):c.pit?['wait']:['accelerate','coast','brake','turn-left','turn-right','hold-line','conserve','attack','recover',...(segment(c.position).pit&&pitOpen()?['pit']:[])];},advance(intents){
         const events:string[]=[],before=clone(cars),safeLimits=cars.map((_,i)=>limit(i));tick++;let nextYellow=Math.max(0,yellow-1);
         for(let i=0;i<cars.length;i++) {const c=cars[i],v=race.vehicles[i],old=before[i],a=intents[`driver-${i}`],crew=intents[`crew-${i}`],s=segment(old.position);if(old.finished)continue;
-            if(old.pit){if(crew==='refuel'){c.energy=v.capacity;events.push(`${c.id}: refuel`);}if(crew==='replace-grip')c.grip=100;if(crew==='cool')c.temperature=Math.max(0,c.temperature-40);c.pit--;c.speed=0;continue;}
+            if(circuit&&tick<=(c.gridSlot??0)){events.push(`${c.id}: qualifying grid delay`);continue;}
+            const service=circuit?intents[`pit-${i}`]:crew,strategy=circuit?intents[`strategist-${i}`]:crew;
+            if(circuit&&(crew==='call-service'||strategy==='strategy-conserve'||old.pit&&service!=='wait')){c.coordination=(c.coordination??0)+1;events.push(`${c.id}: structured crew handoff`);}
+            if(old.pit){if(service==='refuel'){c.energy=v.capacity;events.push(`${c.id}: refuel`);}if(service==='replace-grip')c.grip=100;if(service==='cool')c.temperature=Math.max(0,c.temperature-40);c.pit--;c.speed=0;continue;}
             if(a==='pit'){c.pit=4;c.pits++;c.speed=0;events.push(`${c.id}: pit entry`);continue;}
             let speed=old.speed;
-            if(a==='accelerate')speed+=v.power+6+v.setup.gearing;if(a==='attack')speed+=v.power+13+v.setup.gearing;if(a==='brake')speed-=v.braking+15;if(a==='coast'||a==='conserve'||crew==='strategy-conserve')speed-=4;
+            if(a==='accelerate')speed+=v.power+6+v.setup.gearing;if(a==='attack')speed+=v.power+13+v.setup.gearing;if(a==='brake')speed-=v.braking+15;if(a==='coast'||a==='conserve'||crew==='strategy-conserve'||circuit&&strategy==='strategy-conserve')speed-=4;
             if(a==='turn-left')c.lane=Math.max(-1,c.lane-1);if(a==='turn-right')c.lane=Math.min(1,c.lane+1);
             if(a==='recover'&&old.damage){c.damage=Math.max(0,c.damage-12);c.recoveries++;speed=16;}
             const safe=safeLimits[i],risk=Math.max(0,speed-safe)+(a==='attack'?s.curvature*4:0);

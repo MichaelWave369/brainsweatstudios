@@ -1,0 +1,217 @@
+import { clone, exact, freeze, hash, integer, plain } from "../runtime/data.ts";
+import { assertData } from "../worlds/compiler.ts";
+import {
+  AgentError,
+  bytes,
+  validateController,
+  validateNotebook,
+  type Budgets,
+  type ContextData,
+  type ControllerSpec,
+  type ModelObservation,
+} from "./contracts.ts";
+export interface WorldModelObservation
+  extends Omit<ModelObservation, "schema"> {
+  schema: "model-observation@2";
+  worldHash: string;
+  packHash: string;
+}
+export interface WorldProviderRequest {
+  schema: "provider-request@2";
+  template: "mission@1";
+  controller: ControllerSpec;
+  observation: WorldModelObservation;
+  context: ContextData;
+  budgets: Budgets;
+}
+export function validateWorldRequest(input: unknown): WorldProviderRequest {
+  try {
+    assertData(input, 48000, 12000, 18);
+  } catch {
+    throw new AgentError(
+      "MALFORMED",
+      "World requests must be bounded serializable data.",
+    );
+  }
+  if (
+    !plain(input) ||
+    !exact(input, [
+      "schema",
+      "template",
+      "controller",
+      "observation",
+      "context",
+      "budgets",
+    ]) ||
+    input.schema !== "provider-request@2" ||
+    input.template !== "mission@1"
+  )
+    throw new AgentError("VERSION", "Incompatible world request.");
+  const controller = validateController(input.controller),
+    b = input.budgets,
+    o = input.observation,
+    c = input.context;
+  if (
+    !plain(b) ||
+    !exact(b, [
+      "maxTicks",
+      "maxRequests",
+      "timeoutMs",
+      "retries",
+      "observationBytes",
+      "responseBytes",
+      "notebookBytes",
+    ]) ||
+    !integer(b.maxTicks, 1, 10000) ||
+    !integer(b.maxRequests, 1, 4096) ||
+    !integer(b.timeoutMs, 10, 60000) ||
+    !integer(b.retries, 0, 2) ||
+    !integer(b.observationBytes, 2048, 24000) ||
+    !integer(b.responseBytes, 128, 8192) ||
+    !integer(b.notebookBytes, 256, 4096)
+  )
+    throw new AgentError("BUDGET", "Invalid world provider budgets.");
+  if (
+    !plain(o) ||
+    !exact(o, [
+      "schema",
+      "actionSchema",
+      "episode",
+      "sequence",
+      "world",
+      "environmentVersion",
+      "agent",
+      "tick",
+      "objective",
+      "state",
+      "target",
+      "map",
+      "conditions",
+      "observationIndex",
+      "turn",
+      "legalActions",
+      "constraints",
+      "events",
+      "terminal",
+      "worldHash",
+      "packHash",
+    ]) ||
+    o.schema !== "model-observation@2" ||
+    o.actionSchema !== "model-action@1" ||
+    o.environmentVersion !== "1.0.0" ||
+    typeof o.world !== "string" ||
+    !/^[a-z][a-z0-9-]{0,31}$/.test(o.world) ||
+    typeof o.episode !== "string" ||
+    !/^[a-f0-9]{24}$/.test(o.episode) ||
+    !["worldHash", "packHash"].every(
+      (k) => typeof o[k] === "string" && /^[a-f0-9]{64}$/.test(String(o[k])),
+    ) ||
+    !integer(o.sequence, 1, 4096) ||
+    !integer(o.tick, 0, 10000) ||
+    !plain(o.agent) ||
+    !exact(o.agent, ["id", "role"]) ||
+    !["id", "role"].every(
+      (k) =>
+        typeof o.agent === "object" &&
+        o.agent !== null &&
+        typeof (o.agent as Record<string, unknown>)[k] === "string" &&
+        /^[a-z][a-z0-9-]{0,31}$/.test(
+          String((o.agent as Record<string, unknown>)[k]),
+        ),
+    ) ||
+    typeof o.objective !== "string" ||
+    o.objective.length > 1200 ||
+    !plain(o.state) ||
+    bytes(o) > b.observationBytes ||
+    !Array.isArray(o.legalActions) ||
+    o.legalActions.length < 1 ||
+    o.legalActions.length > 48 ||
+    !o.legalActions.every(
+      (a) =>
+        plain(a) &&
+        exact(a, ["type"]) &&
+        typeof a.type === "string" &&
+        /^[a-z][a-z0-9-]{0,31}$/.test(a.type),
+    ) ||
+    o.target !== null ||
+    o.observationIndex !== null ||
+    !Array.isArray(o.map) ||
+    o.map.length !== 0 ||
+    !Array.isArray(o.conditions) ||
+    o.conditions.length !== 0 ||
+    typeof o.turn !== "string" ||
+    !plain(o.constraints) ||
+    !exact(o.constraints, ["remainingTicks", "information"]) ||
+    !integer(o.constraints.remainingTicks, 0, 10000) ||
+    typeof o.constraints.information !== "string" ||
+    o.constraints.information.length > 200 ||
+    !Array.isArray(o.events) ||
+    o.events.length > 8 ||
+    !o.events.every(
+      (e) =>
+        plain(e) &&
+        exact(e, ["type", "detail"]) &&
+        typeof e.type === "string" &&
+        e.type.length <= 40 &&
+        typeof e.detail === "string" &&
+        e.detail.length <= 200,
+    ) ||
+    !plain(o.terminal) ||
+    !exact(o.terminal, [
+      "terminal",
+      "success",
+      "reason",
+      "ticks",
+      "score",
+      "collisions",
+      "resources",
+    ]) ||
+    typeof o.terminal.terminal !== "boolean" ||
+    o.terminal.success !== false ||
+    o.terminal.score !== 0 ||
+    o.terminal.resources !== 0 ||
+    o.terminal.collisions !== 0 ||
+    o.terminal.ticks !== o.tick ||
+    !["running", "stopped"].includes(String(o.terminal.reason))
+  )
+    throw new AgentError("MALFORMED", "Invalid public world observation.");
+  if (
+    !plain(c) ||
+    !exact(c, ["strategy", "recent", "summary", "notebook"]) ||
+    !["STATE_ONLY", "RECENT_WINDOW", "BOUNDED_EPISODE_MEMORY"].includes(
+      String(c.strategy),
+    ) ||
+    !Array.isArray(c.recent) ||
+    c.recent.length > 6 ||
+    !c.recent.every(
+      (r) =>
+        plain(r) &&
+        exact(r, ["tick", "action", "events"]) &&
+        integer(r.tick, 0, 10000) &&
+        typeof r.action === "string" &&
+        r.action.length <= 32 &&
+        Array.isArray(r.events) &&
+        r.events.length <= 8 &&
+        r.events.every((e) => typeof e === "string" && e.length <= 200),
+    ) ||
+    !Array.isArray(c.summary) ||
+    c.summary.length > 12 ||
+    !c.summary.every(
+      (r) =>
+        plain(r) &&
+        exact(r, ["type", "count"]) &&
+        typeof r.type === "string" &&
+        r.type.length <= 40 &&
+        integer(r.count, 0, 10000),
+    ) ||
+    bytes(c) > 10000
+  )
+    throw new AgentError("MALFORMED", "Invalid bounded world context.");
+  if (c.notebook !== null)
+    validateNotebook(c.notebook, Number(b.notebookBytes));
+  hash(input);
+  return freeze({
+    ...clone(input),
+    controller,
+  }) as unknown as WorldProviderRequest;
+}

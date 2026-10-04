@@ -183,3 +183,20 @@ The previously future async model host is now implemented independently in
 and [new artifacts](model-actions.md). V6 receipt/package/manifest validators
 remain intact; their unsigned provenance limitations still apply. Optional
 model output cannot mutate world state or confer server competition authority.
+
+
+## V8 WorldSpec runtime
+
+Data-defined worlds use a separate `src/worlds/` authority API: observe(actor),
+step(intent set), snapshot, stateHash and result. Strict compiled definitions
+resolve finite resources, graph locations, scoped roles, closed predicates,
+delayed effects, fixed/conditional schedules and objectives. Ordered actions or
+complete simultaneous frames resolve by declared role order. Snapshot hydration
+is reserved for a fully verified recording and never exposed to controllers.
+
+`world-episode@1` embeds its pack/rule hash, explicit seed hierarchy, actor bindings,
+compact actions/event ledger and 96-record checkpoints. `verifyWorldReceipt` reruns
+all transitions; checkpoint inspection uses a separate environment after that
+verification. V6 runtime/environment 1.0.0, episode@1, controller@1 and experiment@1
+retain their own rules and validators. See [WorldSpec](world-spec.md),
+[long clock/limits](long-horizon.md), [teams](multi-agent.md) and [receipts](receipts.md).

@@ -31,3 +31,23 @@ Request versions, ids, bounds and JSON are validated before transport. Receipt
 import reconstructs each observation/mask from initial world state and rejects
 unknown/hidden/tampered values even when the digest is recomputed. Inspecting an
 old frame reads a recording; it does not restore or step the live world.
+
+
+## Data-defined worlds (@2)
+
+`provider-request@2` carries a strict `model-observation@2` with world and pack
+hashes, validated world/version/role identity, tick/turn, public objective, masked
+resource/entity/flag fields, permitted graph map, legal actions, bounded signals
+and public event projection. It uses the same mission@1 instructions and
+model-action@1 proposal parser. V7 @1 requests retain their original validator.
+
+Sensors may be always/role-visible, hidden, revealed by inspection, bucketed,
+delayed or location-limited. Costs/status preconditions are validated by the world;
+a legal mask does not reveal a hidden precondition. Private scheduler, future
+variants, RNG, raw snapshots and exact hidden/bucket values are excluded. Terminal
+provider metadata contains no private reserve score. Public event projection also
+checks visibility, so a resource ledger cannot bypass masking through context.
+
+The operator board and receipt inspector can show authoritative state; provider
+requests are independently projected and validated. Tests cover hidden state,
+role-specific paid reveal, bucket values, detached frozen data and score claims.

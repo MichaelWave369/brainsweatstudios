@@ -1,6 +1,6 @@
 {
   "name": "brain-sweat-studio",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -19,7 +19,13 @@
     "test:headless": "node scripts/headless.mjs",
     "test:agents": "node scripts/test-agents.mjs",
     "agent:bridge": "node scripts/agent-bridge.mjs",
-    "qualify:ollama": "node scripts/qualify-ollama.mjs"
+    "qualify:ollama": "node scripts/qualify-ollama.mjs",
+    "test:worlds": "node scripts/test-worlds.mjs",
+    "world:list": "node scripts/world.mjs list",
+    "world:validate": "node scripts/world.mjs validate",
+    "world:run": "node scripts/world.mjs run",
+    "replay:verify": "node scripts/world.mjs verify",
+    "experiment:batch": "node scripts/world.mjs batch"
   },
   "dependencies": {
     "lucide-react": "1.50.0",

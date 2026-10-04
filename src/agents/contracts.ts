@@ -1,6 +1,7 @@
 import { clone, exact, finite, freeze, hash, integer, plain } from '../runtime/data.ts';
 import { validatePackage, type ControllerPackage } from '../runtime/packages.ts';
 import { type GarageWorld, type Intent, type WorldView, type WorldTransition, validateWorldConfig } from '../runtime/garageWorlds.ts';
+import { validateWorldRequest, type WorldProviderRequest } from './worldContracts.ts';
 
 export const AGENT_VERSION = '1.0.0' as const;
 export const OBSERVATION_VERSION = 'model-observation@1' as const;
@@ -71,7 +72,8 @@ export function validateController(v: unknown): ControllerSpec {
   return freeze({ ...clone(v), package: pkg }) as unknown as ControllerSpec;
 }
 export interface ContextData { strategy: ContextStrategy; recent: { tick: number; action: string; events: string[] }[]; summary: { type: string; count: number }[]; notebook: Notebook | null }
-export interface ProviderRequest { schema: 'provider-request@1'; template: typeof TEMPLATE_VERSION; controller: ControllerSpec; observation: ModelObservation; context: ContextData; budgets: Budgets }
+export interface LegacyProviderRequest { schema: 'provider-request@1'; template: typeof TEMPLATE_VERSION; controller: ControllerSpec; observation: ModelObservation; context: ContextData; budgets: Budgets }
+export type ProviderRequest = LegacyProviderRequest | WorldProviderRequest;
 export interface ProviderResponse { text: string; usage: { inputTokens: number | null; outputTokens: number | null }; model: string }
 export interface ModelInfo { id: string; sizeBytes: number | null; contextLength: number | null; capabilities: string[]; digest: string | null; local: boolean }
 export function validateModelInfo(v: unknown): ModelInfo {
@@ -85,6 +87,7 @@ export function validateProviderResponse(v: unknown, maxBytes: number): Provider
 }
 export interface ProviderAdapter { id: 'mock' | 'ollama'; version: typeof AGENT_VERSION; models(signal: AbortSignal): Promise<ModelInfo[]>; propose(request: ProviderRequest, signal: AbortSignal): Promise<ProviderResponse> }
 export function validateRequest(v: unknown): ProviderRequest {
+  if (plain(v) && v.schema === 'provider-request@2') return validateWorldRequest(v);
   if (!plain(v) || !exact(v, ['schema', 'template', 'controller', 'observation', 'context', 'budgets']) || v.schema !== 'provider-request@1' || v.template !== TEMPLATE_VERSION) throw new AgentError('VERSION', 'Incompatible provider request.');
   const controller = validateController(v.controller), budgets = validateBudgets(v.budgets), o = v.observation;
   if (!plain(o) || !exact(o, ['schema', 'actionSchema', 'episode', 'sequence', 'world', 'environmentVersion', 'agent', 'tick', 'objective', 'state', 'target', 'map', 'conditions', 'observationIndex', 'turn', 'legalActions', 'constraints', 'events', 'terminal']) || o.schema !== OBSERVATION_VERSION || o.actionSchema !== ACTION_VERSION || !plain(o.agent) || !exact(o.agent, ['id', 'role']) || typeof o.agent.id !== 'string' || !/^[a-z-]{1,32}$/.test(o.agent.id) || typeof o.agent.role !== 'string' || typeof o.episode !== 'string' || !/^[a-f0-9]{24}$/.test(o.episode) || !integer(o.sequence, 1, 240) || !integer(o.tick, 0, 120) || typeof o.objective !== 'string' || o.objective.length > 1200 || !plain(o.state) || bytes(o) > budgets.observationBytes || !Array.isArray(o.legalActions) || o.legalActions.length < 1 || o.legalActions.length > 12 || !o.legalActions.every(a => plain(a) && exact(a, ['type']) && typeof a.type === 'string' && /^[a-z:-]{1,32}$/.test(a.type))) throw new AgentError('MALFORMED', 'Invalid structured observation.');

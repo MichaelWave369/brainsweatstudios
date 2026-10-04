@@ -7,6 +7,8 @@ import { familyConfig, validateFamilyContent, validateScore, validateVehicle } f
 import { createFamilyEnvironment, chooseFamilyAction } from '../src/families/runtime';
 import { FamilySession } from '../src/families/session';
 import { familyReceiptDigest, verifyFamilyReceipt } from '../src/families/receipts';
+import { WorldSession } from '../src/worlds/session';
+import { townPack } from '../src/worlds/townZero';
 async function finish(s:FamilySession){for(let i=0;i<256&&!s.env.result().terminal;i++){expect(await s.step(),s.error).toBe(true);}return s.receipt();}
 describe('distinct family authorities',()=>{
     for(const family of FAMILY_IDS)for(const mode of ['baseline','mock'])it(`${family}: ${mode} completes and replays actual mechanics`,async()=>{
@@ -48,4 +50,6 @@ describe('distinct family authorities',()=>{
         const config=familyConfig('auto-circuit'),vehicle=clone(config.race!.vehicles[0]);expect(()=>validateVehicle({...vehicle,power:Infinity})).toThrow();expect(()=>validateVehicle({...vehicle,script:'execute'})).toThrow();let called=false;const getter=Object.defineProperty({},'schema',{enumerable:true,get(){called=true;return 'vehicle-spec@1';}});expect(()=>validateVehicle(getter)).toThrow();expect(called).toBe(false);const score=clone(familyConfig('ensemble-lab').score!);score.parts[0].notes[1].beat=0;expect(()=>validateScore(score)).toThrow();
     });
     it('public policies choose only the legal role action',()=>{for(const family of FAMILY_IDS){const env=createFamilyEnvironment(familyConfig(family));for(const role of env.roles)expect(env.observe(role).legal).toContain(chooseFamilyAction(env.observe(role)));}});
+    it('an imported legacy WorldSpec may use a family id without changing its native authority or mock protocol',async()=>{const pack=clone(townPack());pack.worlds[0].id='auto-circuit';const spec=pack.worlds[0],role=spec.roles[0].id,c={...baselineController('legacy-model'),family:'model' as const,provider:'mock' as const,model:'mock-policy'};const session=new WorldSession(pack,spec.id,369,{[role]:c});expect(await session.step()).not.toBeNull();expect(session.status,session.error).toBe('READY');expect(session.receipt().schema).toBe('world-episode@1');});
+    it('portable vehicle parameters affect motion while the destination retains its own entity ids',()=>{const config=familyConfig('auto-circuit',17,'head-to-head'),vehicle={...config.race!.vehicles[0],id:'car-1',power:10,mass:2},input={snapshotHash:hash('declared setup'),notes:[],artifacts:[{type:'vehicle-setup' as const,contentHash:hash(vehicle),content:vehicle}]},a=createFamilyEnvironment(config,{'driver-0':input}),b=createFamilyEnvironment(config);const intents={'driver-0':'accelerate','crew-0':'wait','driver-1':'accelerate','crew-1':'wait'};a.step(intents);b.step(intents);const cars=a.result().public.cars as {id:string;speed:number}[];expect(cars.map(c=>c.id)).toEqual(['car-0','car-1']);expect(cars[0].speed).toBeGreaterThan((b.result().public.cars as {speed:number}[])[0].speed);});
 });

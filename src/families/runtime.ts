@@ -11,7 +11,7 @@ export function createFamilyEnvironment(configInput:unknown,provided:Record<stri
     const config=validateFamilyConfig(configInput),effective=clone(config);
     assertData(provided,160000,18000,16);requireData(plain(provided),'Family inputs must be plain data.');
     const checked=Object.fromEntries(Object.entries(provided).map(([actor,value])=>[actor,validateFamilyInput(value,config.family)]));
-    if(effective.race){const vehicle=checked['driver-0']?.artifacts.find(a=>a.type==='vehicle-setup');if(vehicle)effective.race.vehicles[0]=clone(vehicle.content as VehicleSpec);}
+    if(effective.race){const vehicle=checked['driver-0']?.artifacts.find(a=>a.type==='vehicle-setup');if(vehicle)effective.race.vehicles[0]={...clone(vehicle.content as VehicleSpec),id:effective.race.vehicles[0].id};}
     if(effective.family==='ensemble-lab'){const score=checked.conductor?.artifacts.find(a=>a.type==='music-score');if(score)effective.score=clone(score.content as ScoreSpec);}
     let machine:FamilyMachine;
     switch(config.family){case 'auto-circuit':machine=raceMachine(effective);break;case 'stunt-show':machine=stuntMachine(effective);break;case 'cache-quest':machine=cacheMachine(effective);break;case 'web-scout':machine=webMachine(effective);break;case 'stream-studio':machine=streamMachine(effective,checked);break;case 'ensemble-lab':machine=ensembleMachine(effective);}

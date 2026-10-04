@@ -87,9 +87,11 @@ export default function WorldLab({
   const session = useRef<WorldSession | null>(initialSession),
     worker = useRef<Worker | null>(null),
     active = useRef(false),
+    lifecycle = useRef(0),
     alive = useRef(true),
     saveRef = useRef(saved),
     displayReceipt = useRef<WorldReceipt | null>(saved.receipt),
+    persistRef = useRef<(s: WorldSession) => void>(() => {}),
     callback = useRef(onChange),
     bridge = useRef<ReturnType<typeof ollamaAdapter> | null>(null);
   saveRef.current = saved;
@@ -113,6 +115,7 @@ export default function WorldLab({
     current = session.current?.env,
     status = current ? session.current!.status : "STOPPED";
   const halt = () => {
+    lifecycle.current++;
     active.current = false;
     session.current?.pause();
     worker.current?.terminate();
@@ -123,7 +126,25 @@ export default function WorldLab({
   };
   useEffect(() => {
     alive.current = true;
+    const visibility = () => {
+      if (!document.hidden) return;
+      // Cancel at the browser event boundary, before a React prop/effect can
+      // lag behind another burst or provider completion. Publish completed
+      // evidence before acknowledging PAUSED in the board.
+      active.current = false;
+      lifecycle.current++;
+      const s = session.current;
+      if (s?.status === "READY" || s?.status === "REQUESTING") s.pause();
+      worker.current?.terminate();
+      worker.current = null;
+      setRunning(false);
+      setBatching(false);
+      if (s) persistRef.current(s);
+      else setRevision((n) => n + 1);
+    };
+    document.addEventListener("visibilitychange", visibility);
     return () => {
+      document.removeEventListener("visibilitychange", visibility);
       alive.current = false;
       active.current = false;
       session.current?.stop();
@@ -133,16 +154,20 @@ export default function WorldLab({
   }, []);
   useEffect(() => {
     if (paused) {
+      lifecycle.current++;
       active.current = false;
-      session.current?.pause();
+      const s = session.current;
+      if (s?.status === "READY" || s?.status === "REQUESTING") s.pause();
       worker.current?.terminate();
       worker.current = null;
       setRunning(false);
       setBatching(false);
-      setRevision((n) => n + 1);
+      if (s) persistRef.current(s);
+      else setRevision((n) => n + 1);
     }
   }, [paused]);
   const persist = (s: WorldSession, follow = true) => {
+    if (s !== session.current) return;
     try {
       const r = verifyWorldReceipt(s.receipt()),
         next = rememberWorld(saveRef.current, r, s.recorder.pack);
@@ -159,6 +184,7 @@ export default function WorldLab({
       setRunning(false);
     }
   };
+  persistRef.current = persist;
   const bindings = (source: WorldSpec) =>
     Object.fromEntries(
       source.roles.map((r) => [
@@ -227,20 +253,25 @@ export default function WorldLab({
   };
   const advance = async (human: Record<string, string> = {}) => {
     const s = session.current;
-    if (!s || paused) return;
+    if (!s || paused || document.hidden || s.status === "REQUESTING") return;
+    const epoch = lifecycle.current;
     try {
       if (s.status !== "READY") s.resume();
-      const result = await s.step(human);
+      const pending = s.step(human);
+      setRevision((n) => n + 1);
+      const result = await pending;
+      if (epoch !== lifecycle.current || s !== session.current) return;
       if (result) setHumanIntents({});
       if (alive.current) persist(s);
     } catch (error) {
-      if (alive.current)
+      if (alive.current && epoch === lifecycle.current && s === session.current)
         setNotice(error instanceof Error ? error.message : "Action rejected.");
     }
   };
   const run = async () => {
     const s = session.current;
-    if (!s || paused) return;
+    if (!s || paused || document.hidden || s.status === "REQUESTING") return;
+    const epoch = ++lifecycle.current;
     active.current = true;
     s.resume();
     setRunning(true);
@@ -252,6 +283,7 @@ export default function WorldLab({
     try {
       while (
         active.current &&
+        epoch === lifecycle.current &&
         !s.env.result().terminal &&
         s.status === "READY" &&
         s.env.result().tick - startTick < cap
@@ -261,6 +293,7 @@ export default function WorldLab({
           let i = 0;
           i < 8 &&
           active.current &&
+          epoch === lifecycle.current &&
           s.status === "READY" &&
           !s.env.result().terminal;
           i++
@@ -291,17 +324,22 @@ export default function WorldLab({
             break;
           }
         }
-        if (!alive.current) return;
+        if (
+          !alive.current ||
+          epoch !== lifecycle.current ||
+          s !== session.current
+        )
+          return;
         persist(s);
         if (done) break;
         await new Promise<void>((resolve) => setTimeout(resolve, 16));
       }
     } catch (error) {
-      if (alive.current)
+      if (alive.current && epoch === lifecycle.current)
         setNotice(error instanceof Error ? error.message : "Campaign paused.");
     } finally {
-      active.current = false;
-      if (alive.current) {
+      if (alive.current && epoch === lifecycle.current && s === session.current) {
+        active.current = false;
         setRunning(false);
         persist(s);
       }
@@ -316,6 +354,7 @@ export default function WorldLab({
           "Connect and explicitly select an installed model first.",
         );
       active.current = false;
+      lifecycle.current++;
       setRunning(false);
       s.handoff(
         role,
@@ -404,7 +443,7 @@ export default function WorldLab({
       );
       worker.current = w;
       w.onmessage = (e) => {
-        if (!alive.current) return;
+        if (!alive.current || worker.current !== w) return;
         const data = e.data as {
           type: string;
           summary: TrialSummary;
@@ -856,14 +895,24 @@ export default function WorldLab({
             <div className="button-row">
               <button
                 className="btn secondary"
-                disabled={paused || running || current.result().terminal}
+                disabled={
+                  paused ||
+                  running ||
+                  status === "REQUESTING" ||
+                  current.result().terminal
+                }
                 onClick={() => void advance()}
               >
                 Step world controller
               </button>
               <button
                 className="btn primary"
-                disabled={paused || running || current.result().terminal}
+                disabled={
+                  paused ||
+                  running ||
+                  status === "REQUESTING" ||
+                  current.result().terminal
+                }
                 onClick={() => void run()}
               >
                 Run bounded campaign
@@ -879,7 +928,12 @@ export default function WorldLab({
               </button>
               <button
                 className="btn secondary"
-                disabled={paused}
+                disabled={
+                  paused ||
+                  status === "REQUESTING" ||
+                  status === "READY" ||
+                  current.result().terminal
+                }
                 onClick={() => {
                   session.current!.resume();
                   setRevision((n) => n + 1);

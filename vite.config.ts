@@ -23,5 +23,7 @@ export default defineConfig(({ command, isPreview }) => ({
   resolve: { alias: { '@studio': fileURLToPath(new URL('./src', import.meta.url)) } },
   base: command === 'serve' && !isPreview ? '/' : (process.env.VITE_BASE_PATH || '/brainsweatstudios/'),
   build: { target: 'es2022', sourcemap: false },
-  test: { include: ['tests/*.test.ts'], environment: 'node' },
+  // Long deterministic searches share CPU with world-family generation. Keep
+  // the runner bounded on two-core CI hosts without relaxing test deadlines.
+  test: { include: ['tests/*.test.ts'], environment: 'node', maxWorkers: 2 },
 }));

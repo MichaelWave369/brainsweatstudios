@@ -64,10 +64,17 @@ function read(state: WorldState, ref: Ref): number | boolean | string {
   if (kind === "flag") return state.flags[id];
   return state.objectives[id];
 }
-export function evaluate(rule: Predicate, state: WorldState): boolean {
-  if (rule.op === "all") return rule.rules.every((r) => evaluate(r, state));
-  if (rule.op === "any") return rule.rules.some((r) => evaluate(r, state));
-  if (rule.op === "not") return !evaluate(rule.rule, state);
+export function evaluate(
+  rule: Predicate,
+  state: WorldState,
+  budget = { remaining: 4096 },
+): boolean {
+  if (--budget.remaining < 0) throw new Error("Rule evaluation limit.");
+  if (rule.op === "all")
+    return rule.rules.every((r) => evaluate(r, state, budget));
+  if (rule.op === "any")
+    return rule.rules.some((r) => evaluate(r, state, budget));
+  if (rule.op === "not") return !evaluate(rule.rule, state, budget);
   if (!("ref" in rule)) return false;
   const a = read(state, rule.ref),
     b = rule.value;
@@ -152,6 +159,7 @@ export function createWorldEnvironment(
   };
   let ledger: LedgerEntry[] = [],
     effectsUsed = 0;
+  let evaluationBudget = { remaining: 4096 };
   const entry = (
     kind: LedgerEntry["kind"],
     source: string,
@@ -417,7 +425,7 @@ export function createWorldEnvironment(
       if (state.objectives[o.id] === "failed") continue;
       const old = state.objectives[o.id],
         ok =
-          evaluate(o.condition, state) &&
+          evaluate(o.condition, state, evaluationBudget) &&
           o.requires.every((r) => state.objectives[r] === "complete");
       let next: WorldState["objectives"][string] = ok ? "complete" : "pending";
       if (!ok && o.deadline !== null && state.tick >= o.deadline)
@@ -453,6 +461,7 @@ export function createWorldEnvironment(
     const before = clone(state);
     ledger = [];
     effectsUsed = 0;
+    evaluationBudget = { remaining: 4096 };
     const resolutions: Resolution[] = [];
     const sorted = actors.flatMap((a) =>
         intents.filter((p) => p.actor === a.id),
@@ -483,7 +492,7 @@ export function createWorldEnvironment(
         )
           outcome = "conflict";
         else if (
-          !evaluate(a.condition, state) ||
+          !evaluate(a.condition, state, evaluationBudget) ||
           a.costs.some(
             (c) =>
               state.resources[c.resource] - c.amount <
@@ -551,7 +560,7 @@ export function createWorldEnvironment(
           e.when &&
           state.runs[e.id] < e.maxRuns &&
           !state.queue.some((q) => q.kind === "event" && q.source === e.id) &&
-          evaluate(e.when, state)
+          evaluate(e.when, state, evaluationBudget)
         )
           schedule({
             due: state.tick,
@@ -584,7 +593,7 @@ export function createWorldEnvironment(
           const e = world.events[q.source];
           if (state.runs[e.id] >= e.maxRuns) continue;
           state.runs[e.id]++;
-          if (e.when && !evaluate(e.when, state)) {
+          if (e.when && !evaluate(e.when, state, evaluationBudget)) {
             const cause = entry("cancelled", e.id, q.cause, q.id, q.due, null);
             if (e.repeat && state.runs[e.id] < e.maxRuns)
               schedule({
@@ -628,7 +637,7 @@ export function createWorldEnvironment(
       for (const rule of spec.rules)
         if (
           (rule.frequency === "tick" || !state.fired.includes(rule.id)) &&
-          evaluate(rule.when, state)
+          evaluate(rule.when, state, evaluationBudget)
         ) {
           const cause = entry(
             "triggered",

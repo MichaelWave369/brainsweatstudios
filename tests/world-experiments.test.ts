@@ -3,6 +3,8 @@ import { clone, hash } from "../src/runtime/data";
 import { requireWorld } from "../src/worlds/compiler";
 import {
   generateExperiment,
+  memoryExperiment,
+  runWorldTrial,
   mutateWorld,
   runWorldBatch,
   validateWorldExperiment,
@@ -15,8 +17,36 @@ import {
 import { inspectWorldReceipt } from "../src/worlds/receipts";
 import { freshMemory, verifyWorldReceipt } from "../src/worlds/receipts";
 import { WorldSession } from "../src/worlds/session";
-import { townPack, townZero } from "../src/worlds/townZero";
+import { townPack, townZero, tutorialWorld } from "../src/worlds/townZero";
 
+it("generates generic families with no optional resources or scheduled events", () => {
+  const s = tutorialWorld();
+  s.resources = [];
+  s.events = [];
+  s.roles[0].resources = [];
+  s.roles[0].actions = ["wait"];
+  s.actions = [s.actions[0]];
+  s.objectives[0].condition = { op: "gte", ref: "tick", value: 1 };
+  const m = generateExperiment(s, 1);
+  expect(m.family.allowedMutations).toEqual([]);
+  expect(validateWorldExperiment(m).instances).toHaveLength(4);
+});
+
+it("freezes separate public context strategies and rejects trials outside the manifest", async () => {
+  const m = memoryExperiment(tutorialWorld(), 1);
+  expect(m.controllers.map((c) => c.context)).toEqual([
+    "STATE_ONLY",
+    "RECENT_WINDOW",
+    "BOUNDED_NOTEBOOK",
+  ]);
+  await expect(
+    runWorldTrial(m, "unknown", m.controllers[0].id),
+  ).rejects.toThrow();
+  const a = await runWorldTrial(m, m.instances[0].id, m.controllers[0].id);
+  const b = await runWorldTrial(m, m.instances[0].id, m.controllers[0].id);
+  expect(a).toEqual(b);
+  expect(a.summary.controller).toBe(m.controllers[0].id);
+});
 it("generates 100 reproducible bounded instances with disjoint frozen partitions", () => {
   const a = generateExperiment(townZero(), 25),
     b = generateExperiment(townZero(), 25);

@@ -32,7 +32,13 @@ export default function RuntimeLab({ academy, paused, onChange }: { academy: Aca
     if (!active || paused) return;
     const timer = setTimeout(() => {
       try {
-        const step = run.current?.next(); if (!step) return;
+        // Coalesce short trials within a bounded slice. Re-rendering the full
+        // trace inspector after every trial dominated Firefox rerun time.
+        const deadline = performance.now() + 12;
+        let step = run.current?.next(); if (!step) return;
+        for (let trials = 1; !step.done && trials < 4 && performance.now() < deadline; trials++) {
+          step = run.current?.next(); if (!step) return;
+        }
         if (!step.done) { setProgress(step.value); setRevision(n => n + 1); return; }
         const result = step.value;
         if (imported.current?.result && (canonical(imported.current.result) !== canonical(result.manifest.result) || canonical(imported.current.traceHashes) !== canonical(result.manifest.traceHashes))) throw new Error('Rerun differs from the imported result or trace hashes.');
@@ -40,7 +46,7 @@ export default function RuntimeLab({ academy, paused, onChange }: { academy: Aca
         onChange(rememberExperiment(academy.lab, result.manifest, result.champion, trace));
         setNotice(imported.current ? 'Manifest rerun verified. Results and trace hashes match.' : 'Experiment complete. Evaluation kept the controller frozen.'); imported.current = null;
       } catch (error) { run.current = null; setProgress(null); setNotice(error instanceof Error ? error.message : 'Experiment could not run.'); }
-    }, 20);
+    }, 16);
     return () => clearTimeout(timer);
   }, [active, paused, revision, academy.lab, onChange]);
   const start = (spec?: Experiment) => {

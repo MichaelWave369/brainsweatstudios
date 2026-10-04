@@ -3,6 +3,8 @@ import { clone } from "../runtime/data";
 import { compileWorld, parseWorldData, validatePack } from "../worlds/compiler";
 import {
   generateExperiment,
+  memoryExperiment,
+  validateWorldExperiment,
   type BatchReport,
   type TrialSummary,
 } from "../worlds/experiments";
@@ -67,11 +69,14 @@ export default function WorldLab({
     [notice, setNotice] = useState(""),
     [frame, setFrame] = useState(saved.receipt?.records.length || 0),
     [filter, setFilter] = useState(""),
+    [humanIntents, setHumanIntents] = useState<Record<string, string>>({}),
     [batching, setBatching] = useState(false),
     [trials, setTrials] = useState<TrialSummary[]>([]),
     [models, setModels] = useState<ModelInfo[]>([]),
     [model, setModel] = useState(""),
     [memoryText, setMemoryText] = useState(""),
+    [contextMode, setContextMode] =
+      useState<WorldController["context"]>("STATE_ONLY"),
     [requestCap, setRequestCap] = useState(1000),
     [interval, setIntervalValue] = useState(1);
   const [planGoal, setPlanGoal] = useState(""),
@@ -181,6 +186,7 @@ export default function WorldLab({
                 : "public-baseline",
           requestBudget: requestCap,
           decisionInterval: interval,
+          context: contextMode,
         } as WorldController,
       ]),
     );
@@ -220,7 +226,8 @@ export default function WorldLab({
     if (!s || paused) return;
     try {
       if (s.status !== "READY") s.resume();
-      await s.step(human);
+      const result = await s.step(human);
+      if (result) setHumanIntents({});
       if (alive.current) persist(s);
     } catch (error) {
       if (alive.current)
@@ -296,18 +303,35 @@ export default function WorldLab({
       }
     }
   };
-  const handoff = (family: "human" | "baseline" | "model") => {
+  const handoff = (family: "human" | "baseline" | "model", local = false) => {
     const s = session.current;
     if (!s) return;
     try {
+      if (local && (!bridge.current || !model))
+        throw new Error(
+          "Connect and explicitly select an installed model first.",
+        );
       active.current = false;
       setRunning(false);
-      s.handoff(role, {
-        ...baselineController(`${family}-replacement`),
-        family,
-        provider: family === "model" ? "mock" : "none",
-        model: family === "model" ? "mock-policy" : "public-baseline",
-      });
+      s.handoff(
+        role,
+        {
+          ...baselineController(`${family}-replacement`),
+          family,
+          provider: family === "model" ? (local ? "ollama" : "mock") : "none",
+          model:
+            family === "model"
+              ? local
+                ? model
+                : "mock-policy"
+              : "public-baseline",
+          context: contextMode,
+          requestBudget: requestCap,
+          decisionInterval: interval,
+        },
+        "Operator selected a replacement.",
+        local ? bridge.current! : undefined,
+      );
       persist(s);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Handoff rejected.");
@@ -357,10 +381,15 @@ export default function WorldLab({
       );
     }
   };
-  const launchBatch = (input?: unknown) => {
+  const launchBatch = (
+    input?: unknown,
+    inspect?: { instance: string; controller: string },
+  ) => {
     try {
+      const manifest = validateWorldExperiment(
+        input || generateExperiment(spec, 2),
+      );
       halt();
-      const manifest = input || generateExperiment(spec, 2);
       setBatching(true);
       setTrials([]);
       const w = new Worker(
@@ -379,6 +408,31 @@ export default function WorldLab({
         };
         if (data.type === "trial") {
           setTrials((t) => [...t, data.summary]);
+        } else if (data.type === "inspected") {
+          try {
+            const expected = saveRef.current.comparison?.trials.find(
+              (t) =>
+                t.instance === data.summary.instance &&
+                t.controller === data.summary.controller,
+            );
+            if (expected && expected.receiptHash !== data.receipt.digest)
+              throw new Error(
+                "Selected trial replay differs from the frozen comparison.",
+              );
+            const restored = WorldSession.restore(data.receipt);
+            session.current = restored;
+            persist(restored);
+            setNotice("Frozen trial reproduced. Inspection is stopped.");
+          } catch (error) {
+            setNotice(
+              error instanceof Error
+                ? error.message
+                : "Trial inspection failed.",
+            );
+          }
+          setBatching(false);
+          w.terminate();
+          worker.current = null;
         } else if (data.type === "complete") {
           try {
             const next = validateWorldSave({
@@ -415,7 +469,9 @@ export default function WorldLab({
         w.terminate();
         worker.current = null;
       };
-      w.postMessage(manifest);
+      w.postMessage(
+        inspect ? { kind: "inspect", manifest, ...inspect } : manifest,
+      );
     } catch (error) {
       setNotice(
         error instanceof Error ? error.message : "Comparison rejected.",
@@ -550,7 +606,9 @@ export default function WorldLab({
           Context strategy
           <select
             aria-label="World context strategy"
+            value={contextMode}
             onChange={(e) => {
+              setContextMode(e.target.value as WorldController["context"]);
               const s = session.current;
               if (s) {
                 const c = s.recorder.controller(actor);
@@ -881,6 +939,14 @@ export default function WorldLab({
               >
                 Hand world role to mock
               </button>
+              {controller === "ollama" && (
+                <button
+                  className="btn secondary"
+                  onClick={() => handoff("model", true)}
+                >
+                  Hand world role to selected local model
+                </button>
+              )}
             </div>
             {canHuman ? (
               <div
@@ -893,13 +959,42 @@ export default function WorldLab({
                     className="btn secondary"
                     key={a.type}
                     disabled={paused}
-                    onClick={() => void advance({ [actor]: a.type })}
+                    onClick={() =>
+                      current!.world.spec.turnMode === "simultaneous"
+                        ? setHumanIntents((previous) => ({
+                            ...previous,
+                            [actor]: a.type,
+                          }))
+                        : void advance({ [actor]: a.type })
+                    }
                   >
                     {a.label}
                   </button>
                 ))}
               </div>
             ) : null}
+            {current.world.spec.turnMode === "simultaneous" && (
+              <div className="button-row">
+                <pre translate="no">{JSON.stringify(humanIntents)}</pre>
+                <button
+                  className="btn secondary"
+                  disabled={
+                    paused ||
+                    running ||
+                    !current.actors
+                      .filter(
+                        (a) =>
+                          session.current!.recorder.controller(a.id).family ===
+                          "human",
+                      )
+                      .every((a) => humanIntents[a.id])
+                  }
+                  onClick={() => void advance(humanIntents)}
+                >
+                  Resolve staged human intents
+                </button>
+              </div>
+            )}
             <details>
               <summary>Declared plan and execution</summary>
               <label className="world-field">
@@ -1037,6 +1132,38 @@ export default function WorldLab({
                 className="btn secondary"
                 onClick={() =>
                   setFrame(
+                    (receipt?.records.find(
+                      (r) =>
+                        r.index + 1 > frame &&
+                        r.frame?.ledger.some((e) => e.kind === "objective"),
+                    )?.index ?? -1) + 1 ||
+                      receipt?.records.length ||
+                      0,
+                  )
+                }
+              >
+                Next objective change
+              </button>
+              <button
+                className="btn secondary"
+                onClick={() =>
+                  setFrame(
+                    (receipt?.records.find(
+                      (r) =>
+                        r.index + 1 > frame &&
+                        r.frame?.ledger.some((e) => e.kind === "failure"),
+                    )?.index ?? -1) + 1 ||
+                      receipt?.records.length ||
+                      0,
+                  )
+                }
+              >
+                Next failure
+              </button>
+              <button
+                className="btn secondary"
+                onClick={() =>
+                  setFrame(
                     receipt?.handoffs.find((h) => h.index > frame)?.index ||
                       receipt?.records.length ||
                       0,
@@ -1132,6 +1259,13 @@ export default function WorldLab({
           </button>
           <button
             className="btn secondary"
+            disabled={!compiled.ok || batching || running || paused}
+            onClick={() => launchBatch(memoryExperiment(spec))}
+          >
+            Compare public context strategies
+          </button>
+          <button
+            className="btn secondary"
             onClick={() =>
               download(
                 "brain-sweat-world-experiment.json",
@@ -1156,6 +1290,54 @@ export default function WorldLab({
         </div>
         {batching ? (
           <p role="status">Completed trials: {trials.length}</p>
+        ) : null}
+        {saved.comparison && saved.manifest ? (
+          <details>
+            <summary>Individual frozen trials</summary>
+            <p>
+              Inspect recreates the selected offline trial and verifies its
+              recorded hash.
+            </p>
+            <div className="world-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Controller</th>
+                    <th>Partition / seed</th>
+                    <th>Recovery / blocked</th>
+                    <th>Receipt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {saved.comparison.trials.map((t) => (
+                    <tr key={`${t.instance}:${t.controller}`}>
+                      <td translate="no">{t.controller}</td>
+                      <td translate="no">
+                        {t.partition} / {t.seed}
+                      </td>
+                      <td>
+                        {t.recoveryTicks} / {t.blocked}
+                      </td>
+                      <td>
+                        <button
+                          className="btn secondary"
+                          disabled={batching || running || paused}
+                          onClick={() =>
+                            launchBatch(saved.manifest, {
+                              instance: t.instance,
+                              controller: t.controller,
+                            })
+                          }
+                        >
+                          Inspect frozen trial
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
         ) : null}
         {saved.comparison ? (
           <div className="world-table-wrap">

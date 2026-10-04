@@ -130,16 +130,24 @@ export const familyManifest = (base: WorldSpec): FamilyManifest => ({
   version: "1.0.0",
   base: clone(requireWorld(base).spec) as WorldSpec,
   allowedMutations: [
-    {
-      type: "reserve-scale",
-      resource: base.resources[0]?.id || "",
-      percent: 70,
-    },
-    {
-      type: "event-shift",
-      event: base.events.find((e) => e.at !== null)?.id || "",
-      ticks: 12,
-    },
+    ...(base.resources.length
+      ? [
+          {
+            type: "reserve-scale",
+            resource: base.resources[0].id,
+            percent: 70,
+          } as const,
+        ]
+      : []),
+    ...(base.events.some((e) => e.at !== null)
+      ? [
+          {
+            type: "event-shift",
+            event: base.events.find((e) => e.at !== null)!.id,
+            ticks: 12,
+          } as const,
+        ]
+      : []),
   ],
   curricula: [
     { id: "foundation", days: 7 },
@@ -338,6 +346,68 @@ export function summarizeBatch(
   };
   return freeze({ ...base, digest: hash(base) });
 }
+export function memoryExperiment(base: WorldSpec, count = 2): WorldExperiment {
+  return generateExperiment(
+    base,
+    count,
+    (["STATE_ONLY", "RECENT_WINDOW", "BOUNDED_NOTEBOOK"] as const).map(
+      (context) => ({
+        ...baselineController(context.toLowerCase().replaceAll("_", "-")),
+        family: "model",
+        provider: "mock",
+        model: "mock-policy",
+        context,
+      }),
+    ),
+  );
+}
+export async function runWorldTrial(
+  input: unknown,
+  instanceId: string,
+  controllerId: string,
+) {
+  const manifest = validateWorldExperiment(input);
+  const instance = manifest.instances.find((i) => i.id === instanceId),
+    controller = manifest.controllers.find((c) => c.id === controllerId);
+  if (!instance || !controller)
+    throw new Error("Trial is outside the frozen manifest.");
+  return runTrial(instance, controller);
+}
+async function runTrial(instance: WorldInstance, c: WorldController) {
+  const pack: WorldPack = {
+    schema: "brain-sweat-pack@1",
+    id: "experiment-pack",
+    version: "1.0.0",
+    worlds: [instance.spec],
+  };
+  const bindings = Object.fromEntries(
+    instance.spec.roles.map((r) => [r.id, { ...c, id: c.id }]),
+  );
+  const s = new WorldSession(pack, instance.spec.id, instance.seed, bindings);
+  while (!s.env.result().terminal && s.status === "READY") await s.step();
+  const receipt = verifyWorldReceipt(s.receipt()),
+    r = receipt.result;
+  const summary: TrialSummary = {
+    instance: instance.id,
+    partition: instance.partition,
+    controller: c.id,
+    seed: instance.seed,
+    worldHash: instance.worldHash,
+    receiptHash: receipt.digest,
+    success: r.success,
+    ticks: r.tick,
+    completion: r.completion,
+    reserves: Object.values(r.reserves).reduce((a, b) => a + b, 0),
+    blocked: r.blocked,
+    conflicts: r.conflicts,
+    recoveries: r.recoveries,
+    recoveryTicks: r.recoveryTicks,
+    inspections: r.inspections,
+    failure: r.reason,
+    requests: Object.values(receipt.requests).reduce((a, b) => a + b, 0),
+  };
+  return { summary, receipt };
+}
 export async function* runWorldBatch(
   input: unknown,
 ): AsyncGenerator<
@@ -348,43 +418,7 @@ export async function* runWorldBatch(
     trials: TrialSummary[] = [];
   for (const instance of manifest.instances)
     for (const c of manifest.controllers) {
-      const pack: WorldPack = {
-          schema: "brain-sweat-pack@1",
-          id: "experiment-pack",
-          version: "1.0.0",
-          worlds: [instance.spec],
-        },
-        bindings = Object.fromEntries(
-          instance.spec.roles.map((r) => [r.id, { ...c, id: c.id }]),
-        );
-      const s = new WorldSession(
-        pack,
-        instance.spec.id,
-        instance.seed,
-        bindings,
-      );
-      while (!s.env.result().terminal && s.status === "READY") await s.step();
-      const receipt = verifyWorldReceipt(s.receipt()),
-        r = receipt.result;
-      const summary: TrialSummary = {
-        instance: instance.id,
-        partition: instance.partition,
-        controller: c.id,
-        seed: instance.seed,
-        worldHash: instance.worldHash,
-        receiptHash: receipt.digest,
-        success: r.success,
-        ticks: r.tick,
-        completion: r.completion,
-        reserves: Object.values(r.reserves).reduce((a, b) => a + b, 0),
-        blocked: r.blocked,
-        conflicts: r.conflicts,
-        recoveries: r.recoveries,
-        recoveryTicks: r.recoveryTicks,
-        inspections: r.inspections,
-        failure: r.reason,
-        requests: Object.values(receipt.requests).reduce((a, b) => a + b, 0),
-      };
+      const { summary, receipt } = await runTrial(instance, c);
       trials.push(summary);
       yield { summary, receipt };
     }

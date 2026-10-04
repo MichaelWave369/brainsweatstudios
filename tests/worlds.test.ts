@@ -7,7 +7,11 @@ import {
   truth,
   validatePack,
 } from "../src/worlds/compiler";
-import { createWorldEnvironment, seedHierarchy } from "../src/worlds/runtime";
+import {
+  createWorldEnvironment,
+  evaluate,
+  seedHierarchy,
+} from "../src/worlds/runtime";
 import {
   baselineController,
   receiptDigest,
@@ -109,6 +113,14 @@ describe("data-only world security", () => {
   });
 });
 describe("deterministic authority and causality", () => {
+  it("shares a finite predicate-node budget across evaluations", () => {
+    const e = createWorldEnvironment(requireWorld(tutorialWorld()));
+    const budget = { remaining: 2 };
+    expect(evaluate(truth, e.snapshot(), budget)).toBe(true);
+    expect(evaluate(truth, e.snapshot(), budget)).toBe(true);
+    expect(() => evaluate(truth, e.snapshot(), budget)).toThrow();
+    expect(e.result().tick).toBe(0);
+  });
   it("separates all seed streams and has no authoritative Math.random dependency", () => {
     const a = seedHierarchy(369);
     expect(new Set(Object.values(a)).size).toBe(7);
@@ -219,6 +231,89 @@ describe("deterministic authority and causality", () => {
   });
 });
 describe("long receipts and controller interoperability", () => {
+  it("resolves simultaneous model teams independently of inference completion order", async () => {
+    const spec = tutorialWorld();
+    spec.turnMode = "simultaneous";
+    spec.roles = [
+      { ...spec.roles[0], id: "first" },
+      { ...spec.roles[0], id: "second" },
+    ];
+    spec.actions.find((a) => a.id === "inspect-store")!.effects = [];
+    spec.actions.find((a) => a.id === "refill")!.exclusive = "store";
+    const run = async (reverse: boolean) => {
+      const observed: number[] = [];
+      const controllers = Object.fromEntries(
+        spec.roles.map((r) => [
+          r.id,
+          {
+            ...baselineController(r.id),
+            family: "model",
+            provider: "mock",
+            model: "mock-policy",
+          },
+        ]),
+      );
+      const adapters = Object.fromEntries(
+        spec.roles.map((r, i) => [
+          r.id,
+          {
+            ...mockAdapter(),
+            propose: async (
+              request: Parameters<ProviderAdapter["propose"]>[0],
+            ) => {
+              observed.push(request.observation.tick);
+              await new Promise((resolve) =>
+                setTimeout(resolve, i === Number(reverse) ? 20 : 1),
+              );
+              return {
+                text: '{"action":{"type":"refill"}}',
+                model: "mock-policy",
+                usage: { inputTokens: null, outputTokens: null },
+              };
+            },
+          },
+        ]),
+      );
+      const s = new WorldSession(
+        {
+          schema: "brain-sweat-pack@1",
+          id: "team-pack",
+          version: "1.0.0",
+          worlds: [spec],
+        },
+        spec.id,
+        369,
+        controllers as never,
+        adapters,
+      );
+      await s.step();
+      expect(observed).toEqual([0, 0]);
+      expect(verifyWorldReceipt(s.receipt()).result.conflicts).toBe(1);
+      return s.env.snapshot();
+    };
+    expect(await run(false)).toEqual(await run(true));
+  });
+  it("rejects lifecycle and artifact changes before altering session state", () => {
+    const s = new WorldSession(townPack());
+    s.stop();
+    expect(() =>
+      s.handoff("planner", {
+        ...baselineController("invalid"),
+        requestBudget: 0,
+      }),
+    ).toThrow();
+    expect(s.status).toBe("STOPPED");
+    expect(s.recorder.controller("planner").id).not.toBe("invalid");
+    const before = s.env.stateHash();
+    for (let i = 0; i < 128; i++) s.setMemory("planner", s.memories.planner);
+    const memory = clone(s.memories.planner);
+    expect(() =>
+      s.setMemory("planner", { ...memory, facts: ["New fact"] }),
+    ).toThrow();
+    expect(s.memories.planner).toEqual(memory);
+    expect(s.env.stateHash()).toBe(before);
+    expect(verifyWorldReceipt(s.receipt()).artifacts).toHaveLength(128);
+  });
   it("verifies a complete 30-day campaign, checkpoints and stopped restoration", async () => {
     const r = await finish(new WorldSession(townPack(30)));
     expect(r.result.tick).toBe(720);

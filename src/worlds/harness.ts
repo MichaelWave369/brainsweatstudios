@@ -1,7 +1,7 @@
 import { requireWorld } from "./compiler.ts";
 import { chooseWorldAction } from "./controllers.ts";
 import { generateExperiment, runWorldBatch } from "./experiments.ts";
-import { verifyWorldReceipt } from "./receipts.ts";
+import { baselineController, verifyWorldReceipt } from "./receipts.ts";
 import { createWorldEnvironment } from "./runtime.ts";
 import { WorldSession } from "./session.ts";
 import { townPack, townZero } from "./townZero.ts";
@@ -71,10 +71,18 @@ export async function runWorldHarness() {
   let trials = 0;
   while (!(await batch.next()).done) trials++;
   const batchMs = Math.round(now() - batchStart);
+  const hundredStart = now(),
+    hundredBatch = runWorldBatch(
+      generateExperiment(townZero(), 25, [baselineController("maintenance")]),
+    );
+  let hundredTrials = 0;
+  while (!(await hundredBatch.next()).done) hundredTrials++;
+  const hundredMs = Math.round(now() - hundredStart);
   if (
     !seven.result.success ||
     !thirty.result.success ||
     trials !== 20 ||
+    hundredTrials !== 100 ||
     hundred.instances.length !== 100
   )
     throw new Error("Town Zero harness failed.");
@@ -101,6 +109,7 @@ export async function runWorldHarness() {
     ],
     receiptVerificationMs: verifyMs,
     batch: { worlds: trials, milliseconds: batchMs },
+    sequentialEpisodes: { episodes: hundredTrials, milliseconds: hundredMs },
     generated: {
       instances: hundred.instances.length,
       milliseconds: generateMs,

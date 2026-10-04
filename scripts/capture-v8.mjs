@@ -1,0 +1,30 @@
+import { chromium } from 'playwright';
+import { mkdir } from 'node:fs/promises';
+const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:5173/brainsweatstudios/';
+await mkdir('docs/screenshots/v8', { recursive: true });
+const browser = await chromium.launch({args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']});
+try {
+  const context = await browser.newContext({viewport: {width: 1440, height: 1000}}), page = await context.newPage();
+  await page.goto(base + '#/academy?tab=worlds');
+  await page.getByRole('heading', {name: 'World authoring lab', exact: true}).waitFor();
+  await page.screenshot({path: 'docs/screenshots/v8/authoring.png'});
+  await page.getByRole('button', {name: 'Run validated preview', exact: true}).click();
+  await page.getByLabel('World run tick cap', {exact: true}).fill('100');
+  await page.getByRole('button', {name: 'Run bounded campaign', exact: true}).click();
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.worlds.receipt.result.tick === 100);
+  await page.locator('.world-operations').screenshot({path: 'docs/screenshots/v8/operations.png'});
+  await page.getByLabel('World replay frame', {exact: true}).fill('96');
+  await page.getByRole('button', {name: 'Next event', exact: true}).click();
+  await page.getByRole('heading', {name: 'Verified causal timeline', exact: true}).locator('..').screenshot({path: 'docs/screenshots/v8/causal-timeline.png'});
+  await page.getByRole('button', {name: 'Compare frozen world controllers', exact: true}).click();
+  await page.waitForFunction(() => Boolean(JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.worlds.comparison));
+  await page.getByRole('heading', {name: 'Frozen family comparisons', exact: true}).locator('..').screenshot({path: 'docs/screenshots/v8/comparison.png'});
+  await page.setViewportSize({width: 390, height: 844});
+  await page.locator('.world-operations').scrollIntoViewIfNeeded();
+  await page.screenshot({path: 'docs/screenshots/v8/mobile-operations.png'});
+  await page.getByLabel('Language', {exact: true}).selectOption('es');
+  await page.getByRole('heading', {name: 'Laboratorio de creación de mundos', exact: true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path: 'docs/screenshots/v8/spanish-authoring.png'});
+  console.log('V8 production review captures: authoring, district operations, causal replay, frozen comparison, mobile and Spanish. Offline baselines only.');
+  await context.close();
+} finally {await browser.close();}

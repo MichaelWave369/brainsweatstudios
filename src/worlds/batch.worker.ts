@@ -1,8 +1,17 @@
 /// <reference lib="webworker" />
-import { runWorldBatch } from "./experiments.ts";
+import { runWorldBatch, runWorldTrial } from "./experiments.ts";
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 scope.onmessage = async (e) => {
   try {
+    if (e.data?.kind === "inspect") {
+      const result = await runWorldTrial(
+        e.data.manifest,
+        e.data.instance,
+        e.data.controller,
+      );
+      scope.postMessage({ type: "inspected", ...result });
+      return;
+    }
     const iterator = runWorldBatch(e.data);
     while (true) {
       const next = await iterator.next();

@@ -35,9 +35,20 @@ try {
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.garage.receipt.result.success);
   await page.getByRole('button',{name:'Verify model world replay',exact:true}).click(); await page.getByText('World replay verified from recorded actions. Model regeneration was not requested.',{exact:true}).waitFor();
   await page.reload(); await page.getByRole('heading',{name:'Model receipt inspector',exact:true}).waitFor();
+  await page.goto(`${base}#/academy?tab=worlds`);
+  await page.getByLabel('Campaign curriculum', {exact: true}).selectOption('30');
+  await page.getByLabel('World controller team', {exact: true}).selectOption('mock');
+  await page.getByRole('button', {name: 'Run validated preview', exact: true}).click();
+  await page.getByLabel('World run tick cap', {exact: true}).fill('720');
+  await page.getByRole('button', {name: 'Run bounded campaign', exact: true}).click();
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.worlds.receipt?.result.success, undefined, {timeout: 120000});
+  assert.equal((await page.evaluate(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')))).academy.worlds.receipt.result.tick, 720);
+  await page.getByRole('button', {name: 'Verify long world replay', exact: true}).click();
+  await page.getByText('Long world replay and checkpoints verified. No inference was requested.', {exact: true}).waitFor();
+  await page.reload(); assert.equal(await page.locator('.world-status').innerText(), 'STOPPED');
   await page.goto(`${base}#/class/derivatives`); await page.getByLabel('Point x',{exact:true}).fill('6'); await page.reload(); assert.equal(await page.getByLabel('Point x',{exact:true}).inputValue(),'6');
   await page.goto(`${base}#/lab/engine`); await page.getByRole('button',{name:'Resume checkpoint',exact:true}).click(); await page.locator('.crt-screen .game-controls').waitFor();
   await page.goto(base); await page.locator('.world-card').last().waitFor();
   await page.screenshot({ path: `docs/screenshots/live-v${studio.major}.png` }); assert.deepEqual(errors, []);
-  console.log('Live v7 verified: Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, and zero page errors.'); await context.close();
+  console.log('Live v8 verified: 30-day Town Zero, long replay, stopped restoration, Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, and zero page errors.'); await context.close();
 } finally { await browser.close(); }

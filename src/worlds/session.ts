@@ -123,9 +123,15 @@ export class WorldSession {
     actor: string,
     to: WorldController,
     note = "Operator selected a replacement.",
+    adapter?: ProviderAdapter,
   ) {
-    this.pause();
+    if (adapter && (to.family !== "model" || adapter.id !== to.provider))
+      throw new Error("Replacement provider differs from its controller.");
     this.recorder.handoff(actor, to, note);
+    this.pause();
+    if (adapter) this.adapters[actor] = adapter;
+    else if (this.adapters[actor]?.id !== to.provider)
+      delete this.adapters[actor];
     this.lastDecision[actor] = -10000;
     this.resume();
   }
@@ -308,6 +314,11 @@ export class WorldSession {
           const adapter =
             this.adapters[a.id] ||
             createProvider(c.provider === "ollama" ? "ollama" : "mock");
+          if (adapter.id !== c.provider)
+            throw new AgentError(
+              "VERSION",
+              "Controller provider differs from its adapter.",
+            );
           const response = await Promise.race([
             adapter.propose(request, abort.signal),
             new Promise<never>((_, reject) => {
@@ -381,12 +392,14 @@ export class WorldSession {
   }
   setMemory(actor: string, value: unknown) {
     if (!this.memories[actor]) throw new Error("Unknown memory owner.");
-    this.memories[actor] = validateMemory(value);
-    this.recorder.artifact(actor, "memory", this.memories[actor]);
+    const memory = validateMemory(value);
+    this.recorder.artifact(actor, "memory", memory);
+    this.memories[actor] = memory;
   }
   setPlan(actor: string, value: unknown) {
-    this.plans[actor] = validatePlan(value);
-    this.recorder.artifact(actor, "plan", this.plans[actor]);
+    const plan = validatePlan(value);
+    this.recorder.artifact(actor, "plan", plan);
+    this.plans[actor] = plan;
   }
   receipt(): WorldReceipt {
     const r = this.recorder.finish(

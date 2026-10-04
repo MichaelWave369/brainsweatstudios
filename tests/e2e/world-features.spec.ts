@@ -230,6 +230,17 @@ test("worlds: worker comparisons keep partitions frozen and rerun imported manif
       timeout: 60000,
     })
     .toBe(savedWorlds.comparison.digest);
+  await page.getByText("Individual frozen trials", { exact: true }).click();
+  await page
+    .getByRole("button", { name: "Inspect frozen trial", exact: true })
+    .first()
+    .click();
+  await expect
+    .poll(async () => (await saved(page)).academy.worlds.receipt?.digest, {
+      timeout: 60000,
+    })
+    .toBe(savedWorlds.comparison.trials[0].receiptHash);
+  await expect(page.locator(".world-status")).toHaveText("STOPPED");
   expect((await saved(page)).xp).toBe(0);
 });
 test("worlds: Spanish, keyboard tabs, 320/390 layouts and operations remain accessible", async ({
@@ -287,6 +298,14 @@ test("worlds: Spanish, keyboard tabs, 320/390 layouts and operations remain acce
   await expect(
     page.getByRole("tab", { name: "Garaje de agentes", exact: true }),
   ).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await expect(
+    page.getByRole("tab", {
+      name: "Laboratorio de creación de mundos",
+      exact: true,
+    }),
+  ).toBeFocused();
   await page.getByLabel("Idioma", { exact: true }).selectOption("en");
   await expect(
     page.getByRole("heading", { name: "World authoring lab", exact: true }),
@@ -323,6 +342,29 @@ test("worlds: hidden and paused sessions stop advancing; hard offline replay and
   const tick = (await saved(page)).academy.worlds.receipt.result.tick;
   await page.waitForTimeout(200);
   expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(tick);
+  await page
+    .getByRole("button", { name: "Run bounded campaign", exact: true })
+    .click();
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      value: true,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator(".world-status")).toHaveText("PAUSED");
+  const hiddenTick = (await saved(page)).academy.worlds.receipt.result.tick;
+  await page.waitForTimeout(200);
+  expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(
+    hiddenTick,
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      value: false,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
   const calls: string[] = [];
   page.on("request", (r) => {
     if (r.method() === "POST" || /11435|11434/.test(r.url()))

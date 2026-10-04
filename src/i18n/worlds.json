@@ -210,5 +210,19 @@
   "stable": "estable",
   "storm": "tormenta",
   "Add action": "Añadir acción",
-  "Add event": "Añadir evento"
+  "Add event": "Añadir evento",
+  "Hand world role to selected local model": "Entregar el rol del mundo al modelo local seleccionado",
+  "Resolve staged human intents": "Resolver las intenciones humanas preparadas",
+  "Next objective change": "Siguiente cambio de objetivo",
+  "Next failure": "Siguiente fallo",
+  "Compare public context strategies": "Comparar estrategias de contexto público",
+  "Individual frozen trials": "Ensayos congelados individuales",
+  "Inspect recreates the selected offline trial and verifies its recorded hash.": "La inspección recrea el ensayo local elegido y verifica su hash registrado.",
+  "Partition / seed": "Partición / semilla",
+  "Recovery / blocked": "Recuperación / bloqueado",
+  "Receipt": "Registro",
+  "Inspect frozen trial": "Inspeccionar ensayo congelado",
+  "Frozen trial reproduced. Inspection is stopped.": "Ensayo congelado reproducido. La inspección está detenida.",
+  "Keep a fictional town supplied, compare controller teams, and inspect delayed consequences in the Academy. Local models remain optional.": "Mantén abastecido un pueblo ficticio, compara equipos de controladores e inspecciona consecuencias diferidas en la Academia. Los modelos locales son opcionales.",
+  "Explore Town Zero": "Explorar Town Zero"
 }

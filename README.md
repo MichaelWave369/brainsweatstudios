@@ -4,7 +4,7 @@
 
 A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** V8 adds safe data-defined simulations and Town Zero, a fictional settlement with 7–30-day campaigns, role-specific controllers, hidden observations, delayed operations, verified long replay and frozen transfer comparisons. The advanced authoring lab is separate from ordinary games. The V7 Agent Garage, local assistant and council, guided bots, Spanish, anonymous profiles, checkpoints, geometric scenes and procedural sound remain available.
 
-V8 is merged and published; its actual-live verification passed. V9 is being prepared on a separate review branch. [Campaign audit](docs/campaign-audit.md) · [V8 verification](docs/verification-v8.md) · [V9 verification](docs/verification-v9.md).
+V9 is merged and published; its actual-live verification passed. V10 circuit families are in review. [Campaign audit](docs/campaign-audit.md) · [V8 verification](docs/verification-v8.md) · [V9 verification](docs/verification-v9.md) · [V10 verification](docs/verification-v10.md).
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
@@ -317,3 +317,17 @@ Open `#/academy?tab=locker` from the Academy. Create a local operational passpor
 Record a public plan after advancing a WorldSpec run, retain it with creator/receipt/hash provenance, and inspect admission/rejection at the next handoff. Artifacts contain data and confer no permission to alter world state. Exports include the native evidence needed to validate inventory and portfolio claims. Restoring a Locker leaves execution stopped and providers disconnected. The bounded archive retains eight runs; export before replacement. No XP or intelligence certification is awarded.
 
 `npm run agent:list`, `npm run agent:show -- studio-agent`, and `npm run agent:run -- survey` use the same host as the browser. Add `--input locker.json` for an exported archive. `node scripts/career.mjs verify --input locker.json` replays its evidence.
+
+## Agent Circuit Worlds (V10 review build)
+
+The advanced Locker can enable six distinct native simulations for an existing passport: normalized racing, fictional stunt choreography, seeded virtual cache navigation, synthetic source research, local show production, and original score execution. Family telemetry, human controls, configuration imports, role descriptors, proven outputs and explicit fresh/frozen/prior handoffs remain outside ordinary games. A research dossier can supply source references to a later simulated show. All roles propose before a simultaneous turn advances.
+
+```sh
+npm run family:list
+npm run race:run -- --mode endurance
+npm run cache:run -- --partition HOLDOUT
+npm run performance:run -- --controller mock
+npm run replay:verify -- exported-receipt-or-locker.json
+```
+
+See [V10 verification](docs/verification-v10.md) for mechanics, partition seed ranges, artifact provenance, bounded storage and measured checks. Audio rendering is the V11 rung; season orchestration is V12.

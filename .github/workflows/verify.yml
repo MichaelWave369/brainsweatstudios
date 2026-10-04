@@ -68,6 +68,13 @@ jobs:
         env:
           CROSS_BROWSER: 1
           TEST_PRODUCTION: 1
+      - name: Verify V10 distinct native families and portable evidence in three browsers
+        run: npm run test:e2e -- tests/e2e/family-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Verify shared headless family host
+        run: npm run test:families
       - name: Verify shared headless career host
         run: npm run test:career
       - name: Deterministic model-controller and recovery sweep
@@ -90,9 +97,9 @@ jobs:
             fi
           fi
           if [ "$studio_ui_only" = "1" ]; then
-            npm run test:e2e -- --workers=3 --grep-invert 'agent:|academy:|runtime:|garage:|worlds:|career:'
+            npm run test:e2e -- --workers=3 --grep-invert 'agent:|academy:|runtime:|garage:|worlds:|career:|families:'
           else
-            npm run test:e2e -- --workers=3 --grep-invert 'academy:|runtime:|garage:|worlds:|career:'
+            npm run test:e2e -- --workers=3 --grep-invert 'academy:|runtime:|garage:|worlds:|career:|families:'
           fi
         env:
           BOT_FULL_SWEEP: 1

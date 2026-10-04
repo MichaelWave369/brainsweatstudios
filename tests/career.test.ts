@@ -211,6 +211,8 @@ describe('memory firewall and artifact admission', () => {
         raw.artifacts[0].creationRun = '0'.repeat(64);
         expect(() => validateCareer(raw)).toThrow();
         raw.artifacts[0] = clone(save.artifacts[0]);
+        expect(raw.artifacts[0].type).toBe('world-plan');
+        if (raw.artifacts[0].type !== 'world-plan') throw new Error('Expected a retained world plan.');
         raw.artifacts[0].content.goal = 'Forged';
         expect(() => validateCareer(raw)).toThrow();
         expect(() => validateCareer({ ...save, artifacts: [{ ...save.artifacts[0], code: 'eval()' }] })).toThrow();

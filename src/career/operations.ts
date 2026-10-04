@@ -2,10 +2,12 @@ import { clone, freeze, hash } from '../runtime/data.ts';
 import { dataBytes } from '../worlds/compiler.ts';
 import { CAREER_LIMITS, type AgentPassport, type CareerRun, type CareerSave, type EvaluationInput, type MemoryCondition, type Partition, type PortableArtifact, type PublicNote, type WorldHandoffRecord } from './types.ts';
 import { createPassport, demand, inputHash, runDigest, validateCareer, validateEvaluation, validateNote, validatePassport, verifyCareerRun } from './validation.ts';
+import { FAMILY_IDS } from '../families/types.ts';
+import { acceptsArtifact } from '../families/specs.ts';
 function synchronize(save: CareerSave): CareerSave {
     const runIds = new Set(save.runs.map(r => r.digest));
     save.artifacts = save.artifacts.filter(a => runIds.has(a.creationRun));
-    save.agents = save.agents.map(a => ({ ...a, performanceEvidence: save.runs.filter(r => r.agentId === a.id).map(r => r.digest), roleHistory: save.runs.filter(r => r.agentId === a.id).map(r => ({ runId: r.digest, worldId: r.worldId, role: r.actor })), inventory: save.artifacts.filter(p => p.creator === a.id).map(p => p.id) }));
+    save.agents = save.agents.map(a => ({ ...a, performanceEvidence: save.runs.filter(r => r.agentId === a.id).map(r => r.digest), roleHistory: save.runs.filter(r => r.agentId === a.id).map(r => ({ runId: r.digest, worldId: r.worldId, role: r.actor })), inventory: save.artifacts.filter(p => p.creator === a.id).map(p => p.id), vehicleRef:save.artifacts.some(p=>p.creator===a.id&&p.id===a.vehicleRef)?a.vehicleRef:null, mediaRefs:a.mediaRefs.filter(id=>save.artifacts.some(p=>p.creator===a.id&&p.id===id)) }));
     Object.keys(save.notes).forEach(id => { save.notes[id] = save.notes[id].filter(n => n.sourceRun === null || runIds.has(n.sourceRun)); });
     return save;
 }
@@ -21,6 +23,10 @@ export function updatePassport(save: CareerSave, passport: AgentPassport): Caree
     demand(next.agents.some(a => a.id === p.id), 'Passport is absent.');
     next.agents = next.agents.map(a => a.id === p.id ? p : a);
     return validateCareer(next);
+}
+export function enableCircuitWorlds(save:CareerSave,agentId:string):CareerSave {
+    const agent=validateCareer(save).agents.find(a=>a.id===agentId);demand(agent,'Passport is absent.');
+    return updatePassport(save,{...agent,compatibleWorlds:[...new Set([...agent.compatibleWorlds,...FAMILY_IDS])],publicCapabilities:[...new Set([...agent.publicCapabilities,'family-artifacts' as const])]});
 }
 export function writeNote(save: CareerSave, agentId: string, note: PublicNote): CareerSave {
     const next = clone(validateCareer(save)), value = validateNote(note);
@@ -45,7 +51,7 @@ export function evaluationInput(save: CareerSave, agentId: string, worldId: stri
 export function handoffRecord(save: CareerSave, agentId: string, source: string, destination: string, input: EvaluationInput): WorldHandoffRecord {
     const agent = validateCareer(save).agents.find(a => a.id === agentId);
     demand(agent, 'Passport is absent.');
-    const capabilities = destination === 'town-zero' || destination === 'reserve-lesson' ? ['public-notes', 'world-plan'] : [];
+    const capabilities = destination === 'town-zero' || destination === 'reserve-lesson' ? ['public-notes', 'world-plan'] : FAMILY_IDS.includes(destination as typeof FAMILY_IDS[number]) ? ['public-notes','family-artifacts'] : [];
     return freeze({ schema: 'career-handoff@1', agentId, source, destination, memory: input.notes.map(n => n.id), accepted: input.artifacts.map(a => a.id), rejected: agent.inventory.filter(id => !input.artifacts.some(a => a.id === id)).map(id => ({ id, reason: input.condition === 'FRESH' ? 'Fresh input excludes inventory.' : 'Destination excludes this artifact.' })), acceptedCapabilities: agent.publicCapabilities.filter(c => capabilities.includes(c)), rejectedCapabilities: agent.publicCapabilities.filter(c => !capabilities.includes(c)), input, snapshotHash: input.snapshotHash });
 }
 export function sealRun(input: Omit<CareerRun, 'schema' | 'digest'>): CareerRun {
@@ -87,10 +93,17 @@ export function removeArtifact(save: CareerSave, id: string): CareerSave {
     next.artifacts = next.artifacts.filter(a => a.id !== id);
     return validateCareer(synchronize(next));
 }
+export function retainFamilyOutputs(save:CareerSave,runId:string,prefix:string):CareerSave {
+    const next=clone(validateCareer(save)),run=next.runs.find(r=>r.digest===runId);demand(run&&run.receipt.schema==='family-episode@1','Choose native family evidence.');demand(['CAREER','TRAIN'].includes(run.evaluation.partition),'Holdout/transfer outputs stay outside career inventory.');
+    const outputs=run.receipt.outputs.filter(p=>p.actor===run.actor);demand(outputs.length,'This episode has no completed public output.');
+    outputs.forEach(o=>{const artifact:PortableArtifact={schema:'career-artifact@1',id:`${prefix}-${o.type}`,type:o.type,version:'1.0.0',creator:run.agentId,creationRun:run.digest,contentHash:o.contentHash,compatibleWorlds:FAMILY_IDS.filter(f=>acceptsArtifact(f,o.type)),content:clone(o.content),bytes:dataBytes(o.content)};demand(!next.artifacts.some(a=>a.id===artifact.id),'Choose a new artifact id.');next.artifacts.push(artifact);});
+    next.agents=next.agents.map(a=>a.id===run.agentId?{...a,vehicleRef:next.artifacts.filter(p=>p.creator===a.id&&p.type==='vehicle-setup').at(-1)?.id??a.vehicleRef,mediaRefs:next.artifacts.filter(p=>p.creator===a.id&&['music-score','show-rundown','research-dossier','performance-plan'].includes(p.type)).map(p=>p.id).slice(-8)}:a);
+    return validateCareer(synchronize(next));
+}
 export function portfolio(save: CareerSave, agentId: string) {
     const runs = validateCareer(save).runs.filter(r => r.agentId === agentId);
     const families = [...new Set(runs.map(r => r.family))];
-    return families.map(family => { const rows = runs.filter(r => r.family === family); return { family, runs: new Set(rows.map(r => r.evaluation.episode)).size, completed: new Set(rows.filter(r => r.receipt.result.terminal).map(r => r.evaluation.episode)).size, skills: rows.map(r => ({ receipt: r.digest, world: r.worldId, role: r.actor, planning: r.receipt.schema === 'world-episode@1' ? r.receipt.artifacts.filter(a => a.actor === r.actor && a.kind === 'plan').length : 0, information: r.receipt.schema === 'world-episode@1' ? r.receipt.result.inspections : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'information')).length, coordination: r.receipt.schema === 'world-episode@1' ? r.receipt.result.signals : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'signal')).length, recovery: r.receipt.schema === 'world-episode@1' ? r.receipt.result.recoveries : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.attempts.some(e => e.code !== null)).length, resourceOutcome: r.receipt.schema === 'world-episode@1' ? r.receipt.result.reserves : r.receipt.result.resources })), evidence: rows.map(r => ({ id: r.digest, world: r.worldId, actor: r.actor, partition: r.evaluation.partition, condition: r.evaluation.condition, controller: r.controller.family })) }; });
+    return families.map(family => { const rows = runs.filter(r => r.family === family); return { family, runs: new Set(rows.map(r => r.evaluation.episode)).size, completed: new Set(rows.filter(r => r.receipt.result.terminal).map(r => r.evaluation.episode)).size, skills: rows.map(r => r.receipt.schema==='family-episode@1'?{receipt:r.digest,world:r.worldId,role:r.actor,measures:r.receipt.result.measures}:({ receipt: r.digest, world: r.worldId, role: r.actor, planning: r.receipt.schema === 'world-episode@1' ? r.receipt.artifacts.filter(a => a.actor === r.actor && a.kind === 'plan').length : 0, information: r.receipt.schema === 'world-episode@1' ? r.receipt.result.inspections : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'information')).length, coordination: r.receipt.schema === 'world-episode@1' ? r.receipt.result.signals : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'signal')).length, recovery: r.receipt.schema === 'world-episode@1' ? r.receipt.result.recoveries : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.attempts.some(e => e.code !== null)).length, resourceOutcome: r.receipt.schema === 'world-episode@1' ? r.receipt.result.reserves : r.receipt.result.resources })), evidence: rows.map(r => ({ id: r.digest, world: r.worldId, actor: r.actor, partition: r.evaluation.partition, condition: r.evaluation.condition, controller: r.controller.family })) }; });
 }
 export function exportPassport(save: CareerSave, agentId: string): CareerSave {
     const locker = validateCareer(save);

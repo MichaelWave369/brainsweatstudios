@@ -26,7 +26,7 @@ Vehicle values and motion are fictional normalized units. Measures describe reco
 
 ## Operator surfaces
 
-The advanced Locker at `#/academy?tab=locker` provides family destinations, seed/format controls, validated configuration import/export, shared controller descriptors, native human intents, role inspection, SVG telemetry, evidence and output retention. Restores remain STOPPED and award no game XP. EN/ES controls, keyboard focus and 320/390 layouts have explicit browser cases. The normal five academy tabs and human mission catalog remain unchanged.
+The advanced Locker at `#/academy?tab=locker` provides family destinations, seed/format controls, validated configuration import/export, shared controller descriptors, native human intents, role inspection, SVG telemetry, evidence and output retention. Restores remain STOPPED and award no game XP. EN/ES controls, keyboard focus and 320/390 layouts have explicit browser cases. The normal five academy tabs and human mission catalog remain unchanged. Display/build release metadata is aligned with package version 10.0.0; the prior main source retained an older display label.
 
 Shared commands:
 

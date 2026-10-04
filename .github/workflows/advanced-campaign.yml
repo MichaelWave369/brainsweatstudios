@@ -2,6 +2,14 @@ name: Advanced campaign checks
 on:
   pull_request:
     paths:
+      - 'src/circuit/**'
+      - 'src/app/Circuit*.tsx'
+      - 'src/styles/circuit.css'
+      - 'src/i18n/circuit.json'
+      - 'tests/circuit.test.ts'
+      - 'tests/e2e/circuit-features.spec.ts'
+      - 'scripts/circuit.mjs'
+      - 'scripts/test-circuit.mjs'
       - 'src/career/**'
       - 'src/families/**'
       - 'src/performance/**'
@@ -38,9 +46,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run build && npm run test:career && npm run test:families
+      - run: npm run build && npm run test:career && npm run test:families && npm run test:circuit
       - name: Verify scoped identity and evidence in three browsers
-        run: npm run test:e2e -- tests/e2e/career-features.spec.ts tests/e2e/family-features.spec.ts tests/e2e/performance-features.spec.ts --workers=3
+        run: npm run test:e2e -- tests/e2e/career-features.spec.ts tests/e2e/family-features.spec.ts tests/e2e/performance-features.spec.ts tests/e2e/circuit-features.spec.ts --workers=3
         env:
           CROSS_BROWSER: 1
           TEST_PRODUCTION: 1

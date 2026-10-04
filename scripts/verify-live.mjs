@@ -89,6 +89,31 @@ try {
     assert.equal(await page.locator('audio').evaluate(a => a.paused), true);
     console.log('Live synthetic performance: verified local worker render, real WAV export and stopped playback.');
   }
+  if (studio.major >= 12) {
+    const { agentModule } = await import('./agent-module.mjs');
+    const { decodeCircuitStorage } = await agentModule('src/circuit/storage.ts');
+    const { validateCircuit } = await agentModule('src/circuit/evidence.ts');
+    await page.goto(`${base}#/academy?tab=circuit`);
+    await page.getByRole('heading', { name: 'Circuit Paddock', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Create two starter teams', exact: true }).click();
+    await page.getByRole('button', { name: 'Freeze new season', exact: true }).click();
+    for (let i = 0; i < 6; i++) {
+      await page.getByRole('button', { name: 'Run next event', exact: true }).click();
+      await page.waitForFunction(() => document.querySelector('[data-circuit-status]')?.getAttribute('data-circuit-status') === 'COMPLETE', undefined, { timeout: 45000 });
+    }
+    const readCircuit = async () => {
+      const raw = await page.evaluate(() => { const b = JSON.parse(localStorage.getItem('brain-sweat-studio:profiles:v2')); return b.profiles.find(p => p.id === b.active).save.academy.circuit; });
+      return raw.schema === 'circuit-storage@1' ? decodeCircuitStorage(raw) : validateCircuit(raw);
+    };
+    const circuit = await readCircuit(); assert.equal(circuit.events.length, 6);
+    assert(circuit.events.every(e => e.ending === 'COMPLETE' && e.parts.every(p => p.native.result.success)));
+    assert.equal(circuit.events[3].parts[0].shifts.length, 24);
+    assert(circuit.events[5].parts[1].admissions[0].assets.some(a => a.type === 'research-dossier'));
+    await page.reload(); await page.getByRole('heading', { name: 'Circuit Paddock', exact: true }).waitFor();
+    assert.equal(await page.getByTestId('circuit-status').textContent(), 'STOPPED');
+    assert.deepEqual((await readCircuit()).events.map(e => e.digest), circuit.events.map(e => e.digest));
+    console.log('Live Agent Circuit: six events, 19 native phases, seven families, actual Town role rotations, proven score/research/show continuity and stopped profile restoration.');
+  }
   await page.screenshot({ path: `docs/screenshots/live-v${studio.major}.png` }); assert.deepEqual(errors, []);
   console.log(`Live v${studio.major} verified: 30-day Town Zero, long replay, stopped restoration, Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, Agent Locker passport continuity and stopped restoration, and zero page errors.`); await context.close();
 } finally { await browser.close(); }

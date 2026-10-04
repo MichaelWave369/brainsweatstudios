@@ -31,4 +31,5 @@ export class FamilySession {
         }catch(e){this.pending.forEach(c=>c.abort());if(generation===this.generation){this.status='ERROR';this.error=e instanceof Error?e.message:'Proposal rejected.';}return false;}finally{this.busy=false;}
     }
     receipt():FamilyReceipt {const r:Omit<FamilyReceipt,'digest'>={schema:'family-episode@1',config:this.env.config,initialControllers:clone(this.controllers),inputs:this.env.inputs,records:clone(this.records),result:this.env.result(),outputs:this.env.outputs(),ending:this.env.result().terminal?'COMPLETE':this.status==='ERROR'?'ERROR':'STOPPED'};return verifyFamilyReceipt({...r,digest:familyReceiptDigest(r)});}
+    static restore(input:unknown,adapters:Record<string,ProviderAdapter>={}) {const r=verifyFamilyReceipt(input),s=new FamilySession(r.config,r.initialControllers,r.inputs,adapters);for(const row of r.records){s.env.step(row.intents);s.records.push(clone(row));}s.status='STOPPED';return s;}
 }

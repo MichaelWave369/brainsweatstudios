@@ -6,9 +6,7 @@ verification and gameplay checks succeeded. The retained older working tree
 was V8; the earlier V11 draft was not present. This implementation reconstructs
 the reported V11 checkpoint on `codex/v11-synthetic-performance`.
 
-V11 is a review branch. The public studio remains V10. No merge, tag, release,
-paid service, production secret, microphone access or public-site deployment is
-part of this checkpoint.
+The operator merged V11 PR #6 on 2026-10-04 at `14f50dd88fe5a46257b846ac512c28b13a89c01b`. The [Pages build, deployment and actual-live checks](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37225938626) and [full gameplay checks](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37225938554) passed. V11 is published. The evidence below records the source review gate that preceded that merge.
 
 ## Implemented and verified locally
 
@@ -53,8 +51,7 @@ the Playwright captures were inspected directly. All three GitHub source gates p
 `1ec8503d2a8f83d33c84bfc61c736597f4722f37`. This final evidence update changes
 only this document; the verified application, workflows, dependencies and tests
 are unchanged. [PR #6](https://github.com/larrinamsalva/brainsweatstudios/pull/6)
-is held for operator review. No existing assertions, deadlines, retries or skips
-were weakened.
+was approved and merged by the operator after that source gate. No existing assertions, deadlines, retries or skips were weakened.
 
 All existing CI coverage is retained. The advanced campaign now includes the
 four V11 stories in Chromium/Firefox/WebKit, and the production workflow includes

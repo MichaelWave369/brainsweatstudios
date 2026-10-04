@@ -16,7 +16,7 @@ export function createFamilyEnvironment(configInput:unknown,provided:Record<stri
     if(effective.race){const vehicle=checked['driver-0']?.artifacts.find(a=>a.type==='vehicle-setup');if(vehicle)effective.race.vehicles[0]={...clone(vehicle.content as VehicleSpec),id:effective.race.vehicles[0].id};}
     if(effective.family==='ensemble-lab'){const score=checked.conductor?.artifacts.find(a=>a.type==='music-score');if(score)effective.score=clone(score.content as ScoreSpec);}
     let machine:FamilyMachine;
-    switch(config.family){case 'auto-circuit':machine=raceMachine(effective);break;case 'stunt-show':machine=stuntMachine(effective);break;case 'cache-quest':machine=cacheMachine(effective);break;case 'web-scout':machine=webMachine(effective);break;case 'stream-studio':machine=streamMachine(effective,checked);break;case 'ensemble-lab':machine=config.schema==='family-config@2'?performanceMachine(effective):ensembleMachine(effective);}
+    switch(config.family){case 'auto-circuit':machine=raceMachine(effective);break;case 'stunt-show':machine=stuntMachine(effective);break;case 'cache-quest':machine=cacheMachine(effective,checked);break;case 'web-scout':machine=webMachine(effective);break;case 'stream-studio':machine=streamMachine(effective,checked);break;case 'ensemble-lab':machine=config.schema==='family-config@2'?performanceMachine(effective):ensembleMachine(effective);}
     if(config.schema==='family-config@2'&&['stunt-show','stream-studio'].includes(config.family))machine=scoredMediaMachine(machine,checked);
     requireData(Object.keys(checked).every(role=>machine.roles.includes(role)),'Input actor is absent from this world.');
     const inputs=freeze(Object.fromEntries(machine.roles.map(r=>[r,checked[r]||emptyFamilyInput()])));let tick=0;
@@ -29,13 +29,13 @@ export function chooseFamilyAction(view:Pick<FamilyObservation,'family'|'role'|'
     const s=view.state,choose=(a:string)=>view.legal.includes(a)?a:view.legal.includes('wait')?'wait':view.legal[0];
     if(view.family==='auto-circuit'){
         const c=s.telemetry as {pit:number;energy:number;grip:number;damage:number;temperature:number;speed:number;finished:boolean},v=s.vehicle as VehicleSpec;
-        if(c.finished)return choose('wait');if(view.role.startsWith('crew'))return choose(c.pit?(c.energy<v.capacity?'refuel':c.grip<90?'replace-grip':'cool'):'wait');
+        if(c.finished)return choose('wait');if(view.role.startsWith('pit'))return choose(c.pit?(c.energy<v.capacity?'refuel':c.grip<90?'replace-grip':'cool'):'wait');if(view.role.startsWith('strategist'))return choose(c.energy<v.capacity/3?'strategy-conserve':'wait');if(view.role.startsWith('crew'))return choose(c.pit?(s.authority==='race-authority@3'?'call-service':c.energy<v.capacity?'refuel':c.grip<90?'replace-grip':'cool'):'wait');
         if(c.pit)return choose('wait');if(c.damage>12)return choose('recover');if(view.legal.includes('pit')&&(c.energy<Math.min(40,v.capacity/2)||c.grip<30||c.temperature>65))return 'pit';
         const safe=Number(s.safeSpeed);return choose(c.speed>safe?'brake':c.speed<safe-12?'accelerate':'hold-line');
     }
     if(view.family==='stunt-show'){if(view.role==='producer')return choose(!s.music?'music-cue':!s.camera?'camera-cue':'wait');return choose(s.phase==='recovery'?'recover':s.phase==='air'?Number(s.rotation)<Number(s.targetRotation)?'rotate':'land':!s.prepared?'prepare':s.music&&s.camera?'launch':'wait');}
     if(view.family==='cache-quest'){
-        if(view.role==='navigator')return choose(s.clue?'share-route':'wait');if(Number(s.energy)<8)return choose('rest');const p=s.position as {x:number;y:number};
+        if(view.role==='navigator')return choose(s.clue||s.authority==='cache-authority@3'?'share-route':'wait');if(Number(s.energy)<8)return choose('rest');const p=s.position as {x:number;y:number};
         if(!s.clue)return choose('inspect');const target=s.found?{x:0,y:0}:(s.clue as {virtualCell:{x:number;y:number}}).virtualCell;
         if(p.x<target.x)return choose('east');if(p.x>target.x)return choose('west');if(p.y<target.y)return choose('south');if(p.y>target.y)return choose('north');
         if(!s.puzzle)return choose('inspect');if(!s.solved){const puzzle=s.puzzle as {left:number;right:number;choices:number[]};return choose(`solve-${puzzle.choices.indexOf(puzzle.left+puzzle.right)}`);}return choose('collect');

@@ -65,5 +65,8 @@
   "Import Locker": "Importar casillero",
   "Locker imported. Execution is stopped.": "Casillero importado. La ejecución está detenida.",
   "Observed measures": "Medidas observadas",
-  "World outcomes include the recorded team actions. These measures describe this scenario and controller.": "Los resultados del mundo incluyen las acciones registradas del equipo. Estas medidas describen este escenario y controlador."
+  "World outcomes include the recorded team actions. These measures describe this scenario and controller.": "Los resultados del mundo incluyen las acciones registradas del equipo. Estas medidas describen este escenario y controlador.",
+  "Edit note": "Editar nota",
+  "Cancel note edit": "Cancelar edición de nota",
+  "Delete artifact": "Eliminar artefacto"
 }

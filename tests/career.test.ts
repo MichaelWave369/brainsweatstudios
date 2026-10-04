@@ -83,6 +83,25 @@ describe('operational passports and verified evidence', () => {
     });
 });
 describe('memory firewall and artifact admission', () => {
+    it('serializes proposals so overlapping host calls cannot advance the world twice',async()=>{
+        const save=locker(),session=createCareerSession(save.agents[0],'reserve-lesson',evaluationInput(save,'iris','reserve-lesson','exclusive'));
+        const pending=session.step();await expect(session.step()).rejects.toThrow(/current intent/);await pending;expect(session.result().terminal).toBe(false);expect(session.receipt().receipt.schema==='world-episode@1'&&session.receipt().receipt.records.length).toBe(1);
+    });
+
+    it('retains creation proof while the same episode continues and counts episodes once', async () => {
+        let save = locker();
+        const session = createCareerSession(save.agents[0], 'reserve-lesson', evaluationInput(save, 'iris', 'reserve-lesson', 'continuing'));
+        await session.step();
+        session.recordPlan();
+        const origin = session.receipt();
+        save = retainPlan(rememberRun(save, origin), origin.digest, 'plan', ['town-zero']);
+        await session.step();
+        save = rememberRun(save, session.receipt());
+        expect(save.artifacts).toHaveLength(1);
+        expect(save.runs).toHaveLength(2);
+        expect(portfolio(save, 'iris')[0].runs).toBe(1);
+        expect(validateCareer(JSON.parse(JSON.stringify(save)))).toEqual(save);
+    });
     it('continues a paused V7 snapshot without resetting identity or stopping the native session permanently', async () => {
         const save = locker(), input = evaluationInput(save, 'iris', 'survey', 'partial'), session = createCareerSession(save.agents[0], 'survey', input);
         await session.step();

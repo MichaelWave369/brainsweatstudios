@@ -26,6 +26,7 @@ test('career: one passport uses baseline and mock families; receipts restore sto
     await agent(page);
     await episode(page);
     await page.getByLabel('Controller selection', { exact: true }).selectOption('mock');
+    await expect.poll(async () => (await saved(page)).agents[0].controller.garage.family).toBe('model');
     await page.getByLabel('Destination world', { exact: true }).selectOption('survey');
     await episode(page);
     const data = validateCareer(await saved(page));
@@ -42,6 +43,10 @@ test('career: scoped notes, verified plan handoffs, fresh holdout and invalid im
     await agent(page);
     await page.getByLabel('Public note', { exact: true }).fill('Preserve a public reserve.');
     await page.getByRole('button', { name: 'Save public note', exact: true }).click();
+    await page.getByRole('button', { name: 'Edit note', exact: true }).click();
+    await page.getByLabel('Public note', { exact: true }).fill('Preserve a declared public reserve.');
+    await page.getByRole('button', { name: 'Save public note', exact: true }).click();
+    expect((await saved(page)).notes['studio-agent']).toHaveLength(1);
     await page.getByLabel('Memory condition', { exact: true }).selectOption('PRIOR');
     await page.getByRole('button', { name: 'Prepare handoff', exact: true }).click();
     await page.getByRole('button', { name: 'Advance one tick', exact: true }).click();
@@ -61,7 +66,7 @@ test('career: scoped notes, verified plan handoffs, fresh holdout and invalid im
     await expect(page.getByRole('alert')).toContainText('passport');
     expect(await saved(page)).toEqual(before);
 });
-test('career: hidden and paused episodes stop; offline cached Locker imports and replay require no provider', async ({ page, context }) => {
+test('career: hidden and paused episodes stop; offline cached Locker imports and replay require no provider', async ({ page }) => {
     await prepare(page);
     const origin = await productionOrigin();
     try {
@@ -78,9 +83,11 @@ test('career: hidden and paused episodes stop; offline cached Locker imports and
         await page.waitForTimeout(250);
         expect(await saved(page)).toEqual(before);
         await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: false }); document.dispatchEvent(new Event('visibilitychange')); });
+        expect(await page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
         await origin.close();
-        await context.setOffline(true);
-        await page.reload();
+        const response = await page.reload();
+        expect(response?.status()).toBe(200);
+        expect(response?.fromServiceWorker()).toBe(true);
         await expect(page.getByRole('heading', { name: 'Agent Locker', exact: true })).toBeVisible();
         await expect(page.getByRole('status').filter({ hasText: 'Execution status' })).toContainText('STOPPED');
         validateCareer(await saved(page));

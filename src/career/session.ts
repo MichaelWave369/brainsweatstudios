@@ -22,6 +22,8 @@ export function createCareerSession(passport: AgentPassport, worldId: string, in
         evaluation.notes.forEach(n => { if (n.sourceRun)
             demand(provenance.runs.some(r => r.digest === n.sourceRun && r.agentId === agent.id && r.evaluation.partition === n.partition), 'Memory provenance differs before execution.'); });
     }
+    let busy=false;
+    const exclusive=async(fn:()=>Promise<boolean>)=>{demand(!busy,'Wait for the current intent to settle.');busy=true;try{return await fn();}finally{busy=false;}};
     if (['town-zero', 'reserve-lesson'].includes(worldId)) {
         const pack = townPack(), spec = pack.worlds.find(w => w.id === worldId)!;
         const actor = spec.roles[0].id;
@@ -35,7 +37,7 @@ export function createCareerSession(passport: AgentPassport, worldId: string, in
             actor, kind: 'world' as const,
             status: () => session.status, observation: () => session.env.observe(actor), result: () => session.env.result(),
             actions: () => session.env.observe(actor).legalActions.map(a => a.type),
-            step: async (action?: string) => { session.resume(); const ok = await session.step(action ? { [actor]: action } : undefined); return !!ok; },
+            step: async (action?: string) => exclusive(async()=>{ session.resume(); const ok = await session.step(action ? { [actor]: action } : undefined); return !!ok; }),
             pause: () => session.pause(), stop: () => session.stop(),
             recordPlan: () => { demand(session.env.result().tick > 0, 'Advance before creating a portable plan.'); session.setPlan(actor, { schema: 'world-plan@1', goal: 'Preserve public reserves.', steps: ['Inspect visible conditions.', 'Choose a legal refill or repair.'], risks: ['Delayed demand can consume reserves.'], fallbacks: ['Wait when no legal operation is useful.'] }); },
             receipt: (): CareerRun => { session.stop(); return sealRun({ agentId: agent.id, actor, worldId, family: 'infrastructure', controller, evaluation, receipt: session.receipt() }); },
@@ -51,7 +53,7 @@ export function createCareerSession(passport: AgentPassport, worldId: string, in
     return {
         actor, kind: 'garage' as const, status: () => ['IDLE', 'WAITING'].includes(session.status) ? 'READY' : session.status, observation: () => session.observation(), result: () => session.result(),
         actions: () => session.observation().legalActions.map(a => a.type),
-        step: async (action?: string) => { session.resume(); await session.step(action ? { type: action } : undefined); return !session.lastError; },
+        step: async (action?: string) => exclusive(async()=>{ session.resume(); await session.step(action ? { type: action } : undefined); return !session.lastError; }),
         pause: () => session.pause(), stop: () => session.stop(), recordPlan: () => { throw new Error('This destination does not admit world plans.'); },
         receipt: (): CareerRun => { session.pause(); return sealRun({ agentId: agent.id, actor, worldId, family: worldId === 'community' ? 'cooperation' : 'navigation', controller, evaluation, receipt: session.receipt() }); },
     };

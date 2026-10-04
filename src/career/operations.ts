@@ -55,7 +55,8 @@ export function sealRun(input: Omit<CareerRun, 'schema' | 'digest'>): CareerRun 
 export function rememberRun(save: CareerSave, run: CareerRun, handoff?: WorldHandoffRecord): CareerSave {
     const next = clone(validateCareer(save)), verified = verifyCareerRun(run);
     // A receipt for the same episode replaces the previous stopped snapshot.
-    next.runs = next.runs.filter(r => !(r.agentId === verified.agentId && r.evaluation.episode === verified.evaluation.episode));
+    const referenced = new Set([...next.artifacts.map(a => a.creationRun), ...Object.values(next.notes).flatMap(list => list.flatMap(n => n.sourceRun ? [n.sourceRun] : [])), ...next.runs.flatMap(r => [...r.evaluation.artifacts.map(a => a.creationRun), ...r.evaluation.notes.flatMap(n => n.sourceRun ? [n.sourceRun] : [])]), ...verified.evaluation.artifacts.map(a => a.creationRun)]);
+    next.runs = next.runs.filter(r => r.digest !== verified.digest && (!(r.agentId === verified.agentId && r.evaluation.episode === verified.evaluation.episode) || referenced.has(r.digest)));
     next.runs.push(verified);
     if (handoff && !next.handoffs.some(h => h.snapshotHash === handoff.snapshotHash))
         next.handoffs = [...next.handoffs, handoff].slice(-16);
@@ -63,7 +64,7 @@ export function rememberRun(save: CareerSave, run: CareerRun, handoff?: WorldHan
     while (next.runs.length > CAREER_LIMITS.runs || dataBytes(next) > CAREER_LIMITS.bytes) {
         // Preserve receipts referenced by admitted artifact provenance. If that
         // dependency graph fills the archive, ask the operator to export/reset.
-        const candidates = next.runs.filter(r => r.digest !== verified.digest && !next.runs.some(n => n.evaluation.artifacts.some(a => a.creationRun === r.digest) || n.evaluation.notes.some(a => a.sourceRun === r.digest)));
+        const candidates = next.runs.filter(r => r.digest !== verified.digest && !next.artifacts.some(a => a.creationRun === r.digest) && !Object.values(next.notes).some(list => list.some(n => n.sourceRun === r.digest)) && !next.runs.some(n => n.evaluation.artifacts.some(a => a.creationRun === r.digest) || n.evaluation.notes.some(a => a.sourceRun === r.digest)));
         demand(candidates.length, 'Export the archive before retaining another large dependent receipt.');
         next.runs = next.runs.filter(r => r.digest !== candidates[0].digest);
         synchronize(next);
@@ -81,10 +82,15 @@ export function retainPlan(save: CareerSave, runId: string, id: string, compatib
     next.artifacts.push(artifact);
     return validateCareer(synchronize(next));
 }
+export function removeArtifact(save: CareerSave, id: string): CareerSave {
+    const next = clone(validateCareer(save));
+    next.artifacts = next.artifacts.filter(a => a.id !== id);
+    return validateCareer(synchronize(next));
+}
 export function portfolio(save: CareerSave, agentId: string) {
     const runs = validateCareer(save).runs.filter(r => r.agentId === agentId);
     const families = [...new Set(runs.map(r => r.family))];
-    return families.map(family => { const rows = runs.filter(r => r.family === family); return { family, runs: rows.length, completed: rows.filter(r => r.receipt.result.terminal).length, skills: rows.map(r => ({ receipt: r.digest, world: r.worldId, role: r.actor, planning: r.receipt.schema === 'world-episode@1' ? r.receipt.artifacts.filter(a => a.actor === r.actor && a.kind === 'plan').length : 0, information: r.receipt.schema === 'world-episode@1' ? r.receipt.result.inspections : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'information')).length, coordination: r.receipt.schema === 'world-episode@1' ? r.receipt.result.signals : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'signal')).length, recovery: r.receipt.schema === 'world-episode@1' ? r.receipt.result.recoveries : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.attempts.some(e => e.code !== null)).length, resourceOutcome: r.receipt.schema === 'world-episode@1' ? r.receipt.result.reserves : r.receipt.result.resources })), evidence: rows.map(r => ({ id: r.digest, world: r.worldId, actor: r.actor, partition: r.evaluation.partition, condition: r.evaluation.condition, controller: r.controller.family })) }; });
+    return families.map(family => { const rows = runs.filter(r => r.family === family); return { family, runs: new Set(rows.map(r => r.evaluation.episode)).size, completed: new Set(rows.filter(r => r.receipt.result.terminal).map(r => r.evaluation.episode)).size, skills: rows.map(r => ({ receipt: r.digest, world: r.worldId, role: r.actor, planning: r.receipt.schema === 'world-episode@1' ? r.receipt.artifacts.filter(a => a.actor === r.actor && a.kind === 'plan').length : 0, information: r.receipt.schema === 'world-episode@1' ? r.receipt.result.inspections : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'information')).length, coordination: r.receipt.schema === 'world-episode@1' ? r.receipt.result.signals : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.transition?.events.some(e => e.type === 'signal')).length, recovery: r.receipt.schema === 'world-episode@1' ? r.receipt.result.recoveries : r.receipt.records.filter(a => a.observation.agent.id === r.actor && a.attempts.some(e => e.code !== null)).length, resourceOutcome: r.receipt.schema === 'world-episode@1' ? r.receipt.result.reserves : r.receipt.result.resources })), evidence: rows.map(r => ({ id: r.digest, world: r.worldId, actor: r.actor, partition: r.evaluation.partition, condition: r.evaluation.condition, controller: r.controller.family })) }; });
 }
 export function exportPassport(save: CareerSave, agentId: string): CareerSave {
     const locker = validateCareer(save);

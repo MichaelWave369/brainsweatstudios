@@ -228,5 +228,16 @@
   "Recorded role observations": "Observaciones registradas por rol",
   "Causal ledger table": "Tabla del registro causal",
   "Individual frozen trials table": "Tabla de ensayos congelados individuales",
-  "Frozen comparison distributions": "Distribuciones de comparación congelada"
+  "Frozen comparison distributions": "Distribuciones de comparación congelada",
+  "Repeated rejections / delayed outages": "Rechazos repetidos / interrupciones diferidas",
+  "Action costs by resource": "Costos de acciones por recurso",
+  "Recorded behavior profile": "Perfil de comportamiento registrado",
+  "Repeated rejections count the same role and action blocked or conflicted again before a successful execution. Delayed outages count facilities reaching zero from an earlier scheduled event. Action costs retain each resource unit separately.": "Los rechazos repetidos cuentan la misma acción y rol bloqueados o en conflicto otra vez antes de ejecutarse con éxito. Las interrupciones diferidas cuentan instalaciones que llegan a cero por un evento programado antes. Los costos conservan cada unidad de recurso por separado.",
+  "Recorded behavior distributions": "Distribuciones de comportamiento registrado",
+  "Reserve mean / median": "Media / mediana de reservas",
+  "Recovery ticks mean / median": "Media / mediana de pasos de recuperación",
+  "Repeated rejections mean / median": "Media / mediana de rechazos repetidos",
+  "Delayed outages mean / median": "Media / mediana de interrupciones diferidas",
+  "Action cost distributions": "Distribuciones de costos de acciones",
+  "Inspect resource costs": "Inspeccionar costos de recursos"
 }

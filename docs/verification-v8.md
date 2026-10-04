@@ -14,22 +14,23 @@ V6/V7 individual schemas and their original validators remain independent.
 
 ## Current evidence
 
-Local source has 256 passing unit cases (the original 206 plus 50 V8 cases),
-lint, TypeScript and production build. Fresh CI also passes those checks. Browser
-verification is still running after the fixes below; pending checks are not passes.
+Local source has 257 passing unit cases (the original 206 plus 51 V8 cases),
+lint, TypeScript and production build. The prior complete CI regression passed 256 unit cases and all browser checks.
+The final behavior-diagnostic addition is checked locally; its fresh browser
+regression remains pending. Pending checks are not passes.
 
 | Check | Recorded result |
 |---|---|
 | Locked install, lint, TypeScript and production build | Passed locally / in CI |
-| Full unit suite | 256 passed; original assertions retained |
+| Full unit suite | 257 passed locally; original assertions retained |
 | Original headless runtime | 1,000 episodes; 76,766 steps; 978 successes; 15 verified replays |
 | Existing deterministic mock sweep | 32 successes; 786 ticks; 33 verified replays; eight frozen trials; six recoveries |
 | Town Zero headless | Full 7- and 30-day campaigns and 20-/100-world batches passed |
 | New world validation/authority/receipts/family tests | Passed |
-| Existing Academy/runtime/Garage browser cases | Passed in prior V8 CI; fresh full regression running |
-| New World Lab browser cases | Long campaigns, human handoffs, rejection and offline worker flows passed; final three-browser rerun pending |
+| Existing Academy/runtime/Garage browser cases | Passed in complete V8 CI |
+| New World Lab browser cases | 18 passed in Chromium/Firefox/WebKit; fresh behavior-profile rerun pending |
 | Production upgrade/offline/online SQL checks | Passed in V8 CI |
-| Full 888-mission and broader accessibility suite | Fresh V8 sweep pending |
+| Full 888-mission and broader accessibility suite | 1,050 passed, including all 888 authored missions; final source rerun pending |
 | Actual Pages V8 / live verification | Pending reviewed merge |
 | Actual installed Ollama | UNAVAILABLE; no models or trials |
 
@@ -41,9 +42,16 @@ keyboard/aXe/narrow layouts, hidden/pause lifecycle and production outage recove
 Local browser execution was blocked by missing executables and an unsuccessful
 browser download; browser evidence comes from the actual production CI build.
 
+The complete three-browser/gameplay result is recorded in
+[37171733914](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37171733914),
+code `048d5612c81981189507e2d0ff295796add70e6e`. Production checks and 59
+Chromium advanced flows also pass on `66783bf82044d0503a3caee177e451d888fe5dd9` in
+[37172403745](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37172403745).
+Its 18 World Lab cases pass in all three browsers.
+
 ## Boundaries exercised
 
-The 50 V8 cases cover strict schema/size/depth/finite values, malformed packs,
+The 51 V8 cases cover strict schema/size/depth/finite values, malformed packs,
 prototype keys/getters/unsafe processors, duplicate ids/references/cycles,
 role scopes, detached masks/hidden buckets, paid inspection, delayed costs and
 actual cancellation provenance, scheduler overflow and finite accounting,
@@ -52,7 +60,9 @@ timeouts/request economy, rejected lifecycle/artifact updates, long hash-chain/
 checkpoint replay, redigested tampering, stopped restore with receipt identity,
 controller memory/plan persistence, generic provider-request@2, reproducible
 100-instance families, split leakage, bounded mutations/distributions, isolated
-frozen trial selection and three public context strategies.
+frozen trial selection and three public context strategies, repeated rejection/
+delayed-outage diagnostics, actual per-resource costs, canceled outage exclusion
+and descriptor-safe save/report validation.
 
 Offline context comparisons use the authored deterministic mock. They establish
 the experiment mechanism; no actual-model memory/recovery result is claimed.
@@ -68,18 +78,18 @@ Town Zero scenario or an arbitrary-scale promise.
 
 | Work | Time | Evidence size / count |
 |---|---:|---:|
-| 1,000 authoritative steps | 259 ms | Two campaigns |
-| 10,000 authoritative steps | 2,127 ms | 14 campaigns |
-| Full 7 days | 75 ms | 168 ticks; 201,824-byte receipt |
-| Full 30 days | 262 ms | 720 ticks; 799,560-byte receipt |
-| Offline mock 30 days | 480 ms | 720 ticks; 706 requests; 803,734-byte verified receipt |
-| Full 30-day receipt verification | 296 ms | Every transition/checkpoint |
-| Frozen 20-world batch | 3,153 ms | 20 verified trials |
-| Sequential 100-episode batch | 15,726 ms | 100 verified trials |
-| Generated family | 502 ms | 100 disjoint reproducible instances |
+| 1,000 authoritative steps | 239 ms | Two campaigns |
+| 10,000 authoritative steps | 1,954 ms | 14 campaigns |
+| Full 7 days | 78 ms | 168 ticks; 201,824-byte receipt |
+| Full 30 days | 279 ms | 720 ticks; 799,560-byte receipt |
+| Offline mock 30 days | 514 ms | 720 ticks; 706 requests; 803,734-byte verified receipt |
+| Full 30-day receipt verification | 326 ms | Every transition/checkpoint |
+| Frozen 20-world batch | 3,222 ms | 20 verified trials |
+| Sequential 100-episode batch | 15,277 ms | 100 verified trials |
+| Generated family | 529 ms | 100 disjoint reproducible instances |
 
 Standalone recordings are capped at 8 MB; local World Lab saves at 1.1 MB.
-The new UI is lazy loaded (~44 KB minified) and the batch worker is ~67 KB.
+The new UI is lazy loaded (~46 KB minified) and the batch worker is ~69 KB.
 The shared profile bundle remains ~550 KB minified / 188 KB gzip, with Vite's
 original 500 KB advisory retained. Production precaches the worker and 41 static
 assets. No warning or build threshold was relaxed.

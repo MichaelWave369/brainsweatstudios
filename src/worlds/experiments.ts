@@ -1,5 +1,6 @@
 import { clone, exact, freeze, hash, integer, plain } from "../runtime/data.ts";
 import { assertData, requireWorld } from "./compiler.ts";
+import { summarizeWorldBehavior, type WorldBehavior } from "./behavior.ts";
 import {
   baselineController,
   validateWorldController,
@@ -41,7 +42,7 @@ export interface WorldExperiment {
   controllers: WorldController[];
   digest: string;
 }
-export interface TrialSummary {
+export interface TrialSummary extends WorldBehavior {
   instance: string;
   partition: Partition;
   controller: string;
@@ -79,6 +80,9 @@ export interface BatchReport {
     completion: Distribution;
     reserves: Distribution;
     recoveryTicks: Distribution;
+    repeatedRejections: Distribution;
+    delayedOutages: Distribution;
+    actionCosts: Record<string, Distribution>;
   }[];
   digest: string;
 }
@@ -333,6 +337,26 @@ export function summarizeBatch(
               success,
               reasons,
             ),
+            repeatedRejections: describeDistribution(
+              rows.map((r) => r.repeatedRejections),
+              success,
+              reasons,
+            ),
+            delayedOutages: describeDistribution(
+              rows.map((r) => r.delayedOutages),
+              success,
+              reasons,
+            ),
+            actionCosts: Object.fromEntries(
+              manifest.family.base.resources.map((resource) => [
+                resource.id,
+                describeDistribution(
+                  rows.map((r) => r.actionCosts[resource.id]),
+                  success,
+                  reasons,
+                ),
+              ]),
+            ),
           },
         ];
       },
@@ -388,6 +412,7 @@ async function runTrial(instance: WorldInstance, c: WorldController) {
   const receipt = verifyWorldReceipt(s.receipt()),
     r = receipt.result;
   const summary: TrialSummary = {
+    ...summarizeWorldBehavior(receipt),
     instance: instance.id,
     partition: instance.partition,
     controller: c.id,

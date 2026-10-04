@@ -1,5 +1,5 @@
-import { clone, exact, hash, plain } from "../runtime/data.ts";
-import { dataBytes, validatePack } from "./compiler.ts";
+import { clone, exact, hash, integer, plain } from "../runtime/data.ts";
+import { assertData, dataBytes, validatePack } from "./compiler.ts";
 import {
   summarizeBatch,
   validateWorldExperiment,
@@ -27,6 +27,7 @@ export function validateBatchReport(
   input: unknown,
   manifest: WorldExperiment,
 ): BatchReport {
+  assertData(input, 1100000, 100000, 8);
   if (
     !plain(input) ||
     !exact(input, ["schema", "manifestHash", "trials", "groups", "digest"]) ||
@@ -63,6 +64,9 @@ export function validateBatchReport(
         "inspections",
         "failure",
         "requests",
+        "repeatedRejections",
+        "delayedOutages",
+        "actionCosts",
       ]) ||
       !i ||
       !c ||
@@ -93,7 +97,14 @@ export function validateBatchReport(
           Number(t[k as keyof TrialSummary]) <= 100000000,
       ) ||
       t.ticks > i.spec.clock.maxTicks ||
-      t.completion > 1
+      t.completion > 1 ||
+      !integer(t.repeatedRejections, 0, t.ticks * i.spec.roles.length) ||
+      !integer(t.delayedOutages, 0, t.ticks * 512) ||
+      !plain(t.actionCosts) ||
+      !exact(t.actionCosts, i.spec.resources.map((r) => r.id)) ||
+      !Object.values(t.actionCosts).every((cost) =>
+        integer(cost, 0, t.ticks * i.spec.roles.length * 100000),
+      )
     )
       throw new Error("Comparison attribution or metric bounds differ.");
     seen.add(key);
@@ -105,11 +116,11 @@ export function validateBatchReport(
 }
 export function validateWorldSave(input: unknown): WorldSave {
   if (input === undefined) return freshWorldSave();
+  assertData(input, 1100000, 250000, 26);
   if (
     !plain(input) ||
     !exact(input, ["schema", "pack", "receipt", "manifest", "comparison"]) ||
-    input.schema !== "world-lab@1" ||
-    dataBytes(input) > 1100000
+    input.schema !== "world-lab@1"
   )
     throw new Error("Invalid or excessive world lab save.");
   const pack =

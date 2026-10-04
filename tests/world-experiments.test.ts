@@ -15,9 +15,82 @@ import {
   freshWorldSave,
 } from "../src/worlds/notebook";
 import { inspectWorldReceipt } from "../src/worlds/receipts";
-import { freshMemory, verifyWorldReceipt } from "../src/worlds/receipts";
+import {
+  baselineController,
+  freshMemory,
+  verifyWorldReceipt,
+} from "../src/worlds/receipts";
 import { WorldSession } from "../src/worlds/session";
 import { townPack, townZero, tutorialWorld } from "../src/worlds/townZero";
+import { summarizeWorldBehavior } from "../src/worlds/behavior";
+
+it("derives repeat rejections, delayed outages and actual costs from verified evidence", async () => {
+  const spec = tutorialWorld();
+  spec.entities = [
+    {
+      id: "boiler",
+      label: "Fictional boiler",
+      location: "store",
+      status: 100,
+      visibility: { mode: "always" },
+    },
+  ];
+  spec.actions.find((a) => a.id === "refill")!.condition = {
+    op: "gte",
+    ref: "tick",
+    value: 5,
+  };
+  spec.events.push({
+    id: "boiler-outage",
+    label: "Deferred outage",
+    at: 4,
+    when: null,
+    repeat: 0,
+    maxRuns: 1,
+    variants: [],
+    effects: [{ type: "entity", id: "boiler", status: 0 }],
+  });
+  spec.actions.push({
+    ...spec.actions[0],
+    id: "cancel-outage",
+    label: "Prevent outage",
+    effects: [{ type: "cancel", event: "boiler-outage" }],
+  });
+  spec.roles[0].actions.push("cancel-outage");
+  const pack = { ...townPack(), worlds: [spec] },
+    bindings = {
+      operator: {
+        ...baselineController("human"),
+        family: "human" as const,
+      },
+    };
+  const s = new WorldSession(pack, spec.id, 369, bindings);
+  for (const action of [
+    "inspect-store",
+    "refill",
+    "refill",
+    "wait",
+    "wait",
+    "refill",
+    "wait",
+    "wait",
+  ])
+    await s.step({ operator: action });
+  const receipt = s.receipt();
+  expect(summarizeWorldBehavior(receipt)).toEqual({
+    repeatedRejections: 1,
+    delayedOutages: 1,
+    actionCosts: { water: 0, budget: 3 },
+  });
+  expect(s.env.result().blocked).toBe(2);
+  const protectedRun = new WorldSession(pack, spec.id, 369, bindings);
+  await protectedRun.step({ operator: "cancel-outage" });
+  for (let i = 0; i < 7; i++) await protectedRun.step({ operator: "wait" });
+  expect(summarizeWorldBehavior(protectedRun.receipt()).delayedOutages).toBe(0);
+  const corrupt = clone(receipt);
+  corrupt.finalHash = "0".repeat(64);
+  expect(() => summarizeWorldBehavior(corrupt)).toThrow();
+});
 
 it("generates generic families with no optional resources or scheduled events", () => {
   const s = tutorialWorld();
@@ -104,9 +177,25 @@ it("runs and reproduces frozen controller distributions from the same instances"
   expect(a.trials).toHaveLength(8);
   expect(validateBatchReport(a, manifest)).toEqual(a);
   expect(a.groups[0].completion.count).toBe(1);
+  expect(a.groups[0].repeatedRejections.count).toBe(1);
+  expect(a.groups[0].delayedOutages.count).toBe(1);
+  expect(a.groups[0].actionCosts.budget.count).toBe(1);
   const bad = clone(a);
   bad.groups[0].completion.mean++;
   expect(() => validateBatchReport(bad, manifest)).toThrow();
+  const costTamper = clone(a);
+  costTamper.trials[0].actionCosts.budget = -1;
+  expect(() => validateBatchReport(costTamper, manifest)).toThrow();
+  let executed = 0;
+  const accessor = Object.defineProperty({}, "trials", {
+    enumerable: true,
+    get: () => {
+      executed++;
+      return [];
+    },
+  });
+  expect(() => validateBatchReport(accessor, manifest)).toThrow();
+  expect(executed).toBe(0);
 }, 15000);
 it("inspects verified checkpoint segments without changing the campaign or original receipt", async () => {
   const s = new WorldSession(townPack());
@@ -122,6 +211,16 @@ it("inspects verified checkpoint segments without changing the campaign or origi
 });
 it("bounded save imports fail atomically for corrupt receipts and leave legacy missing data empty", async () => {
   expect(validateWorldSave(undefined)).toEqual(freshWorldSave());
+  let executed = 0;
+  const accessor = Object.defineProperty({}, "receipt", {
+    enumerable: true,
+    get: () => {
+      executed++;
+      return null;
+    },
+  });
+  expect(() => validateWorldSave(accessor)).toThrow();
+  expect(executed).toBe(0);
   const s = new WorldSession(townPack());
   await s.step();
   const saved = validateWorldSave({

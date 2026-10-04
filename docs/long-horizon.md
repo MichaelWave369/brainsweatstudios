@@ -33,3 +33,10 @@ background work. Campaign pause/resume/save/restore keeps the same world.
 Refresh/import restores STOPPED with providers disconnected. A stopped batch
 retains completed trial displays; rerunning uses its frozen manifest, without
 tuning or silently promoting incomplete results to a completed report.
+
+The three public context modes run the same frozen instance set. Context reports
+include completion/recovery/reserve distributions, repeated rejected actions,
+earlier-scheduled facility outages and per-resource executed action costs.
+These mechanical proxies expose repeat errors and delayed consequences without
+inferring memory capacity. The authored offline mock validates the experiment
+mechanism; actual-model differences remain unqualified.

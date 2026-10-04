@@ -213,6 +213,9 @@ test("worlds: worker comparisons keep partitions frozen and rerun imported manif
     .toBe(true);
   const savedWorlds = (await saved(page)).academy.worlds;
   expect(savedWorlds.comparison.trials).toHaveLength(16);
+  expect(savedWorlds.comparison.groups[0].repeatedRejections.count).toBe(2);
+  expect(savedWorlds.comparison.groups[0].delayedOutages.count).toBe(2);
+  expect(savedWorlds.comparison.groups[0].actionCosts.budget.count).toBe(2);
   expect(
     new Set(savedWorlds.manifest.instances.map((i: { id: string }) => i.id))
       .size,
@@ -231,6 +234,20 @@ test("worlds: worker comparisons keep partitions frozen and rerun imported manif
       timeout: 60000,
     })
     .toBe(savedWorlds.comparison.digest);
+  await page.getByText("Recorded behavior profile", { exact: true }).click();
+  await expect(
+    page.getByRole("region", {
+      name: "Recorded behavior distributions",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
   await page.getByText("Individual frozen trials", { exact: true }).click();
   await page
     .getByRole("button", { name: "Inspect frozen trial", exact: true })

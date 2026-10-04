@@ -42,3 +42,16 @@ equal outcomes do not establish real-model memory equivalence. **Individual froz
 trials** recreates the selected offline run and checks its hash rather than saving
 an unlimited receipt archive. Select a role to view its explicit plan/memory and
 use the public handoff controls for human, baseline, mock or selected local model.
+
+**Recorded behavior profile** shows completion alongside reserves, recovery time,
+repeated rejections, delayed outages and action costs. A repeat means the same
+role/action has the same blocked/conflict outcome again before a successful
+execution. A delayed outage means an entity changes from a nonzero status to
+zero through an event scheduled on an earlier tick; canceled events do not count.
+In Town Zero this provides an operational measure of unresolved delayed facility
+consequences. It does not infer that a controller forgot or understood anything.
+Costs sum only world-authorized executed action costs, per resource; unlike units
+are not merged into an efficiency score. Completion, cost distributions and
+remaining reserves let operators assess the tradeoff. All diagnostics derive
+from a fully verified receipt. Aggregate reports remain unsigned descriptive
+summaries; individual trial recreation verifies the underlying recording.

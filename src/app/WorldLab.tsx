@@ -1342,6 +1342,8 @@ export default function WorldLab({
                     <th>Controller</th>
                     <th>Partition / seed</th>
                     <th>Recovery / blocked</th>
+                    <th>Repeated rejections / delayed outages</th>
+                    <th>Action costs by resource</th>
                     <th>Receipt</th>
                   </tr>
                 </thead>
@@ -1354,6 +1356,14 @@ export default function WorldLab({
                       </td>
                       <td>
                         {t.recoveryTicks} / {t.blocked}
+                      </td>
+                      <td>
+                        {t.repeatedRejections} / {t.delayedOutages}
+                      </td>
+                      <td translate="no">
+                        {Object.entries(t.actionCosts)
+                          .map(([resource, cost]) => `${resource}: ${cost}`)
+                          .join(", ")}
                       </td>
                       <td>
                         <button
@@ -1412,6 +1422,69 @@ export default function WorldLab({
               </tbody>
             </table>
           </div>
+        ) : null}
+        {saved.comparison ? (
+          <details>
+            <summary>Recorded behavior profile</summary>
+            <p>
+              Repeated rejections count the same role and action blocked or
+              conflicted again before a successful execution. Delayed outages
+              count facilities reaching zero from an earlier scheduled event.
+              Action costs retain each resource unit separately.
+            </p>
+            <div
+              className="world-table-wrap"
+              tabIndex={0}
+              role="region"
+              aria-label="Recorded behavior distributions"
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th>Controller</th>
+                    <th>Partition</th>
+                    <th>Reserve mean / median</th>
+                    <th>Recovery ticks mean / median</th>
+                    <th>Repeated rejections mean / median</th>
+                    <th>Delayed outages mean / median</th>
+                    <th>Action cost distributions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {saved.comparison.groups.map((g) => (
+                    <tr key={`${g.controller}-${g.partition}`}>
+                      <td translate="no">{g.controller}</td>
+                      <td translate="no">{g.partition}</td>
+                      <td>
+                        {g.reserves.mean.toFixed(2)} /{" "}
+                        {g.reserves.median.toFixed(2)}
+                      </td>
+                      <td>
+                        {g.recoveryTicks.mean.toFixed(2)} /{" "}
+                        {g.recoveryTicks.median.toFixed(2)}
+                      </td>
+                      <td>
+                        {g.repeatedRejections.mean.toFixed(2)} /{" "}
+                        {g.repeatedRejections.median.toFixed(2)}
+                      </td>
+                      <td>
+                        {g.delayedOutages.mean.toFixed(2)} /{" "}
+                        {g.delayedOutages.median.toFixed(2)}
+                      </td>
+                      <td>
+                        <details>
+                          <summary>Inspect resource costs</summary>
+                          <pre translate="no" tabIndex={0}>
+                            {JSON.stringify(g.actionCosts, null, 2)}
+                          </pre>
+                        </details>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
         ) : null}
       </section>
       <section className="academy-panel">

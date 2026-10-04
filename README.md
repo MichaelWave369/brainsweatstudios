@@ -2,17 +2,19 @@
 
 **PLAY SMARTER. LIVE SMARTER.**
 
+> **Fork-Thirty experimental line.** This fork begins at BrainSweat V12 and preserves its human-first upstream lineage while opening a separate agent-native experimentation path. See [LINEAGE.md](LINEAGE.md).
+
 A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** V8 adds safe data-defined simulations and Town Zero, a fictional settlement with 7–30-day campaigns, role-specific controllers, hidden observations, delayed operations, verified long replay and frozen transfer comparisons. The advanced authoring lab is separate from ordinary games. The V7 Agent Garage, local assistant and council, guided bots, Spanish, anonymous profiles, checkpoints, geometric scenes and procedural sound remain available.
 
-V11 is merged and live; its build, deployment, actual-live verification and full gameplay checks passed. V12 adds the Agent Circuit: persistent crews, frozen six/twelve-event seasons, native qualifiers/racing roles, map and Town relays, synthetic research, original music, replay theater and disjoint frozen comparisons. V12 is a review branch; the public studio remains V11. [Campaign audit](docs/campaign-audit.md) · [V11 verification](docs/verification-v11.md) · [Circuit guide](docs/agent-circuit.md) · [V12 verification](docs/verification-v12.md).
+This fork starts from merged BrainSweat V12 and publishes that V12 baseline on its own GitHub Pages site. V12 adds the Agent Circuit: persistent crews, frozen six/twelve-event seasons, native qualifiers/racing roles, map and Town relays, synthetic research, original music, replay theater and disjoint frozen comparisons. [Campaign audit](docs/campaign-audit.md) · [V11 verification](docs/verification-v11.md) · [Circuit guide](docs/agent-circuit.md) · [V12 verification](docs/verification-v12.md).
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
-Repository: https://github.com/larrinamsalva/brainsweatstudios
+Repository: https://github.com/MichaelWave369/brainsweatstudios
 
-Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
+Play the live studio: https://michaelwave369.github.io/brainsweatstudios/
 
-[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 8 verification](docs/verification-v8.md) · [Version 7 verification](docs/verification-v7.md) · [Version 6 verification](docs/verification-v6.md) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
+[Enter the agent academy](https://michaelwave369.github.io/brainsweatstudios/#/academy) · [Open classes](https://michaelwave369.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://michaelwave369.github.io/brainsweatstudios/#/lab) · [Online commons](https://michaelwave369.github.io/brainsweatstudios/#/online) · [Version 8 verification](docs/verification-v8.md) · [Version 7 verification](docs/verification-v7.md) · [Version 6 verification](docs/verification-v6.md) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
 
 ## Playable worlds
 
@@ -191,7 +193,7 @@ BOT_FULL_SWEEP=1 CROSS_BROWSER=1 TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run 
 
 If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1`. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` can point tests to an installed compatible Chromium executable. Use `TEST_BASE_URL` to test another served build.
 
-Version 7 is published on GitHub Pages after the reviewed merge of [PR #2](https://github.com/larrinamsalva/brainsweatstudios/pull/2). The actual public studio passed verification on 2026-10-04, including the Agent Garage, recorded-action replay, profile restoration, classes, council, learned rover and Spanish refresh. [Open the Agent Garage](https://larrinamsalva.github.io/brainsweatstudios/#/academy?tab=garage) or read the [published verification](docs/verification-v7.md). The frozen V6 baseline remains `e80052aefb19e972063a593cdf486b863e222988`; existing rules and artifact versions remain compatible. PR builds verify without deploying Pages; main-branch release builds also verify the actual public site. No release tag or paid/secret changes were made by this rung.
+Version 7 is published on GitHub Pages after the reviewed merge of [PR #2](https://github.com/larrinamsalva/brainsweatstudios/pull/2). The actual public studio passed verification on 2026-10-04, including the Agent Garage, recorded-action replay, profile restoration, classes, council, learned rover and Spanish refresh. [Open the Agent Garage](https://michaelwave369.github.io/brainsweatstudios/#/academy?tab=garage) or read the [published verification](docs/verification-v7.md). The frozen V6 baseline remains `e80052aefb19e972063a593cdf486b863e222988`; existing rules and artifact versions remain compatible. PR builds verify without deploying Pages; main-branch release builds also verify the actual public site. No release tag or paid/secret changes were made by this rung.
 
 ## GitHub Pages
 

@@ -2,7 +2,9 @@
 
 **PLAY SMARTER. LIVE SMARTER.**
 
-A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** Version 7 adds the Agent Garage: optional local Ollama model controllers, an offline deterministic mock, strict action proposals, cancellation and manual handoffs, partial-observation Survey, cooperative Community Restore, Signal Maze, bounded public notebooks, frozen split/transfer comparisons, and verified world replay. Richer geometric worlds, dynamic shadows, and original stereo music and effects bring the experiments to life. Driving/CDL introductions, trades and safety, math and physics, engine/robot/virtual computer builders, modern survival, food/water systems, production planning, and the retro lab remain playable. The local assistant, Mentor/Benefactor/Strategist council, guided bots, Spanish, profiles, and unfinished-session saves continue across the expansion.
+A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** V8 adds safe data-defined simulations and Town Zero, a fictional settlement with 7–30-day campaigns, role-specific controllers, hidden observations, delayed operations, verified long replay and frozen transfer comparisons. The advanced authoring lab is separate from ordinary games. The V7 Agent Garage, local assistant and council, guided bots, Spanish, anonymous profiles, checkpoints, geometric scenes and procedural sound remain available.
+
+V8 is under review in [PR #3](https://github.com/larrinamsalva/brainsweatstudios/pull/3). The public site still serves the reviewed V7 release until a reviewed merge and deployment. [V8 verification and remaining release gate](docs/verification-v8.md).
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
@@ -10,7 +12,7 @@ Repository: https://github.com/larrinamsalva/brainsweatstudios
 
 Play the live studio: https://larrinamsalva.github.io/brainsweatstudios/
 
-[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 7 verification](docs/verification-v7.md) · [Version 6 verification](docs/verification-v6.md) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
+[Enter the agent academy](https://larrinamsalva.github.io/brainsweatstudios/#/academy) · [Open classes](https://larrinamsalva.github.io/brainsweatstudios/#/classes) · [Enter the retro lab](https://larrinamsalva.github.io/brainsweatstudios/#/lab) · [Online commons](https://larrinamsalva.github.io/brainsweatstudios/#/online) · [Version 8 verification](docs/verification-v8.md) · [Version 7 verification](docs/verification-v7.md) · [Version 6 verification](docs/verification-v6.md) · [Version 5 verification](docs/verification-v5.md) · [Version 4 verification](docs/verification-v4.md) · [Version 3 verification](docs/verification-v3.md)
 
 ## Playable worlds
 
@@ -75,7 +77,7 @@ The four agent worlds use an inspectable priority controller with 1–8 rules. E
 
 ## Agent academy
 
-Open `#/academy`, `#/academy?tab=rover`, `#/academy?tab=lab` or `#/academy?tab=garage`. Training, evaluation, and replay use local simulations and award no game XP. Learned values, controller rules, and training histories save per profile and travel with progress backups. The separate academy JSON can also be exported and strictly validated on import. Training and replay resume stopped after refresh or import; pausing and hidden tabs suspend active work.
+Open `#/academy`, `#/academy?tab=rover`, `#/academy?tab=lab`, `#/academy?tab=garage` or `#/academy?tab=worlds`. Training, evaluation, and replay use local simulations and award no game XP. Learned values, controller rules, and training histories save per profile and travel with progress backups. The separate academy JSON can also be exported and strictly validated on import. Training and replay resume stopped after refresh or import; pausing and hidden tabs suspend active work.
 
 The **controller lab** searches nearby 1–8-rule policies across eight fixed training seeds. Completion wins first, then model score, then fewer ticks. Six generations can improve an incomplete default controller in the sports, survival, scenario, or space arena. Three curricula reuse Explorer/Builder/Master constraints. Evaluation freezes the champion and uses eight separate seeds, with worst score, ticks, reserves, failure advice, and trace replay. Export the policy or use **Load academy champion** in its arena. The approach action includes the existing built-in path planner; this is inspectable controller optimization, not language-model fine-tuning.
 
@@ -123,6 +125,39 @@ added. No real-model qualification is claimed when Ollama is unavailable.
 [Observation contract](docs/model-observations.md) · [Actions/artifacts](docs/model-actions.md) ·
 [Security](docs/agent-security.md) · [Privacy](docs/privacy.md).
 
+## Town Zero and world authoring (V8)
+
+Open `#/academy?tab=worlds` in a V8 build. Start with the tiny Reserve Lesson,
+then run a 7-, 14- or 30-day Town Zero campaign. Edit bounded world data through
+forms, validate a preview, step human roles, choose a transparent baseline or
+use the offline mock. Optional installed local models use the same validator;
+normal play and experiments require no AI service. Pause, stop, hand off roles,
+inspect the district map and causal timeline, and verify/export a recording.
+Refresh/import restores stopped with providers disconnected.
+
+World packs contain strictly validated data, with no executable code, HTML,
+remote scripts, network or filesystem capability. Simulated repairs and units
+are abstract. Public memory and plans remain bounded annotations. Frozen family
+experiments keep TRAIN, VALIDATION, HOLDOUT and TRANSFER identities disjoint,
+show distributions and reproduce individual receipts. Context comparisons use
+STATE_ONLY, RECENT_WINDOW and BOUNDED_NOTEBOOK; mock results establish the
+mechanism, not real-model memory performance. Batch work runs offline in a worker.
+
+```sh
+npm run test:worlds
+npm run world:list
+npm run world:validate -- pack.json
+npm run world:run -- town-zero --seed 369
+npm run replay:verify -- receipt.json
+npm run experiment:batch -- manifest.json
+```
+
+[WorldSpec](docs/world-spec.md) · [Safe rules](docs/world-rules.md) ·
+[World packs](docs/world-pack.md) · [Authoring and SDK](docs/world-authoring.md) ·
+[Town Zero](docs/town-zero.md) · [Teams](docs/multi-agent.md) ·
+[Long horizons](docs/long-horizon.md) · [Receipts](docs/receipts.md) ·
+[Causal ledger](docs/causal-trace.md).
+
 ## Private online play
 
 The online commons supports 2–4-player cooperative Community Dispatch, 2–4-player Agent Duel, invite-only clans of up to 20, and three-round Agent League tournaments for 2–16 players. Host roles can transfer to an existing member. Preset team signals replace free-text messaging.
@@ -141,6 +176,8 @@ npm run dev
 npm run build
 npm run test
 npm run test:headless
+npm run test:agents
+npm run test:worlds
 npm run lint
 ```
 

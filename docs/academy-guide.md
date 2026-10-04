@@ -48,7 +48,7 @@ configured service; the current public site reports setup pending accurately.
 
 ## Agent Garage
 
-Open the fourth tab or `#/academy?tab=garage`. Start with the offline mock and
+Open **Agent garage** or `#/academy?tab=garage`. Start with the offline mock and
 Survey. Step once: scanning spends one tick and two energy to reveal one site.
 Compare proposed, validated and executed actions, then inspect the receipt.
 Illegal output spends a request/retry budget while leaving the world unchanged.
@@ -68,3 +68,39 @@ reduced motion remain supported. Runs award no game XP.
 Ollama is optional: [connect a local bridge](agent-bridge.md), explicitly choose
 an installed model, and set time/request limits. No model/cloud account is
 required for the Garage, and unavailable providers remain explicit errors.
+
+## World authoring and Town Zero
+
+Open **World authoring lab** (`#/academy?tab=worlds`). Choose Reserve Lesson for
+12 steps or Town Zero for 7/14/30 simulated days. Forms edit bounded resources,
+role capabilities, visibility, graph locations, objectives, actions and events.
+Validation errors identify fields; an invalid draft cannot start. The preview
+summary and content hash describe the exact compiled rules. Export/import packs
+for local exchange; files do not install plugins or execute code.
+
+Choose a baseline, human + baseline, offline mock, or explicitly connected local
+team. Each role has separate authority, memory, context and request accounting.
+The operator role selector lets one human rotate or replace roles. Simultaneous
+human teams stage each intent before **Resolve staged human intents**. To assign
+different installed models, select a role/model and hand that role to the selected
+local model. Connect/model selection alone does not infer or download anything.
+
+Step, run to a day/event/decision boundary or use a tick cap. Pause, stop or hide
+the page to halt active work. Refresh/import restores stopped. Costs occur when
+a delayed operation starts; effects complete later. The operations board shows
+operator state, while the role panel shows only the selected controller's public
+observation. Hidden resources may appear as buckets until a paid inspection.
+
+The causal timeline has event/objective/failure/handoff/checkpoint jumps and
+source/target/type/cause filtering. Each frame shows proposals, validation,
+resource changes and resulting hashes. Inspecting an old frame leaves the live
+run unchanged. Public plans/notebooks are explicit annotations, not private
+reasoning or proof that a plan was followed. Verify and export long receipts.
+
+Compare frozen baselines or public context strategies in an offline worker.
+Read each partition's sample count, range, mean/median, success and failures.
+Expand **Individual frozen trials** to recreate a trial and check its receipt
+hash. Saved summaries are not signed model results. Repeated tuning against
+holdout contaminates that interpretation. Results never award game XP or rank
+human intelligence. [Authoring/SDK](world-authoring.md) and [Town Zero](town-zero.md)
+explain the data and model limits.

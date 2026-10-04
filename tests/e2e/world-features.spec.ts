@@ -3,6 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { freshSave } from "../../src/systems/progress";
 import { townPack } from "../../src/worlds/townZero";
 import { verifyWorldReceipt } from "../../src/worlds/receipts";
+import { productionOrigin } from "./productionOrigin";
 test.describe.configure({ mode: "parallel" });
 async function prepare(page: Page, locale: "en" | "es" = "en") {
   const save = freshSave();
@@ -318,74 +319,94 @@ test("worlds: Spanish, keyboard tabs, 320/390 layouts and operations remain acce
     ).violations,
   ).toEqual([]);
 });
-test("worlds: hidden and paused sessions stop advancing; hard offline replay and worker execution use no provider", async ({
+test("worlds: hidden and paused sessions stop advancing; origin outage replay and worker execution use no provider", async ({
   page,
   context,
+  browserName,
 }) => {
   test.skip(
     process.env.TEST_PRODUCTION !== "1",
     "Hard offline shell requires the production service worker.",
   );
   test.setTimeout(120000);
-  await prepare(page);
-  await page.goto("/brainsweatstudios/#/academy?tab=worlds");
-  await page
-    .getByRole("button", { name: "Run validated preview", exact: true })
-    .click();
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-  await page
-    .getByRole("button", { name: "Run bounded campaign", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Pause world", exact: true }).click();
-  await expect(page.locator(".world-status")).toHaveText("PAUSED");
-  const tick = (await saved(page)).academy.worlds.receipt.result.tick;
-  await page.waitForTimeout(200);
-  expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(tick);
-  await page
-    .getByRole("button", { name: "Run bounded campaign", exact: true })
-    .click();
-  await page.evaluate(() => {
-    Object.defineProperty(document, "hidden", {
-      value: true,
-      configurable: true,
+  const origin = await productionOrigin();
+  try {
+    await prepare(page);
+    await page.goto(origin.url + "#/academy?tab=worlds");
+    await page
+      .getByRole("button", { name: "Run validated preview", exact: true })
+      .click();
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForFunction(() =>
+      Boolean(navigator.serviceWorker.controller),
+    );
+    await page
+      .getByRole("button", { name: "Run bounded campaign", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Pause world", exact: true })
+      .click();
+    await expect(page.locator(".world-status")).toHaveText("PAUSED");
+    const tick = (await saved(page)).academy.worlds.receipt.result.tick;
+    await page.waitForTimeout(200);
+    expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(tick);
+    await page
+      .getByRole("button", { name: "Run bounded campaign", exact: true })
+      .click();
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", {
+        value: true,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
     });
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
-  await expect(page.locator(".world-status")).toHaveText("PAUSED");
-  const hiddenTick = (await saved(page)).academy.worlds.receipt.result.tick;
-  await page.waitForTimeout(200);
-  expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(
-    hiddenTick,
-  );
-  await page.evaluate(() => {
-    Object.defineProperty(document, "hidden", {
-      value: false,
-      configurable: true,
+    await expect(page.locator(".world-status")).toHaveText("PAUSED");
+    const hiddenTick = (await saved(page)).academy.worlds.receipt.result.tick;
+    await page.waitForTimeout(200);
+    expect((await saved(page)).academy.worlds.receipt.result.tick).toBe(
+      hiddenTick,
+    );
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", {
+        value: false,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
     });
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
-  const calls: string[] = [];
-  page.on("request", (r) => {
-    if (r.method() === "POST" || /11435|11434/.test(r.url()))
-      calls.push(r.url());
-  });
-  await context.setOffline(true);
-  await page.reload();
-  await expect(page.locator(".world-status")).toHaveText("STOPPED");
-  await page
-    .getByRole("button", { name: "Verify long world replay", exact: true })
-    .click();
-  await page
-    .getByRole("button", {
-      name: "Compare frozen world controllers",
-      exact: true,
-    })
-    .click();
-  await expect
-    .poll(async () => Boolean((await saved(page)).academy.worlds.comparison), {
-      timeout: 60000,
-    })
-    .toBe(true);
-  expect(calls).toEqual([]);
+    const calls: string[] = [];
+    page.on("request", (r) => {
+      if (r.method() === "POST" || /11435|11434/.test(r.url()))
+        calls.push(r.url());
+    });
+    await origin.close();
+    await expect(fetch(origin.url)).rejects.toThrow();
+    // Playwright #42775 applies WebKit's offline flag before service workers.
+    // A stopped origin exercises its real cache fallback without that emulation
+    // defect. Chromium/Firefox additionally use the offline flag.
+    if (browserName !== "webkit") await context.setOffline(true);
+    const response = await page.reload();
+    expect(response?.status()).toBe(200);
+    expect(response?.fromServiceWorker()).toBe(true);
+    await expect(page.locator(".world-status")).toHaveText("STOPPED");
+    await page
+      .getByRole("button", { name: "Verify long world replay", exact: true })
+      .click();
+    await page
+      .getByRole("button", {
+        name: "Compare frozen world controllers",
+        exact: true,
+      })
+      .click();
+    await expect
+      .poll(
+        async () => Boolean((await saved(page)).academy.worlds.comparison),
+        {
+          timeout: 60000,
+        },
+      )
+      .toBe(true);
+    expect(calls).toEqual([]);
+  } finally {
+    await origin.close();
+  }
 });

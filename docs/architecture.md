@@ -1,4 +1,4 @@
-# Version 7 architecture
+# Version 8 architecture
 
 Brain Sweat remains a human educational studio. The 37 ordinary worlds, classes,
 assistant/council, checkpoints, progress, retro lab, sound and offline shell are
@@ -50,9 +50,8 @@ policy editor. New artifacts have independent schema/runtime/environment
 versions. See [runtime contracts](agent-runtime.md).
 
 The notebook retains three manifests, one verified receipt and one controller
-package per local profile. It is limited to 600 KB; separate Academy imports
-are limited to 900 KB and full progress imports retain their existing 2 MB
-limit. Rule and rover histories stay at 80 points, arena traces at 120 ticks,
+package per local profile. It is limited to 600 KB; the original V6 Academy import cap was 900 KB. Current V8 Academy/progress
+file caps are 3 MB, while each individual notebook retains its own bound. Rule and rover histories stay at 80 points, arena traces at 120 ticks,
 rover traces at 80. No unlimited episode history or cloud archive is added.
 
 Initial profiling found repeated route/observation construction made the full
@@ -110,8 +109,8 @@ flowchart TD
 The Node bridge is a separate optional command, absent from website/online
 server bundles. Model descriptors contain no connection credential. Saved
 Garage data is capped at 500 KB, one receipt and at most two manifests, with
-older comparison history pruned when needed to retain the current receipt. Academy import
-is now 1.5 MB; progress stays 2 MB and profile schema 2. V5/V6 saves gain empty
+older comparison history pruned when needed to retain the current receipt. V7 originally allowed 1.5 MB Academy and 2 MB progress imports; V8 allows
+3 MB for these aggregate files. Profile schema remains 2. V5/V6 saves gain empty
 Garage data. Saved records restore without starting sessions or reconnecting providers.
 
 World replay is deterministic from actions; model regeneration can vary.
@@ -121,3 +120,48 @@ steps/episodes and pauses hidden work. Reference scenes redraw on state changes;
 existing geometric WebGL/vector/audio limits remain. No model authority enters
 the online server; model competitions remain future work. V7 was published through the reviewed merge of PR #2 and passed actual-public
 verification on 2026-10-04. See [published evidence](verification-v7.md).
+
+## V8 data-defined worlds
+
+`src/worlds/` is a separate versioned substrate. Existing V6/V7 rule and artifact
+versions retain their own validators. The 37 human worlds are not migrated.
+Only the small Reserve Lesson and Town Zero use the new compiler/runtime.
+
+```mermaid
+flowchart TD
+  P["Untrusted pack / form draft"] --> C["Strict compiler"]
+  C --> W["Immutable definition + private world"]
+  W --> O["Per-role masked observations"]
+  O --> H["Human / baseline / async provider host"]
+  H --> V["Role and intent authority"]
+  V --> W
+  W --> R["Ledger + chain + checkpoints"]
+  R --> Q["Full replay verification"]
+  Q --> I["Separate inspection world"]
+  C --> F["Frozen family / transfer instances"]
+  F --> B["Offline batch worker"]
+  B --> W
+```
+
+| V8 module | Owns |
+|---|---|
+| `types.ts`, `compiler.ts` | Closed data contract, references/scopes, immutable definitions and content hashes |
+| `runtime.ts` | Private resources/status, simulation clock, ordered/simultaneous resolution, delayed operations and bounded ledger |
+| `townZero.ts`, `controllers.ts` | Data-only reference families and five public authored baselines |
+| `session.ts`, `agents/worldContracts.ts` | Independent role bindings, public context, request economy, cancellation and generic provider-request@2 |
+| `receipts.ts`, `notebook.ts` | Compact evidence, full verification, checkpoint inspection, stopped restore and bounded local history |
+| `experiments.ts`, `batch.worker.ts` | Frozen identities/mutations/partitions, descriptive reports and offline trial recreation |
+| `WorldAuthoring.tsx`, `WorldLab.tsx` | Forms, generic operations board, team controls, causal replay and file exchange |
+| `harness.ts`, `cli.ts` | Same headless authority path, measured capacity and local commands |
+
+The new UI is lazy loaded. Displayed execution yields between at most eight
+steps; batch work stays in a worker. Hidden/unmounted tools cancel requests and
+terminate workers. Restoring an artifact does not reconnect a provider or run
+it. Plans and notebooks never acquire mutation authority. Operator inspection
+can show private world state; controllers receive separately masked projections.
+
+The local World Lab retains one receipt/pack and one manifest/comparison, capped
+at 1.1 MB, pruning comparison history when needed. Standalone long receipts have
+an 8 MB verification bound. Every 96 records a checkpoint speeds already-verified
+inspection; raw snapshots are never accepted as verified episode history. See
+[WorldSpec](world-spec.md), [receipts](receipts.md) and [V8 evidence](verification-v8.md).

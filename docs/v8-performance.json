@@ -1,0 +1,47 @@
+{
+  "schema": "world-performance@1",
+  "runtime": "1.0.0",
+  "reference": "Town Zero hourly 7/30-day curricula",
+  "capacities": [
+    {
+      "steps": 1000,
+      "episodes": 2,
+      "milliseconds": 231
+    },
+    {
+      "steps": 10000,
+      "episodes": 14,
+      "milliseconds": 1876
+    }
+  ],
+  "capacityNote": "Authoritative steps across reset 30-day campaigns; not a claim of a 10,000-hour single scenario.",
+  "campaigns": [
+    {
+      "days": 7,
+      "ticks": 168,
+      "milliseconds": 86,
+      "receiptBytes": 201824
+    },
+    {
+      "days": 30,
+      "ticks": 720,
+      "milliseconds": 281,
+      "receiptBytes": 799560
+    }
+  ],
+  "receiptVerificationMs": 302,
+  "batch": {
+    "worlds": 20,
+    "milliseconds": 3077
+  },
+  "sequentialEpisodes": {
+    "episodes": 100,
+    "milliseconds": 15657
+  },
+  "generated": {
+    "instances": 100,
+    "milliseconds": 515
+  },
+  "realModel": "NOT_RUN",
+  "claims": "Machine-specific descriptive measurements; no IQ, certification, real-model or arbitrary-scale claim."
+}

@@ -69,6 +69,24 @@ file code, accepts remote scores, automatically uploads or tunes against holdout
 
 Limits: 500 KB agent import/save/receipt, two recent manifests, ≤240 records,
 ≤32 handoffs, ≤120 world ticks, ≤240 controller requests. Recording stops before
-an action when its bounded evidence cannot be retained. Full Academy file import
-is 1.5 MB; full progress retains its existing 2 MB limit. Connection state and
+an action when its bounded evidence cannot be retained. V8 aggregate Academy/progress
+file import is 3 MB; the individual V7 limits above remain intact. Connection state and
 running work resume disconnected/stopped after refresh/import.
+
+
+## V8 world artifacts
+
+World intents still return `{ "action": { "type": "VALIDATED_ID" } }`; providers
+cannot add executable processors, parameters, resource writes, scores or authority.
+The same parser validates model-action@1 before scoped world authorization.
+Independent world-episode@1 receipts embed data-defined rules, compact frame deltas,
+actual cause links, role/controller handoffs and periodic verified checkpoints.
+World-memory@1 and world-plan@1 are bounded public annotations. World-family@1,
+world-experiment@1 and world-batch@1 identify frozen instances, declared mutations
+and descriptive distributions. See [artifact versions and verification](receipts.md).
+
+A standalone world receipt is capped at 8 MB / 10,000 records; local world saving
+is capped at 1.1 MB. V6/V7 receipts are not reinterpreted or upgraded into claimed
+WorldSpec/model executions. Full replay validates history; an imported/rehashed
+checkpoint cannot authorize an arbitrary state. Inspection never requests model
+regeneration. Summary reports alone do not authenticate provider execution.

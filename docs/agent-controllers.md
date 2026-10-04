@@ -118,3 +118,28 @@ needed; exports let operators retain evidence beyond this local history.
 without `--model EXACT_INSTALLED_MODEL` it only checks availability/lists models.
 No selected model is hardcoded or downloaded. Real-model availability and bounded
 results must not be confused with deterministic mock/transport coverage.
+
+
+## V8 generic world controllers
+
+`WorldSession` binds each spec-defined role independently to a human, one of five
+public baselines, or the existing provider-neutral model port. World descriptors
+record id/family/provider/model, baseline/context, request/timeout limits, decision
+interval, temperature and seed. They do not contain a connection credential.
+The V8 World Lab can replace selected roles with distinct explicitly selected local
+models; failed/late inference cannot acquire authority. Provider identity must match
+its controller descriptor. Request counters survive replacement and restored receipts.
+
+STATE_ONLY, RECENT_WINDOW and BOUNDED_NOTEBOOK contexts are bounded per actor.
+A world-memory@1 adds hypotheses and commitments to public facts/plans/warnings/
+completed/unresolved lists; world-plan@1 records goal/steps/risks/fallbacks. Neither
+alters world state. `provider-request@2` / `model-observation@2` add world/pack hashes,
+long-horizon limits and arbitrary validated intent ids while keeping model-action@1
+and mission@1. Old @1 requests/receipts remain strict and independent.
+
+The session has explicit READY, REQUESTING, PAUSED, STOPPED, ERROR, BUDGET and
+COMPLETE states. Busy roles and declared decision intervals avoid unnecessary
+calls. Simultaneous proposals share the same frame and never gain priority from
+faster inference. Any controller error pauses without a world transition; operator
+handoff is explicit and recorded. Saved/imported sessions start stopped/disconnected.
+[Team contract](multi-agent.md) and [world artifacts](receipts.md) describe the bounds.

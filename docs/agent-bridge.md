@@ -91,3 +91,14 @@ world hashes to `reports/ollama-qualification.json`. It is not CI and does not
 change model weights or prompts. A missing server/model produces an explicit
 unavailable report with zero trials. A trial failure remains a measured failure,
 not a fabricated pass. The current workspace has no reachable Ollama model.
+
+
+## V8 WorldSpec transport
+
+The bridge's existing request validator dispatches provider-request@1 and @2.
+World requests use masked model-observation@2 and the unchanged structured
+model-action@1 format, with explicit role and bounded long-horizon budgets.
+No new endpoint, origin exception, arbitrary URL, shell/tool capability or cloud
+fallback is added. V8 model teams select installed model ids explicitly and keep
+separate controller budgets; replay/batch baselines and mocks need no bridge.
+Actual provider availability is reported independently of mock/transport tests.

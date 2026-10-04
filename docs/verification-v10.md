@@ -45,10 +45,12 @@ Configuration or Locker JSON can be supplied with `--input FILE`. Provider conne
 
 ## Verification evidence
 
-Local checks: all 315 unit tests (279 previous plus 36 family/continuity tests), lint, TypeScript, build and the shared six-family CLI sweep. Tests exercise actual four-format races, replay tampering, simultaneous completion order, masked observations, rejected stunt envelopes, untrusted research text, cancellation, legacy passports, scoped/frozen inputs, provenance, partition seeds and cross-family continuity.
+Local checks: all 316 unit tests (279 previous plus 37 family/continuity tests), lint, TypeScript, build and the shared six-family CLI sweep. Tests exercise actual four-format races, replay tampering, simultaneous completion order, masked observations, rejected stunt envelopes, untrusted research text, cancellation, legacy passports, scoped/frozen inputs, provenance, partition seeds and cross-family continuity.
 
 Four new browser stories run in Chromium, Firefox and WebKit: all six family episodes/output retention/restore; human race/configuration rejection/heldout inputs; hidden pause plus real origin outage/service-worker restore; and Spanish keyboard/320/390 telemetry with axe. Successful Chromium review captures are saved as CI artifacts.
 
 The production and gameplay workflows retain all original tests, 37 worlds, 48 classes and 888 authored missions, V6/V7/V8 deterministic hosts, repeated WebKit visibility cases, SQL, offline upgrades, licensing and security checks. CI status is pending for the V10 review source; no result is claimed before execution.
 
 The first three-browser run exposed an inherited handoff depth bound that rejected a valid nested research dossier at checkpoint. The handoff/evaluation bounds now cover typed family snapshots within the unchanged aggregate archive limit, and a native research-to-show save regression exercises the actual handoff. The Spanish browser test now uses the established `Avanzar un paso` control label. A compatibility audit also keeps legacy WorldSpec ids separate from native family observations in the mock adapter and prevents a portable setup from replacing destination vehicle entity ids.
+
+Provider episode/template hashes contain public input and family definition data, not the private scenario seed. A twin-map regression proves equal pre-inspection public observations and requests for maps with different concealed cache positions; inspection then reveals the legitimate differing clue. Complete seed/config hashes remain in the exported replay evidence.

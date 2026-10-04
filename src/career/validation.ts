@@ -3,6 +3,9 @@ import { verifyAgentReceipt } from '../agents/receipts.ts';
 import { clone, exact, freeze, hash, plain } from '../runtime/data.ts';
 import { assertData, dataBytes } from '../worlds/compiler.ts';
 import { baselineController, freshMemory, validatePlan, validateWorldController, verifyWorldReceipt } from '../worlds/receipts.ts';
+import { FAMILY_IDS, type FamilyArtifactType } from '../families/types.ts';
+import { acceptsArtifact, seedAllowed, validateFamilyContent } from '../families/specs.ts';
+import { verifyFamilyReceipt } from '../families/receipts.ts';
 import { CAREER_LIMITS, type AgentPassport, type CareerRun, type CareerSave, type EvaluationInput, type PortableArtifact, type PublicNote, type WorldHandoffRecord } from './types.ts';
 export const identifier = (v: unknown): v is string => typeof v === 'string' && /^[a-z][a-z0-9-]{0,63}$/.test(v);
 export const digest = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
@@ -21,7 +24,7 @@ export function createPassport(id: string, displayName: string): AgentPassport {
 }
 export function validatePassport(input: unknown): AgentPassport {
     assertData(input, 30000, 1500, 12);
-    demand(plain(input) && exact(input, ['schema', 'id', 'displayName', 'createdLocally', 'controller', 'publicCapabilities', 'compatibleWorlds', 'memoryMode', 'inventory', 'performanceEvidence', 'teams', 'roleHistory', 'licenses', 'vehicleRef', 'voiceRef', 'mediaRefs']) && input.schema === 'agent-passport@1' && identifier(input.id) && text(input.displayName, 64) && input.displayName.trim().length > 0 && typeof input.createdLocally === 'boolean' && plain(input.controller) && exact(input.controller, ['world', 'garage']) && ids(input.publicCapabilities, 2) && input.publicCapabilities.every(c => ['public-notes', 'world-plan'].includes(c)) && ids(input.compatibleWorlds, 16) && input.memoryMode === 'PUBLIC_SCOPED' && ids(input.inventory, 24) && Array.isArray(input.performanceEvidence) && input.performanceEvidence.length <= 8 && input.performanceEvidence.every(digest) && new Set(input.performanceEvidence).size === input.performanceEvidence.length && ids(input.teams, 8) && Array.isArray(input.roleHistory) && input.roleHistory.length <= 8 && input.roleHistory.every(r => plain(r) && exact(r, ['runId', 'worldId', 'role']) && digest(r.runId) && identifier(r.worldId) && identifier(r.role)) && Array.isArray(input.licenses) && input.licenses.length === 0 && input.vehicleRef === null && input.voiceRef === null && Array.isArray(input.mediaRefs) && input.mediaRefs.length === 0, 'Invalid operational passport.');
+    demand(plain(input) && exact(input, ['schema', 'id', 'displayName', 'createdLocally', 'controller', 'publicCapabilities', 'compatibleWorlds', 'memoryMode', 'inventory', 'performanceEvidence', 'teams', 'roleHistory', 'licenses', 'vehicleRef', 'voiceRef', 'mediaRefs']) && input.schema === 'agent-passport@1' && identifier(input.id) && text(input.displayName, 64) && input.displayName.trim().length > 0 && typeof input.createdLocally === 'boolean' && plain(input.controller) && exact(input.controller, ['world', 'garage']) && ids(input.publicCapabilities, 3) && input.publicCapabilities.every(c => ['public-notes', 'world-plan', 'family-artifacts'].includes(c)) && ids(input.compatibleWorlds, 16) && input.memoryMode === 'PUBLIC_SCOPED' && ids(input.inventory, 24) && Array.isArray(input.performanceEvidence) && input.performanceEvidence.length <= 8 && input.performanceEvidence.every(digest) && new Set(input.performanceEvidence).size === input.performanceEvidence.length && ids(input.teams, 8) && Array.isArray(input.roleHistory) && input.roleHistory.length <= 8 && input.roleHistory.every(r => plain(r) && exact(r, ['runId', 'worldId', 'role']) && digest(r.runId) && identifier(r.worldId) && identifier(r.role)) && Array.isArray(input.licenses) && input.licenses.length === 0 && (input.vehicleRef === null || identifier(input.vehicleRef)) && input.voiceRef === null && ids(input.mediaRefs,8), 'Invalid operational passport.');
     const controller = { world: validateWorldController(input.controller.world), garage: validateController(input.controller.garage) };
     return freeze({ ...clone(input), controller }) as unknown as AgentPassport;
 }
@@ -32,9 +35,10 @@ export function validateNote(input: unknown): PublicNote {
     return freeze(clone(input)) as unknown as PublicNote;
 }
 export function validateArtifact(input: unknown): PortableArtifact {
-    assertData(input, 8000, 300, 8);
-    demand(plain(input) && exact(input, ['schema', 'id', 'type', 'version', 'creator', 'creationRun', 'contentHash', 'compatibleWorlds', 'content', 'bytes']) && input.schema === 'career-artifact@1' && identifier(input.id) && input.type === 'world-plan' && input.version === '1.0.0' && identifier(input.creator) && digest(input.creationRun) && digest(input.contentHash) && ids(input.compatibleWorlds, 16), 'Invalid data-only artifact.');
-    const content = validatePlan(input.content);
+    assertData(input, 40000, 4500, 14);
+    demand(plain(input) && exact(input, ['schema', 'id', 'type', 'version', 'creator', 'creationRun', 'contentHash', 'compatibleWorlds', 'content', 'bytes']) && input.schema === 'career-artifact@1' && identifier(input.id) && typeof input.type==='string' && input.version === '1.0.0' && identifier(input.creator) && digest(input.creationRun) && digest(input.contentHash) && ids(input.compatibleWorlds, 16), 'Invalid data-only artifact.');
+    const content = input.type==='world-plan' ? validatePlan(input.content) : validateFamilyContent(input.type as FamilyArtifactType,input.content);
+    demand(input.type==='world-plan'||input.compatibleWorlds.every(w=>acceptsArtifact(w,input.type as string)),'Artifact declares an unsupported destination.');
     demand(input.contentHash === hash(content) && input.bytes === dataBytes(content), 'Artifact content hash or size differs.');
     return freeze({ ...clone(input), content }) as unknown as PortableArtifact;
 }
@@ -52,7 +56,7 @@ export function validateEvaluation(input: unknown): EvaluationInput {
     return freeze({ ...value, snapshotHash: input.snapshotHash }) as EvaluationInput;
 }
 export function publicWorldMemory(input: EvaluationInput) {
-    return { ...freshMemory(), facts: input.notes.map(n => n.text), plans: input.artifacts.flatMap(a => [a.content.goal, ...a.content.steps, ...a.content.fallbacks]).slice(0, 6) };
+    return { ...freshMemory(), facts: input.notes.map(n => n.text), plans: input.artifacts.filter(a=>a.type==='world-plan').flatMap(a => [a.content.goal, ...a.content.steps, ...a.content.fallbacks]).slice(0, 6) };
 }
 const verifiedRuns = new WeakSet<object>();
 export const runDigest = (r: Omit<CareerRun, 'digest'>) => hash(r);
@@ -62,15 +66,21 @@ export function verifyCareerRun(input: unknown): CareerRun {
     assertData(input, CAREER_LIMITS.bytes, 350000, 30);
     demand(plain(input) && exact(input, ['schema', 'agentId', 'actor', 'worldId', 'family', 'controller', 'evaluation', 'receipt', 'digest']) && input.schema === 'career-run@1' && identifier(input.agentId) && identifier(input.actor) && identifier(input.worldId) && plain(input.receipt), 'Invalid career evidence envelope.');
     const evaluation = validateEvaluation(input.evaluation);
-    const receipt = input.receipt.schema === 'world-episode@1' ? verifyWorldReceipt(input.receipt) : verifyAgentReceipt(input.receipt);
+    const receipt = input.receipt.schema === 'world-episode@1' ? verifyWorldReceipt(input.receipt) : input.receipt.schema==='family-episode@1' ? verifyFamilyReceipt(input.receipt) : verifyAgentReceipt(input.receipt);
     const isWorld = receipt.schema === 'world-episode@1';
-    const worldId = isWorld ? receipt.worldId : receipt.config.world;
-    const family = isWorld ? 'infrastructure' : worldId === 'community' ? 'cooperation' : ['survey', 'signal-maze', 'rover'].includes(worldId) ? 'navigation' : 'arena';
-    const controller = isWorld ? validateWorldController(input.controller) : validateController(input.controller);
+    const isFamily=receipt.schema==='family-episode@1';
+    const worldId = receipt.schema==='world-episode@1' ? receipt.worldId : receipt.schema==='family-episode@1' ? receipt.config.family : receipt.config.world;
+    const family = isFamily ? ({'auto-circuit':'racing','stunt-show':'performance','cache-quest':'navigation','web-scout':'research','stream-studio':'media','ensemble-lab':'music'} as const)[receipt.config.family] : isWorld ? 'infrastructure' : worldId === 'community' ? 'cooperation' : ['survey', 'signal-maze', 'rover'].includes(worldId) ? 'navigation' : 'arena';
+    const controller = isWorld || isFamily ? validateWorldController(input.controller) : validateController(input.controller);
     demand(input.worldId === worldId && input.family === family && hash(controller) === hash(receipt.initialControllers[input.actor]), 'Agent actor/controller attribution differs from the native receipt.');
     demand(evaluation.notes.every(n => n.scope === 'CAREER' || n.worldId === worldId && (n.scope !== 'EPISODE' || n.episode === evaluation.episode)), 'Memory crossed its declared scope.');
     demand(evaluation.artifacts.every(a => a.creator === input.agentId && a.compatibleWorlds.includes(worldId)), 'Artifact is incompatible with this agent/world.');
-    if (!isWorld)
+    if(receipt.schema==='family-episode@1'){
+        demand(seedAllowed(evaluation.partition,receipt.config.seed),'Family benchmark seeds overlap another partition.');
+        demand(evaluation.artifacts.every(a=>a.type!=='world-plan'&&acceptsArtifact(worldId,a.type)),'Destination rejects this artifact family.');
+        const expected={snapshotHash:evaluation.snapshotHash,notes:evaluation.notes.map(n=>n.text),artifacts:evaluation.artifacts.map(a=>({type:a.type,contentHash:a.contentHash,content:a.content}))};
+        demand(hash(receipt.inputs[input.actor])===hash(expected),'Initial family input differs from the declared evaluation.');
+    } else if (!isWorld)
         demand(evaluation.condition === 'FRESH', 'V7 adapter accepts fresh career context only.');
     else {
         // Exactly these initial public inputs must appear before any native decision.
@@ -90,10 +100,10 @@ export function verifyCareerRun(input: unknown): CareerRun {
 }
 export function validateHandoff(input: unknown): WorldHandoffRecord {
     assertData(input, 12000, 1000, 6);
-    demand(plain(input) && exact(input, ['schema', 'agentId', 'source', 'destination', 'memory', 'accepted', 'rejected', 'acceptedCapabilities', 'rejectedCapabilities', 'input', 'snapshotHash']) && input.schema === 'career-handoff@1' && identifier(input.agentId) && identifier(input.source) && identifier(input.destination) && ids(input.memory, 12) && ids(input.accepted, 4) && Array.isArray(input.rejected) && input.rejected.length <= 24 && input.rejected.every(r => plain(r) && exact(r, ['id', 'reason']) && identifier(r.id) && text(r.reason, 120)) && ids(input.acceptedCapabilities, 2) && ids(input.rejectedCapabilities, 2) && digest(input.snapshotHash), 'Invalid cross-world handoff.');
+    demand(plain(input) && exact(input, ['schema', 'agentId', 'source', 'destination', 'memory', 'accepted', 'rejected', 'acceptedCapabilities', 'rejectedCapabilities', 'input', 'snapshotHash']) && input.schema === 'career-handoff@1' && identifier(input.agentId) && identifier(input.source) && identifier(input.destination) && ids(input.memory, 12) && ids(input.accepted, 4) && Array.isArray(input.rejected) && input.rejected.length <= 24 && input.rejected.every(r => plain(r) && exact(r, ['id', 'reason']) && identifier(r.id) && text(r.reason, 120)) && ids(input.acceptedCapabilities, 3) && ids(input.rejectedCapabilities, 3) && digest(input.snapshotHash), 'Invalid cross-world handoff.');
     const admitted = validateEvaluation(input.input);
     demand(input.snapshotHash === admitted.snapshotHash && hash(input.memory) === hash(admitted.notes.map(n => n.id)) && hash(input.accepted) === hash(admitted.artifacts.map(a => a.id)) && admitted.artifacts.every(a => a.creator === input.agentId && a.compatibleWorlds.includes(input.destination as string)) && admitted.notes.every(n => n.scope === 'CAREER' || n.worldId === input.destination && (n.scope !== 'EPISODE' || n.episode === admitted.episode)), 'Handoff admission differs from its public snapshot.');
-    const supported = ['town-zero', 'reserve-lesson'].includes(input.destination as string) ? ['public-notes', 'world-plan'] : [];
+    const supported = ['town-zero', 'reserve-lesson'].includes(input.destination as string) ? ['public-notes', 'world-plan'] : FAMILY_IDS.includes(input.destination as typeof FAMILY_IDS[number]) ? ['public-notes','family-artifacts'] : [];
     demand((input.acceptedCapabilities as string[]).every(c => supported.includes(c)) && (input.rejectedCapabilities as string[]).every(c => !supported.includes(c)), 'Destination capability admission differs.');
     return freeze({ ...clone(input), input: admitted }) as unknown as WorldHandoffRecord;
 }
@@ -117,12 +127,15 @@ export function validateCareer(input: unknown): CareerSave {
             }
         });
     });
-    runs.forEach(r => r.evaluation.artifacts.forEach(a => { const origin = runById.get(a.creationRun); demand(origin && origin.agentId === a.creator && ['CAREER', 'TRAIN'].includes(origin.evaluation.partition) && origin.receipt.schema === 'world-episode@1' && origin.receipt.artifacts.some(p => p.actor === origin.actor && p.kind === 'plan' && hash(p.value) === a.contentHash), 'Admitted artifact lacks eligible provenance.'); }));
-    artifacts.forEach(a => { const origin = runById.get(a.creationRun); demand(origin && origin.agentId === a.creator && origin.receipt.schema === 'world-episode@1' && origin.receipt.artifacts.some(p => p.actor === origin.actor && p.kind === 'plan' && hash(p.value) === a.contentHash), 'Artifact lacks verified creator/creation evidence.'); demand(origin.evaluation.partition === 'CAREER' || origin.evaluation.partition === 'TRAIN', 'Holdout artifacts cannot enter a career inventory.'); });
+    const proven=(origin:CareerRun|undefined,a:PortableArtifact)=>origin&&origin.agentId===a.creator&&['CAREER','TRAIN'].includes(origin.evaluation.partition)&&(origin.receipt.schema==='world-episode@1'?a.type==='world-plan'&&origin.receipt.artifacts.some(p=>p.actor===origin.actor&&p.kind==='plan'&&hash(p.value)===a.contentHash):origin.receipt.schema==='family-episode@1'&&origin.receipt.outputs.some(p=>p.actor===origin.actor&&p.type===a.type&&p.contentHash===a.contentHash));
+    runs.forEach(r => r.evaluation.artifacts.forEach(a => demand(proven(runById.get(a.creationRun),a), 'Admitted artifact lacks eligible provenance.')));
+    artifacts.forEach(a => demand(proven(runById.get(a.creationRun),a), 'Artifact lacks verified creator/creation evidence or eligible partition.'));
     for (const a of agents) {
         demand(hash(a.performanceEvidence) === hash(runs.filter(r => r.agentId === a.id).map(r => r.digest)), 'Portfolio references differ from verified receipts.');
         demand(hash(a.roleHistory) === hash(runs.filter(r => r.agentId === a.id).map(r => ({ runId: r.digest, worldId: r.worldId, role: r.actor }))), 'Role history is unsupported.');
         demand(hash(a.inventory) === hash(artifacts.filter(p => p.creator === a.id).map(p => p.id)), 'Inventory references differ.');
+        demand(a.vehicleRef===null||artifacts.some(p=>p.creator===a.id&&p.id===a.vehicleRef&&p.type==='vehicle-setup'),'Vehicle reference lacks an owned verified setup.');
+        demand(a.mediaRefs.every(id=>artifacts.some(p=>p.creator===a.id&&p.id===id&&['music-score','show-rundown','research-dossier','performance-plan'].includes(p.type))),'Media reference lacks owned verified evidence.');
         demand(new Set(notes[a.id].map(n => n.id)).size === notes[a.id].length, 'Repeated memory id.');
         notes[a.id].forEach(n => {
             if (n.sourceRun) {

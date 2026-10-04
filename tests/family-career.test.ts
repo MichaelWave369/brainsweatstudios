@@ -1,0 +1,40 @@
+import { expect, it } from 'vitest';
+import { FAMILY_IDS } from '../src/families/types';
+import { clone, hash } from '../src/runtime/data';
+import { addAgent, enableCircuitWorlds, evaluationInput, handoffRecord, portfolio, rememberRun, retainFamilyOutputs, updatePassport, writeNote } from '../src/career/operations';
+import { freshCareer, runDigest, validateCareer } from '../src/career/validation';
+import { createCareerSession } from '../src/career/session';
+import { familyReceiptDigest } from '../src/families/receipts';
+import { familyCommand } from '../src/families/cli';
+import { replayCommand } from '../src/replay/cli';
+const locker=()=>enableCircuitWorlds(addAgent(freshCareer(),'iris','Iris'),'iris');
+async function episode(save:ReturnType<typeof locker>,world:string,id:string,partition:'CAREER'|'HOLDOUT'='CAREER',condition:'FRESH'|'PRIOR'='FRESH') {const input=evaluationInput(save,'iris',world,id,partition,condition),session=createCareerSession(save.agents[0],world,input,save);while(!session.result().terminal)expect(await session.step()).toBe(true);return session.receipt();}
+it('one operational passport retains six distinct native families and seven verified portable outputs',async()=>{
+    let save=locker();for(const family of FAMILY_IDS){const run=await episode(save,family,family);save=retainFamilyOutputs(rememberRun(save,run),run.digest,family);}
+    expect(save.agents[0].id).toBe('iris');expect(save.runs).toHaveLength(6);expect(save.artifacts).toHaveLength(7);expect(save.agents[0].vehicleRef).toBe('auto-circuit-vehicle-setup');expect(save.agents[0].mediaRefs).toHaveLength(4);expect(portfolio(save,'iris').map(p=>p.family)).toEqual(['racing','performance','navigation','research','media','music']);expect(replayCommand(JSON.stringify(save))).toMatchObject({verified:true});
+});
+it('research evidence crosses into an actual local rundown, while fresh holdout imports no history',async()=>{
+    let save=locker();const research=await episode(save,'web-scout','research');save=retainFamilyOutputs(rememberRun(save,research),research.digest,'dossier');const input=evaluationInput(save,'iris','stream-studio','show','CAREER','PRIOR'),handoff=handoffRecord(save,'iris','web-scout','stream-studio',input);expect(handoff.accepted).toEqual(['dossier-research-dossier']);
+    const show=await episode(save,'stream-studio','show','CAREER','PRIOR');expect(show.receipt.schema).toBe('family-episode@1');if(show.receipt.schema!=='family-episode@1')throw new Error('Missing native show.');expect(show.receipt.result.measures.sourceReferences).toBe(2);const rundown=show.receipt.outputs.find(o=>o.type==='show-rundown')!;expect(JSON.stringify(rundown.content)).toContain((save.artifacts[0].content as {sources:{contentHash:string}[]}).sources[0].contentHash);
+    const held=evaluationInput(save,'iris','stream-studio','holdout','HOLDOUT');expect(held.notes).toEqual([]);expect(held.artifacts).toEqual([]);const frozen=clone(input);save=writeNote(save,'iris',{id:'note',scope:'CAREER',worldId:null,episode:null,sourceRun:null,partition:'CAREER',text:'A new public note.'});expect(input).toEqual(frozen);
+});
+it('V9 passports retain their existing declarations until the operator explicitly enables families',()=>{
+    const original=addAgent(freshCareer(),'iris','Iris');expect(original.agents[0].publicCapabilities).toEqual(['public-notes','world-plan']);expect(original.agents[0].compatibleWorlds).not.toContain('auto-circuit');const enabled=enableCircuitWorlds(original,'iris');expect(enabled.agents[0].id).toBe(original.agents[0].id);expect(enabled.agents[0].controller).toEqual(original.agents[0].controller);expect(original.agents[0].compatibleWorlds).toHaveLength(5);
+});
+it('forged initial public context cannot be laundered through a correctly rehashed native receipt',async()=>{
+    const save=locker(),run=clone(await episode(save,'cache-quest','honest'));run.evaluation.condition='PRIOR';run.evaluation.notes=[{id:'forged',scope:'CAREER',worldId:null,episode:null,sourceRun:null,partition:'CAREER',text:'Invented context.'}];const {snapshotHash:_snapshot,...context}=run.evaluation;expect(_snapshot).toHaveLength(64);run.evaluation.snapshotHash=hash(context);const {digest:_digest,...body}=run;expect(_digest).toHaveLength(64);run.digest=runDigest(body);expect(()=>rememberRun(save,run)).toThrow('Initial family input');
+});
+it('holdout generation is separate and its outputs cannot be retained as career artifacts',async()=>{
+    const save=locker(),career=await episode(save,'cache-quest','career'),held=await episode(save,'cache-quest','held','HOLDOUT');expect(career.receipt.schema).toBe('family-episode@1');expect(held.receipt.schema).toBe('family-episode@1');if(career.receipt.schema!=='family-episode@1'||held.receipt.schema!=='family-episode@1')throw new Error('Missing family proof.');expect(career.receipt.config.seed).not.toBe(held.receipt.config.seed);expect(()=>retainFamilyOutputs(rememberRun(save,held),held.digest,'held')).toThrow('Holdout');
+});
+it('a benchmark cannot quietly reuse a career or training seed',()=>{const save=locker(),held=evaluationInput(save,'iris','cache-quest','held','HOLDOUT');expect(()=>createCareerSession(save.agents[0],'cache-quest',held,save,{seed:17})).toThrow('disjoint seeds');});
+it('the shared descriptor preset controls every native role while evidence binds the operational actor explicitly',async()=>{const save=locker(),input=evaluationInput(save,'iris','auto-circuit','team'),s=createCareerSession(save.agents[0],'auto-circuit',input,save,{raceMode:'head-to-head',sharedController:true});await s.step();const r=s.receipt();if(r.receipt.schema!=='family-episode@1')throw new Error('Missing team proof.');expect(new Set(Object.values(r.receipt.initialControllers).map(c=>c.id)).size).toBe(1);expect(Object.keys(r.receipt.initialControllers)).toHaveLength(4);expect(r.actor).toBe('driver-0');});
+it('controller replacement preserves operational identity and recorded attribution',async()=>{
+    let save=locker();const first=await episode(save,'stunt-show','baseline');save=rememberRun(save,first);const agent=save.agents[0];save=updatePassport(save,{...agent,controller:{...agent.controller,world:{...agent.controller.world,family:'model',provider:'mock',model:'mock-policy'}}});const second=await episode(save,'web-scout','mock');save=rememberRun(save,second);expect(save.runs.map(r=>r.agentId)).toEqual(['iris','iris']);expect(save.runs.map(r=>r.controller.family)).toEqual(['baseline','model']);
+});
+it('reference fields and portable artifact content require owned native evidence',async()=>{
+    let save=locker();const r=await episode(save,'auto-circuit','race');save=retainFamilyOutputs(rememberRun(save,r),r.digest,'setup');expect(()=>validateCareer({...save,agents:[{...save.agents[0],vehicleRef:'missing'}]})).toThrow();const raw=clone(save);raw.artifacts[0].contentHash='0'.repeat(64);expect(()=>validateCareer(raw)).toThrow();const forged=clone(r);if(forged.receipt.schema!=='family-episode@1')throw new Error('Missing family proof.');forged.receipt.outputs[0].actor='crew-0';const {digest:_native,...native}=forged.receipt;expect(_native).toHaveLength(64);forged.receipt.digest=familyReceiptDigest(native);const {digest:_run,...run}=forged;expect(_run).toHaveLength(64);forged.digest=runDigest(run);expect(()=>rememberRun(save,forged)).toThrow();
+});
+it('shared family CLI uses the native career host for baseline and mock with verified results',async()=>{
+    const save=await familyCommand('run',['ensemble-lab','--controller','mock','--partition','TRANSFER']);expect('runs' in save).toBe(true);if(!('runs' in save))throw new Error('Missing Locker result.');const r=save.runs.at(-1)!;expect(r.evaluation.partition).toBe('TRANSFER');expect(r.controller.family).toBe('model');expect(r.receipt.result.success).toBe(true);expect(replayCommand(JSON.stringify(r))).toMatchObject({verified:true});
+});

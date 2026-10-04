@@ -31,7 +31,7 @@ export default function AgentLocker() {
     const session = useRef<CareerSession | null>(null), admission = useRef<ReturnType<typeof handoffRecord> | undefined>(undefined), running = useRef(false), epoch = useRef(0), alive = useRef(true), latest = useRef(academy);
     const agent = locker.agents.find(a => a.id === selected);
     useLayoutEffect(() => { latest.current = academy; saveAcademy(academy, profile.id); }, [academy, profile.id]);
-    const commit = (career: CareerSave) => { const next = validateAcademy({ ...latest.current, career }); latest.current = next; setAcademy(next); };
+    const commit = (career: CareerSave) => { const next = validateAcademy({ ...latest.current, career }); latest.current = next; saveAcademy(next,profile.id); setAcademy(next); };
     const attempt = (fn: () => void) => {
         try {
             fn();
@@ -98,8 +98,9 @@ export default function AgentLocker() {
             await session.current.step(action);
             if (!alive.current || generation !== epoch.current || document.hidden)
                 return;
-            setStatus(session.current.status());
+            const nextStatus=session.current.status();
             checkpoint();
+            setStatus(nextStatus);
         }
         catch (e) {
             if (alive.current && generation===epoch.current && !document.hidden) {
@@ -122,6 +123,7 @@ export default function AgentLocker() {
                 }
                 if (!alive.current || generation !== epoch.current || document.hidden)
                     break;
+                if(session.current.result().terminal){running.current=false;checkpoint();setStatus('COMPLETE');return;}
                 setStatus(session.current.status());
                 setRevision(n => n + 1);
                 await new Promise<void>(resolve => setTimeout(resolve, 35));

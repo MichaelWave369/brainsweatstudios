@@ -17,3 +17,9 @@ Each rung gets coherent commits and its own verification document. A rung advanc
 ## Evidence interpretation
 
 Receipt verification proves the recorded simulation can replay. Operational identity and editable public notes are declared by the local operator; neither hashes nor agent names prove a human identity, a provider's authenticity, sentience or intelligence. Benchmarks use fresh inputs by default. Explicit prior/frozen inputs are disclosed and immutable; recorded holdout/transfer evidence never becomes automatic career context. User-authored notes remain inspectable declarations, not a claim that arbitrary text can be proven free of outside knowledge.
+
+## Completed rung gates
+
+V9 is merged at `0ec973702c6e3eca187ab622699a22d2584fdb6c` and published, with deployment and actual-live feature verification passed; see [V9 evidence](verification-v9.md).
+
+V10 runtime `8b6eb0caa45cd14d47d61aec7520d08004c52a3d` passed 316 unit tests, shared family/career hosts, all 24 advanced three-browser cases, 67 production browser cases, the 1,050-case full gameplay regression, and repeated WebKit visibility/outage checks. See [V10 evidence](verification-v10.md) for immutable CI links. V10 remains an operator-reviewed PR. V11 can now begin without weakening the earlier gates.

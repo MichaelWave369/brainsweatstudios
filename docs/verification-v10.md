@@ -1,6 +1,6 @@
 # V10 — Agent Circuit Worlds
 
-V10 builds on the verified V9 source `6a1a5b2263550609b028c9f52990d1e7f2a39fd0`. Its six native family kernels, shared career host, CLI, and advanced Locker controls are implemented. V9 is the published studio, merged at `0ec973702c6e3eca187ab622699a22d2584fdb6c` with production deployment and actual-live verification passed. V10 remains a review build. CI results for this rung must be recorded before advancing to V11.
+V10 builds on the verified V9 source `6a1a5b2263550609b028c9f52990d1e7f2a39fd0`. Its six native family kernels, shared career host, CLI, and advanced Locker controls are implemented. V9 is the published studio, merged at `0ec973702c6e3eca187ab622699a22d2584fdb6c` with production deployment and actual-live verification passed. V10 remains a review build. The final runtime source passed all three CI gates before V11 began.
 
 ## Distinct mechanics
 
@@ -49,7 +49,13 @@ Local checks: all 316 unit tests (279 previous plus 37 family/continuity tests),
 
 Four new browser stories run in Chromium, Firefox and WebKit: all six family episodes/output retention/restore; human race/configuration rejection/heldout inputs; hidden pause plus real origin outage/service-worker restore; and Spanish keyboard/320/390 telemetry with axe. Successful Chromium review captures are saved as CI artifacts.
 
-The production and gameplay workflows retain all original tests, 37 worlds, 48 classes and 888 authored missions, V6/V7/V8 deterministic hosts, repeated WebKit visibility cases, SQL, offline upgrades, licensing and security checks. CI status is pending for the V10 review source; no result is claimed before execution.
+The production and gameplay workflows retain all original tests, 37 worlds, 48 classes and 888 authored missions, V6/V7/V8 deterministic hosts, repeated WebKit visibility cases, SQL, offline upgrades, licensing and security checks. Final runtime source `8b6eb0caa45cd14d47d61aec7520d08004c52a3d` passed all gates:
+
+- [Advanced campaign](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37191669524): all 24 Locker/family cases in Chromium, Firefox and WebKit, plus shared headless hosts.
+- [Production](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37191669532): all 67 browser cases, locked build, SQL permissions/concurrency, offline upgrades, licensing and security. Deployment/live jobs were skipped for the PR.
+- [Gameplay](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37191669528): all 1,050 gameplay/accessibility cases, all earlier specialist stages and ten repeated WebKit visibility/outage cases.
+
+Successful family and Spanish phone review captures were inspected from the CI artifact. V10 is reviewable in [PR #5](https://github.com/larrinamsalva/brainsweatstudios/pull/5). V9 remains the published studio until the operator merges and the main deployment/live gates pass.
 
 The first three-browser run exposed an inherited handoff depth bound that rejected a valid nested research dossier at checkpoint. The handoff/evaluation bounds now cover typed family snapshots within the unchanged aggregate archive limit, and a native research-to-show save regression exercises the actual handoff. The Spanish browser test now uses the established `Avanzar un paso` control label. A compatibility audit also keeps legacy WorldSpec ids separate from native family observations in the mock adapter and prevents a portable setup from replacing destination vehicle entity ids.
 

@@ -44,7 +44,7 @@ export function validateArtifact(input: unknown): PortableArtifact {
 }
 export function inputHash(input: Omit<EvaluationInput, 'snapshotHash'>) { return hash(input); }
 export function validateEvaluation(input: unknown): EvaluationInput {
-    assertData(input, 40000, 2000, 12);
+    assertData(input, 40000, 5000, 14);
     demand(plain(input) && exact(input, ['mode', 'partition', 'condition', 'episode', 'notes', 'artifacts', 'snapshotHash']) && ['CAREER', 'BENCHMARK'].includes(String(input.mode)) && ['CAREER', 'TRAIN', 'HOLDOUT', 'TRANSFER'].includes(String(input.partition)) && ['FRESH', 'FROZEN', 'PRIOR'].includes(String(input.condition)) && identifier(input.episode) && Array.isArray(input.notes) && input.notes.length <= 12 && Array.isArray(input.artifacts) && input.artifacts.length <= 4, 'Invalid explicit memory condition.');
     demand((input.mode === 'CAREER') === (input.partition === 'CAREER'), 'Benchmark partition must be declared.');
     const notes = input.notes.map(validateNote), artifacts = input.artifacts.map(validateArtifact);
@@ -99,7 +99,7 @@ export function verifyCareerRun(input: unknown): CareerRun {
     return verified;
 }
 export function validateHandoff(input: unknown): WorldHandoffRecord {
-    assertData(input, 12000, 1000, 6);
+    assertData(input, 50000, 7000, 16);
     demand(plain(input) && exact(input, ['schema', 'agentId', 'source', 'destination', 'memory', 'accepted', 'rejected', 'acceptedCapabilities', 'rejectedCapabilities', 'input', 'snapshotHash']) && input.schema === 'career-handoff@1' && identifier(input.agentId) && identifier(input.source) && identifier(input.destination) && ids(input.memory, 12) && ids(input.accepted, 4) && Array.isArray(input.rejected) && input.rejected.length <= 24 && input.rejected.every(r => plain(r) && exact(r, ['id', 'reason']) && identifier(r.id) && text(r.reason, 120)) && ids(input.acceptedCapabilities, 3) && ids(input.rejectedCapabilities, 3) && digest(input.snapshotHash), 'Invalid cross-world handoff.');
     const admitted = validateEvaluation(input.input);
     demand(input.snapshotHash === admitted.snapshotHash && hash(input.memory) === hash(admitted.notes.map(n => n.id)) && hash(input.accepted) === hash(admitted.artifacts.map(a => a.id)) && admitted.artifacts.every(a => a.creator === input.agentId && a.compatibleWorlds.includes(input.destination as string)) && admitted.notes.every(n => n.scope === 'CAREER' || n.worldId === input.destination && (n.scope !== 'EPISODE' || n.episode === admitted.episode)), 'Handoff admission differs from its public snapshot.');

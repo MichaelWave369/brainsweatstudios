@@ -1,0 +1,40 @@
+name: Advanced campaign checks
+on:
+  pull_request:
+    paths:
+      - 'src/career/**'
+      - 'src/app/AgentLocker.tsx'
+      - 'src/styles/career.css'
+      - 'src/i18n/career.json'
+      - 'tests/e2e/career-features.spec.ts'
+      - '.github/workflows/advanced-campaign.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: advanced-campaign-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run build && npm run test:career
+      - name: Verify scoped identity and evidence in three browsers
+        run: npm run test:e2e -- tests/e2e/career-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: campaign-browser-failures
+          path: test-results
+          retention-days: 7

@@ -4,11 +4,12 @@ import academy from './academy.json' with { type: 'json' };
 import runtime from './runtime.json' with { type: 'json' };
 import garage from './garage.json' with { type: 'json' };
 import worlds from './worlds.json' with { type: 'json' };
+import career from './career.json' with { type: 'json' };
 
 let locale: 'en' | 'es' = 'en';
 export const setLocale = (next: 'en' | 'es') => { locale = next; };
 export const getLocale = () => locale;
-const dictionary:Record<string,string> = {...es,...rungFour,...academy,...runtime,...garage,...worlds};
+const dictionary:Record<string,string> = {...es,...rungFour,...academy,...runtime,...garage,...worlds,...career};
 const uppercaseDictionary = new Map(Object.entries(dictionary).map(([source, target]) => [source.toUpperCase(), target.toLocaleUpperCase('es')]));
 const escapePattern = (part: string) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 interface MessageTemplate { expression: RegExp; translation: string; groups: number[][]; prefix: string; specificity: number }

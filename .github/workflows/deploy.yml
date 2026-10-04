@@ -79,7 +79,7 @@ jobs:
           node scripts/verify-production.mjs
       - name: Verify advanced learning flows and graphics
         run: |
-          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/academy-features.spec.ts tests/e2e/runtime-features.spec.ts tests/e2e/agent-garage-features.spec.ts tests/e2e/world-features.spec.ts tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
+          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/academy-features.spec.ts tests/e2e/runtime-features.spec.ts tests/e2e/agent-garage-features.spec.ts tests/e2e/world-features.spec.ts tests/e2e/career-features.spec.ts tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
       - name: Capture review graphics
         if: always()
         run: |

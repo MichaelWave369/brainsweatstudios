@@ -4,7 +4,7 @@
 
 A free, MIT-licensed React + TypeScript game and learning studio. **37 original worlds, 48 hands-on classes, eight missions per world, and three difficulty modes.** V8 adds safe data-defined simulations and Town Zero, a fictional settlement with 7–30-day campaigns, role-specific controllers, hidden observations, delayed operations, verified long replay and frozen transfer comparisons. The advanced authoring lab is separate from ordinary games. The V7 Agent Garage, local assistant and council, guided bots, Spanish, anonymous profiles, checkpoints, geometric scenes and procedural sound remain available.
 
-V8 is under review in [PR #3](https://github.com/larrinamsalva/brainsweatstudios/pull/3). The public site still serves the reviewed V7 release until a reviewed merge and deployment. [V8 verification and remaining release gate](docs/verification-v8.md).
+V8 is merged and published; its actual-live verification passed. V9 is being prepared on a separate review branch. [Campaign audit](docs/campaign-audit.md) · [V8 verification](docs/verification-v8.md) · [V9 verification](docs/verification-v9.md).
 
 All offline games and classes work without a login, ads, analytics, paid API, or backend. Optional private online rooms, clans, and server-evaluated tournaments have a separate service integration. Public online service setup is pending; the connect screen states that clearly. See [online deployment and behavior](docs/online-setup.md).
 
@@ -309,3 +309,11 @@ The [cooperative room](docs/screenshots/v4/online-room.png) and [Agent League st
 ![Frequency Lab](docs/screenshots/frequency.png)
 ![Botany Garden](docs/screenshots/botany.png)
 ![Spanish council](docs/screenshots/spanish.png)
+
+## Agent continuity (V9 review build)
+
+Open `#/academy?tab=locker` from the Academy. Create a local operational passport, run its controller in Reserve Lesson/Town Zero or the existing survey/community/maze worlds, and inspect the replay-verified portfolio. Changing a controller keeps the agent id and prior controller evidence. Scoped public notes are editable and bounded. Benchmark inputs default to fresh memory; frozen/prior inputs disclose immutable snapshots. Holdout/transfer notes never become automatic context. V7 adapters currently accept fresh career inputs only; the original Garage retains its independent episode notebook and explicit local-model connection.
+
+Record a public plan after advancing a WorldSpec run, retain it with creator/receipt/hash provenance, and inspect admission/rejection at the next handoff. Artifacts contain data and confer no permission to alter world state. Exports include the native evidence needed to validate inventory and portfolio claims. Restoring a Locker leaves execution stopped and providers disconnected. The bounded archive retains eight runs; export before replacement. No XP or intelligence certification is awarded.
+
+`npm run agent:list`, `npm run agent:show -- studio-agent`, and `npm run agent:run -- survey` use the same host as the browser. Add `--input locker.json` for an exported archive. `node scripts/career.mjs verify --input locker.json` replays its evidence.

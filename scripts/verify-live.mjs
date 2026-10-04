@@ -49,6 +49,16 @@ try {
   await page.goto(`${base}#/class/derivatives`); await page.getByLabel('Point x',{exact:true}).fill('6'); await page.reload(); assert.equal(await page.getByLabel('Point x',{exact:true}).inputValue(),'6');
   await page.goto(`${base}#/lab/engine`); await page.getByRole('button',{name:'Resume checkpoint',exact:true}).click(); await page.locator('.crt-screen .game-controls').waitFor();
   await page.goto(base); await page.locator('.world-card').last().waitFor();
+  await page.locator('.language-select select').selectOption('en');
+  await page.evaluate(() => { window.location.hash = '/academy?tab=locker'; });
+  await page.getByRole('heading', { name: 'Agent Locker', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Create passport', exact: true }).click();
+  await page.getByRole('button', { name: 'Prepare handoff', exact: true }).click();
+  await page.getByRole('button', { name: 'Run episode', exact: true }).click();
+  await page.getByRole('status').filter({ hasText: 'Execution status: COMPLETE' }).waitFor();
+  const career = await page.evaluate(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.career);
+  assert.equal(career.agents[0].id, 'studio-agent'); assert.equal(career.runs[0].worldId, 'reserve-lesson'); assert.equal(career.runs[0].receipt.result.tick, 12);
+  await page.reload(); await page.getByRole('status').filter({ hasText: 'Execution status: STOPPED' }).waitFor();
   await page.screenshot({ path: `docs/screenshots/live-v${studio.major}.png` }); assert.deepEqual(errors, []);
-  console.log('Live v8 verified: 30-day Town Zero, long replay, stopped restoration, Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, and zero page errors.'); await context.close();
+  console.log(`Live v${studio.major} verified: 30-day Town Zero, long replay, stopped restoration, Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, Agent Locker passport continuity and stopped restoration, and zero page errors.`); await context.close();
 } finally { await browser.close(); }

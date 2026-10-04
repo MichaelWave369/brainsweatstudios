@@ -1,10 +1,6 @@
 # V8 verification and release gate
 
-V8 is built in [PR #3](https://github.com/larrinamsalva/brainsweatstudios/pull/3).
-It has not been merged or published. The actual public studio remains V7.
-A reviewed merge, Pages deployment and actual-live verification remain required
-before calling V8 released. No release tag, model download, paid service,
-production credential change or public online activation was made.
+V8 PR #3 was merged as `32a387eb622b185f03cac609173a69ec65320a1f` and published. The [Pages workflow](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37178741637) passed actual-live 30-day Town Zero, replay, stopped restoration and the existing studio flows. The [full gameplay workflow](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37178741659) also passed, including the repeated WebKit visibility/outage regression. No release tag or model download was created.
 
 The immutable starting main is `343d6c0fdd334b79e5b62aadadb195af1d7a2ff3`;
 published V7 code is `a50ac5e9f92b489db5e3d82096b44d0d37ba5185`.
@@ -20,7 +16,7 @@ Its production workflow passes all 59 advanced Chromium cases. Its gameplay
 workflow passes all 18 World Lab cases in three browsers and ten additional
 WebKit visibility/outage executions. The same gameplay workflow records the
 complete authored-mission and accessibility regression; its immutable result is
-linked below. Actual Pages/live V8 verification still requires a reviewed merge.
+linked below. Actual Pages/live V8 verification passed on the merged main linked above.
 
 | Check | Recorded result |
 |---|---|
@@ -34,7 +30,7 @@ linked below. Actual Pages/live V8 verification still requires a reviewed merge.
 | New World Lab browser cases | 18 passed in Chromium/Firefox/WebKit; ten repeated WebKit visibility/outage cases passed |
 | Production upgrade/offline/online SQL checks | Passed on the visibility-fix source |
 | Full 888-mission and broader accessibility suite | Complete prior V8 run: 1,050 passed, including all 888 authored missions; visibility-fix result in the linked gameplay workflow |
-| Actual Pages V8 / live verification | Pending reviewed merge |
+| Actual Pages V8 / live verification | Passed on merged main `32a387e` |
 | Actual installed Ollama | UNAVAILABLE; no models or trials |
 
 The current regression workflows exercise all existing suites without lowering

@@ -45,3 +45,26 @@ Keyboard tab navigation, touch controls, English/Spanish, high contrast,
 reduced motion and vector fallback apply here too. JSON displays preserve
 technical ids for reproducibility. Online commons still requires a separately
 configured service; the current public site reports setup pending accurately.
+
+## Agent Garage
+
+Open the fourth tab or `#/academy?tab=garage`. Start with the offline mock and
+Survey. Step once: scanning spends one tick and two energy to reveal one site.
+Compare proposed, validated and executed actions, then inspect the receipt.
+Illegal output spends a request/retry budget while leaving the world unchanged.
+
+Try Community Restore with a model and reference controller; each role has its
+own turn and capabilities, so both are needed. Try Signal Maze and notice that
+fictional signs cannot replace the mission. Pause, take manual control and hand
+back to a reference/model controller without resetting the world.
+
+Frozen comparisons use identical world seeds for candidate and baseline, with
+practice, validation, final holdout and transfer kept separate. No model weight
+or prompt is changed. A notebook contains short public facts/plans/alerts, not
+private reasoning. Receipt replay repeats world actions; a fresh model request
+may differ. English/Spanish, keyboard tabs, small screens, vector fallback and
+reduced motion remain supported. Runs award no game XP.
+
+Ollama is optional: [connect a local bridge](agent-bridge.md), explicitly choose
+an installed model, and set time/request limits. No model/cloud account is
+required for the Garage, and unavailable providers remain explicit errors.

@@ -14,3 +14,5 @@ supabase/functions/brain-sweat-online/runtime/
 .env
 .env.local
 supabase/functions/.env
+
+reports/

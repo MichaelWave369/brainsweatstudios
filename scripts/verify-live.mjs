@@ -31,9 +31,13 @@ try {
   await page.goto(`${base}#/academy?tab=lab`); await page.getByRole('button',{name:'Run experiment',exact:true}).click();
   await page.getByRole('heading',{name:'Experiment results',exact:true}).waitFor(); await page.getByRole('button',{name:'Verify replay',exact:true}).click();
   await page.getByText('Replay verified. Every transition and result matches.',{exact:true}).waitFor(); await page.reload(); await page.getByRole('heading',{name:'Verified trace inspector',exact:true}).waitFor();
+  await page.goto(`${base}#/academy?tab=garage`); await page.getByRole('button',{name:'Start garage world',exact:true}).click(); await page.getByRole('button',{name:'Run garage episode',exact:true}).click();
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.garage.receipt.result.success);
+  await page.getByRole('button',{name:'Verify model world replay',exact:true}).click(); await page.getByText('World replay verified from recorded actions. Model regeneration was not requested.',{exact:true}).waitFor();
+  await page.reload(); await page.getByRole('heading',{name:'Model receipt inspector',exact:true}).waitFor();
   await page.goto(`${base}#/class/derivatives`); await page.getByLabel('Point x',{exact:true}).fill('6'); await page.reload(); assert.equal(await page.getByLabel('Point x',{exact:true}).inputValue(),'6');
   await page.goto(`${base}#/lab/engine`); await page.getByRole('button',{name:'Resume checkpoint',exact:true}).click(); await page.locator('.crt-screen .game-controls').waitFor();
   await page.goto(base); await page.locator('.world-card').last().waitFor();
   await page.screenshot({ path: `docs/screenshots/live-v${studio.major}.png` }); assert.deepEqual(errors, []);
-  console.log('Live v6 verified: 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, and zero page errors.'); await context.close();
+  console.log('Live v7 verified: Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, and zero page errors.'); await context.close();
 } finally { await browser.close(); }

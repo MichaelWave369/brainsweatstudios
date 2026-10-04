@@ -3,6 +3,12 @@ on:
   pull_request:
     paths:
       - 'src/career/**'
+      - 'src/families/**'
+      - 'src/app/FamilyTelemetry.tsx'
+      - 'src/i18n/families.json'
+      - 'tests/families.test.ts'
+      - 'tests/family-career.test.ts'
+      - 'tests/e2e/family-features.spec.ts'
       - 'src/app/AgentLocker.tsx'
       - 'src/styles/career.css'
       - 'src/i18n/career.json'
@@ -26,14 +32,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run build && npm run test:career
+      - run: npm run build && npm run test:career && npm run test:families
       - name: Verify scoped identity and evidence in three browsers
-        run: npm run test:e2e -- tests/e2e/career-features.spec.ts --workers=3
+        run: npm run test:e2e -- tests/e2e/career-features.spec.ts tests/e2e/family-features.spec.ts --workers=3
         env:
           CROSS_BROWSER: 1
           TEST_PRODUCTION: 1
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: campaign-browser-failures
           path: test-results

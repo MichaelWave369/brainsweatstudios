@@ -1,9 +1,10 @@
-import { addAgent, evaluationInput, rememberRun } from './operations.ts';
+import { addAgent, enableCircuitWorlds, evaluationInput, rememberRun } from './operations.ts';
+import { FAMILY_IDS, type FamilyId } from '../families/types.ts';
 import { createCareerSession } from './session.ts';
 import { freshCareer, validateCareer, verifyCareerRun } from './validation.ts';
 import { parseJSON } from '../runtime/data.ts';
 export async function careerCommand(command: string, args: string[], file: string | null = null) {
-    const save = file ? validateCareer(parseJSON(file, 1350000)) : addAgent(freshCareer(), 'studio-agent', 'Studio agent');
+    let save = file ? validateCareer(parseJSON(file, 1350000)) : addAgent(freshCareer(), 'studio-agent', 'Studio agent');
     if (command === 'list')
         return save.agents.map(a => ({ id: a.id, name: a.displayName, controller: a.controller.world.family, evidence: a.performanceEvidence.length }));
     if (command === 'show') {
@@ -19,6 +20,7 @@ export async function careerCommand(command: string, args: string[], file: strin
         if (!agent)
             throw new Error('Agent is absent.');
         const world = args[0] || 'reserve-lesson';
+        if(FAMILY_IDS.includes(world as FamilyId))save=enableCircuitWorlds(save,agent.id);
         const input = evaluationInput(save, agent.id, world, `cli-${save.runs.length + 1}`);
         const session = createCareerSession(agent, world, input, save);
         let steps = 0;

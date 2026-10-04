@@ -1,6 +1,6 @@
 {
   "name": "brain-sweat-studio",
-  "version": "9.0.0",
+  "version": "10.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -24,12 +24,18 @@
     "world:list": "node scripts/world.mjs list",
     "world:validate": "node scripts/world.mjs validate",
     "world:run": "node scripts/world.mjs run",
-    "replay:verify": "node scripts/world.mjs verify",
+    "replay:verify": "node scripts/replay.mjs",
     "experiment:batch": "node scripts/world.mjs batch",
     "agent:list": "node scripts/career.mjs list",
     "agent:show": "node scripts/career.mjs show",
     "agent:run": "node scripts/career.mjs run",
-    "test:career": "node scripts/test-career.mjs"
+    "test:career": "node scripts/test-career.mjs",
+    "family:list": "node scripts/family.mjs list",
+    "family:run": "node scripts/family.mjs run",
+    "race:run": "node scripts/family.mjs run auto-circuit",
+    "cache:run": "node scripts/family.mjs run cache-quest",
+    "performance:run": "node scripts/family.mjs run ensemble-lab",
+    "test:families": "node scripts/test-families.mjs"
   },
   "dependencies": {
     "lucide-react": "1.50.0",

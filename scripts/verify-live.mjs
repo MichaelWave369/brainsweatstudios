@@ -59,6 +59,25 @@ try {
   const career = await page.evaluate(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.career);
   assert.equal(career.agents[0].id, 'studio-agent'); assert.equal(career.runs[0].worldId, 'reserve-lesson'); assert.equal(career.runs[0].receipt.result.tick, 12);
   await page.reload(); await page.getByRole('status').filter({ hasText: 'Execution status: STOPPED' }).waitFor();
+  if (studio.major >= 10) {
+    await page.getByRole('button', { name: 'Enable circuit families', exact: true }).click();
+    for (const family of ['auto-circuit','stunt-show','cache-quest','web-scout','stream-studio','ensemble-lab']) {
+      await page.getByLabel('Destination world', { exact: true }).selectOption(family);
+      if (family === 'web-scout') await page.getByLabel('Controller selection', { exact: true }).selectOption('mock');
+      if (family === 'stream-studio') await page.getByLabel('Memory condition', { exact: true }).selectOption('PRIOR');
+      await page.getByRole('button', { name: 'Prepare handoff', exact: true }).click();
+      await page.getByRole('button', { name: 'Run episode', exact: true }).click();
+      await page.getByRole('status').filter({ hasText: 'Execution status' }).filter({ hasText: 'COMPLETE' }).waitFor();
+      const record = await page.evaluate(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.career.runs.at(-1));
+      assert.equal(record.worldId, family); assert.equal(record.agentId, 'studio-agent'); assert.equal(record.receipt.result.success, true);
+      await page.getByRole('button', { name: 'Retain verified family outputs', exact: true }).click();
+    }
+    const advanced = await page.evaluate(() => JSON.parse(localStorage.getItem('brain-sweat-studio:v1')).academy.career);
+    assert.equal(advanced.runs.length, 7); assert.equal(advanced.artifacts.length, 7);
+    assert.equal(advanced.runs.find(r => r.worldId === 'stream-studio').receipt.result.measures.sourceReferences, 2);
+    await page.reload(); await page.getByRole('status').filter({ hasText: 'Execution status' }).filter({ hasText: 'STOPPED' }).waitFor();
+    console.log('Live circuit families: six completed native mechanics, seven proven artifacts, research-to-show handoff and stopped restoration.');
+  }
   await page.screenshot({ path: `docs/screenshots/live-v${studio.major}.png` }); assert.deepEqual(errors, []);
   console.log(`Live v${studio.major} verified: 30-day Town Zero, long replay, stopped restoration, Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, Agent Locker passport continuity and stopped restoration, and zero page errors.`); await context.close();
 } finally { await browser.close(); }

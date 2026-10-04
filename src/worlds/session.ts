@@ -138,19 +138,30 @@ export class WorldSession {
     this.resume();
   }
   private context(actor: string, controller: WorldController): ContextData {
-    const own = this.recorder.records
-      .flatMap((r) =>
-        r.decisions
-          .filter((d) => d.actor === actor && d.action && r.frame)
-          .map((d) => ({
-            tick: r.frame!.tick,
-            action: d.action!,
-            events: publicEvents(this.env.observe(actor), r.frame!.ledger).map(
+    const own: ContextData["recent"] = [];
+    // STATE_ONLY and notebook requests do not use a recent window. For a
+    // window, walk backward only until the six own executed actions are found.
+    if (controller.context === "RECENT_WINDOW") {
+      const observation = this.env.observe(actor);
+      for (
+        let i = this.recorder.records.length - 1;
+        i >= 0 && own.length < 6;
+        i--
+      ) {
+        const row = this.recorder.records[i];
+        const decision = row.decisions.find(
+          (d) => d.actor === actor && d.action,
+        );
+        if (decision && row.frame)
+          own.unshift({
+            tick: row.frame.tick,
+            action: decision.action!,
+            events: publicEvents(observation, row.frame.ledger).map(
               (e) => e.detail,
             ),
-          })),
-      )
-      .slice(-6);
+          });
+      }
+    }
     const memory = this.memories[actor];
     return {
       strategy:

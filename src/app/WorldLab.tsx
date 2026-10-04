@@ -89,13 +89,16 @@ export default function WorldLab({
     active = useRef(false),
     alive = useRef(true),
     saveRef = useRef(saved),
+    displayReceipt = useRef<WorldReceipt | null>(saved.receipt),
     callback = useRef(onChange),
     bridge = useRef<ReturnType<typeof ollamaAdapter> | null>(null);
   saveRef.current = saved;
   callback.current = onChange;
   const compiled = useMemo(() => compileWorld(spec), [spec]);
   const receipt = useMemo(
-    () => session.current?.receipt() || saved.receipt,
+    // Reuse the immutable receipt verified by persist. Rebuilding it here
+    // caused another full replay on every board render during long campaigns.
+    () => displayReceipt.current || saved.receipt,
     [revision, saved.receipt],
   );
   const inspection = useMemo(
@@ -143,6 +146,7 @@ export default function WorldLab({
     try {
       const r = verifyWorldReceipt(s.receipt()),
         next = rememberWorld(saveRef.current, r, s.recorder.pack);
+      displayReceipt.current = r;
       saveRef.current = next;
       callback.current(next);
       setRevision((n) => n + 1);

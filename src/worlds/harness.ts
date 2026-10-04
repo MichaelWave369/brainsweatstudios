@@ -5,8 +5,21 @@ import { baselineController, verifyWorldReceipt } from "./receipts.ts";
 import { createWorldEnvironment } from "./runtime.ts";
 import { WorldSession } from "./session.ts";
 import { townPack, townZero } from "./townZero.ts";
-async function campaign(days: 7 | 30) {
-  const s = new WorldSession(townPack(days));
+async function campaign(days: 7 | 30, mock = false) {
+  const bindings = mock
+    ? Object.fromEntries(
+        townZero(days).roles.map((r) => [
+          r.id,
+          {
+            ...baselineController(r.id),
+            family: "model" as const,
+            provider: "mock" as const,
+            model: "mock-policy",
+          },
+        ]),
+      )
+    : undefined;
+  const s = new WorldSession(townPack(days), "town-zero", 369, bindings);
   while (s.status === "READY" && !s.env.result().terminal) await s.step();
   return s.receipt();
 }
@@ -47,6 +60,10 @@ export async function runWorldHarness() {
     verifyStart = now();
   verifyWorldReceipt(thirty);
   const verifyMs = Math.round(now() - verifyStart);
+  const mockStart = now(),
+    mockThirty = await campaign(30, true),
+    mockMs = Math.round(now() - mockStart);
+  verifyWorldReceipt(mockThirty);
   const generateStart = now(),
     hundred = generateExperiment(townZero(), 25),
     generateMs = Math.round(now() - generateStart),
@@ -81,6 +98,7 @@ export async function runWorldHarness() {
   if (
     !seven.result.success ||
     !thirty.result.success ||
+    !mockThirty.result.success ||
     trials !== 20 ||
     hundredTrials !== 100 ||
     hundred.instances.length !== 100
@@ -108,6 +126,14 @@ export async function runWorldHarness() {
       },
     ],
     receiptVerificationMs: verifyMs,
+    offlineMock: {
+      days: 30,
+      ticks: mockThirty.result.tick,
+      milliseconds: mockMs,
+      requests: Object.values(mockThirty.requests).reduce((a, b) => a + b, 0),
+      receiptBytes: new TextEncoder().encode(JSON.stringify(mockThirty)).length,
+      replayVerified: true,
+    },
     batch: { worlds: trials, milliseconds: batchMs },
     sequentialEpisodes: { episodes: hundredTrials, milliseconds: hundredMs },
     generated: {

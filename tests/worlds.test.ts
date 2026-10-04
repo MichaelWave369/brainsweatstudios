@@ -468,6 +468,14 @@ describe("long receipts and controller interoperability", () => {
     for (let i = 0; i < 40; i++) await s.step();
     expect(s.spent.planner).toBeLessThan(10);
     expect(verifyWorldReceipt(s.receipt()).result.tick).toBe(40);
+    expect(s.request("planner").context.recent).toEqual([]);
+    s.handoff("planner", {
+      ...s.recorder.controller("planner"),
+      context: "RECENT_WINDOW",
+    });
+    const recent = s.request("planner").context.recent;
+    expect(recent).toHaveLength(6);
+    expect(recent.map((r) => r.tick)).toEqual([17, 21, 25, 29, 33, 37]);
   });
   it("never trusts a claimed provider result or score", () => {
     const s = new WorldSession(townPack());

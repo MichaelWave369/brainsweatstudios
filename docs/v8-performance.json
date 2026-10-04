@@ -6,12 +6,12 @@
     {
       "steps": 1000,
       "episodes": 2,
-      "milliseconds": 231
+      "milliseconds": 259
     },
     {
       "steps": 10000,
       "episodes": 14,
-      "milliseconds": 1876
+      "milliseconds": 2127
     }
   ],
   "capacityNote": "Authoritative steps across reset 30-day campaigns; not a claim of a 10,000-hour single scenario.",
@@ -19,28 +19,36 @@
     {
       "days": 7,
       "ticks": 168,
-      "milliseconds": 86,
+      "milliseconds": 75,
       "receiptBytes": 201824
     },
     {
       "days": 30,
       "ticks": 720,
-      "milliseconds": 281,
+      "milliseconds": 262,
       "receiptBytes": 799560
     }
   ],
-  "receiptVerificationMs": 302,
+  "receiptVerificationMs": 296,
+  "offlineMock": {
+    "days": 30,
+    "ticks": 720,
+    "milliseconds": 480,
+    "requests": 706,
+    "receiptBytes": 803734,
+    "replayVerified": true
+  },
   "batch": {
     "worlds": 20,
-    "milliseconds": 3077
+    "milliseconds": 3153
   },
   "sequentialEpisodes": {
     "episodes": 100,
-    "milliseconds": 15657
+    "milliseconds": 15726
   },
   "generated": {
     "instances": 100,
-    "milliseconds": 515
+    "milliseconds": 502
   },
   "realModel": "NOT_RUN",
   "claims": "Machine-specific descriptive measurements; no IQ, certification, real-model or arbitrary-scale claim."

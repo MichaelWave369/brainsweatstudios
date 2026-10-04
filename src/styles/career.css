@@ -11,3 +11,12 @@
 .family-telemetry ol { padding-left:1.3rem; }
 
 .career .family-team-toggle { display:flex; gap:.5rem; align-items:flex-start; } .career .family-team-toggle input { width:auto; flex:none; margin-top:.25rem; }
+
+.performance-panel { margin-block: 1rem; }
+.performance-panel svg { display: block; width: 100%; max-height: 180px; color: var(--accent); margin-block: 1rem; }
+.performance-controls { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(150px,100%),1fr)); gap: .8rem; }
+.performance-controls output { font-variant-numeric: tabular-nums; }
+.performance-panel fieldset { border: 1px solid var(--border); border-radius: 10px; margin: 1rem 0; min-width: 0; }
+.performance-score-strip { display: flex; gap: .6rem; flex-wrap: wrap; margin: 1rem 0; }
+.performance-score-strip span { border: 1px solid var(--border); border-radius: 8px; padding: .4rem .6rem; }
+.performance-composer { border-top: 1px solid var(--border); margin-top: 1rem; padding-top: .6rem; }

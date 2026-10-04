@@ -5,6 +5,8 @@ import { stuntMachine } from './stunt.ts';
 import { cacheMachine } from './cache.ts';
 import { streamMachine, webMachine } from './media.ts';
 import { ensembleMachine } from './ensemble.ts';
+import { performanceMachine } from '../performance/ensemble.ts';
+import { scoredMediaMachine } from '../performance/media.ts';
 import { emptyFamilyInput, requireData, validateFamilyConfig, validateFamilyInput } from './specs.ts';
 import type { FamilyMachine, FamilyObservation, FamilyPublicInput, FamilyResult, ScoreSpec, VehicleSpec } from './types.ts';
 export function createFamilyEnvironment(configInput:unknown,provided:Record<string,FamilyPublicInput>={}) {
@@ -14,7 +16,8 @@ export function createFamilyEnvironment(configInput:unknown,provided:Record<stri
     if(effective.race){const vehicle=checked['driver-0']?.artifacts.find(a=>a.type==='vehicle-setup');if(vehicle)effective.race.vehicles[0]={...clone(vehicle.content as VehicleSpec),id:effective.race.vehicles[0].id};}
     if(effective.family==='ensemble-lab'){const score=checked.conductor?.artifacts.find(a=>a.type==='music-score');if(score)effective.score=clone(score.content as ScoreSpec);}
     let machine:FamilyMachine;
-    switch(config.family){case 'auto-circuit':machine=raceMachine(effective);break;case 'stunt-show':machine=stuntMachine(effective);break;case 'cache-quest':machine=cacheMachine(effective);break;case 'web-scout':machine=webMachine(effective);break;case 'stream-studio':machine=streamMachine(effective,checked);break;case 'ensemble-lab':machine=ensembleMachine(effective);}
+    switch(config.family){case 'auto-circuit':machine=raceMachine(effective);break;case 'stunt-show':machine=stuntMachine(effective);break;case 'cache-quest':machine=cacheMachine(effective);break;case 'web-scout':machine=webMachine(effective);break;case 'stream-studio':machine=streamMachine(effective,checked);break;case 'ensemble-lab':machine=config.schema==='family-config@2'?performanceMachine(effective):ensembleMachine(effective);}
+    if(config.schema==='family-config@2'&&['stunt-show','stream-studio'].includes(config.family))machine=scoredMediaMachine(machine,checked);
     requireData(Object.keys(checked).every(role=>machine.roles.includes(role)),'Input actor is absent from this world.');
     const inputs=freeze(Object.fromEntries(machine.roles.map(r=>[r,checked[r]||emptyFamilyInput()])));let tick=0;
     const result=():FamilyResult=>{const r=machine.result(),budget=tick>=config.maxTicks&&!r.terminal;return freeze({...clone(r),terminal:r.terminal||budget,success:r.success&&!budget,ticks:tick,reason:budget?'budget':r.terminal?'complete':'running'});};
@@ -44,6 +47,6 @@ export function chooseFamilyAction(view:Pick<FamilyObservation,'family'|'role'|'
         const pages=s.opened as {authority:string;date:number;claim:number}[],official=pages.filter(p=>p.authority==='official').sort((a,b)=>b.date-a.date)[0];return choose(`submit-${official.claim}`);
     }
     if(view.family==='stream-studio'){const role=view.role;return choose(role==='producer'?Number(s.completed)>=3?'finish-show':'cue-segment':role==='host'?s.ready?'present':!s.caption?'caption':'wait':role==='director'?'wide-camera':role==='audio'?'original-music':role==='graphics'?'title-graphic':'check-sources');}
-    if(view.role==='conductor')return choose(!s.started?'entry':Number(s.beat)>=Number(s.end)?'cutoff':(s.cues as {type:string}[]).some(c=>c.type==='dynamics')?'dynamics':'conduct');
+    if(view.role==='conductor')return choose(!s.started?'entry':Number(s.beat)>=Number(s.end)?'cutoff':s.authority==='ensemble-authority@2'?(s.cues as {type:string}[]).find(c=>['entry','cutoff','dynamics'].includes(c.type))?.type||'conduct':(s.cues as {type:string}[]).some(c=>c.type==='dynamics')?'dynamics':'conduct');
     return choose(s.started&&s.active&&s.target?'play-target':'rest');
 }

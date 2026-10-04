@@ -60,3 +60,12 @@ Successful family and Spanish phone review captures were inspected from the CI a
 The first three-browser run exposed an inherited handoff depth bound that rejected a valid nested research dossier at checkpoint. The handoff/evaluation bounds now cover typed family snapshots within the unchanged aggregate archive limit, and a native research-to-show save regression exercises the actual handoff. The Spanish browser test now uses the established `Avanzar un paso` control label. A compatibility audit also keeps legacy WorldSpec ids separate from native family observations in the mock adapter and prevents a portable setup from replacing destination vehicle entity ids.
 
 Provider episode/template hashes contain public input and family definition data, not the private scenario seed. A twin-map regression proves equal pre-inspection public observations and requests for maps with different concealed cache positions; inspection then reveals the legitimate differing clue. Complete seed/config hashes remain in the exported replay evidence.
+
+
+## Published checkpoint — 2026-10-04
+
+The operator merged PR #5 at `21fde5d76431e62184a53417b1eec41b0a6692ac`.
+[Main production/deployment/live verification](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37215250388)
+completed with build, deploy and verify-live jobs successful.
+[Main gameplay verification](https://github.com/larrinamsalva/brainsweatstudios/actions/runs/37215250355)
+also succeeded. Earlier review statements above describe the pre-merge checkpoint.

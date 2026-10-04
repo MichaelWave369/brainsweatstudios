@@ -16,7 +16,7 @@ export async function familyCommand(command:string,args:string[],file:string|nul
     if(option('--controller')==='mock'){const a=save.agents[0];save=updatePassport(save,{...a,controller:{...a.controller,world:{...a.controller.world,family:'model',provider:'mock',model:'mock-policy'}}});}else {requireData(!option('--controller')||option('--controller')==='baseline','This CLI supports public baseline and offline mock only.');if(option('--controller')==='baseline'){const a=save.agents[0];save=updatePassport(save,{...a,controller:{...a.controller,world:baselineController('career-controller')}});}}
     const partition=(option('--partition')||'CAREER') as Partition;requireData(['CAREER','TRAIN','HOLDOUT','TRANSFER'].includes(partition),'Declare a known partition.');
     const seed=Number(option('--seed')??({CAREER:17,TRAIN:1001,HOLDOUT:2001,TRANSFER:3001}[partition])),mode=(option('--mode')||'solo') as NonNullable<FamilyConfig['race']>['mode'];
-    const config=plain(value)&&value.schema==='family-config@1'?validateFamilyConfig(value):familyConfig(family,seed,mode);requireData(config.family===family,'Configuration belongs to another family.');
+    const config=plain(value)&&['family-config@1','family-config@2'].includes(String(value.schema))?validateFamilyConfig(value):familyConfig(family,seed,mode);requireData(config.family===family,'Configuration belongs to another family.');
     const agent=save.agents[0],input=evaluationInput(save,agent.id,family,`family-cli-${save.runs.length+1}`,partition,'FRESH'),session=createCareerSession(agent,family,input,save,{config});
     while(!session.result().terminal)requireData(await session.step(),'Controller halted before a valid transition.');
     return rememberRun(save,session.receipt());

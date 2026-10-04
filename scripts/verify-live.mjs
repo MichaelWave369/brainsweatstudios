@@ -78,6 +78,17 @@ try {
     await page.reload(); await page.getByRole('status').filter({ hasText: 'Execution status' }).filter({ hasText: 'STOPPED' }).waitFor();
     console.log('Live circuit families: six completed native mechanics, seven proven artifacts, research-to-show handoff and stopped restoration.');
   }
+  if (studio.major >= 11) {
+    await page.getByRole('button', { name: 'Render local audio', exact: true }).click();
+    await page.getByRole('button', { name: 'Export WAV', exact: true }).waitFor({ state: 'visible' });
+    await page.waitForFunction(() => ![...document.querySelectorAll('button')].find(b => b.textContent === 'Export WAV').disabled);
+    const downloadReady = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export WAV', exact: true }).click();
+    const audioDownload = await downloadReady;
+    const { readFile } = await import('node:fs/promises'); const wav = await readFile(await audioDownload.path());
+    assert.equal(wav.subarray(0, 4).toString(), 'RIFF');
+    assert.equal(await page.locator('audio').evaluate(a => a.paused), true);
+    console.log('Live synthetic performance: verified local worker render, real WAV export and stopped playback.');
+  }
   await page.screenshot({ path: `docs/screenshots/live-v${studio.major}.png` }); assert.deepEqual(errors, []);
   console.log(`Live v${studio.major} verified: 30-day Town Zero, long replay, stopped restoration, Agent Garage, hidden survey, validated mock actions, world replay, profile restore, 37 worlds, 48 classes, controller optimization, learned rover, frozen evaluation, academy refresh, council, retro lab, player rewards, bot isolation, Spanish refresh, Agent Locker passport continuity and stopped restoration, and zero page errors.`); await context.close();
 } finally { await browser.close(); }

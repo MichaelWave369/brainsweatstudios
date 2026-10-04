@@ -154,7 +154,7 @@ BOT_FULL_SWEEP=1 CROSS_BROWSER=1 TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run 
 
 If a host cannot expose network interfaces, run `npm run dev -- --host 127.0.0.1`. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` can point tests to an installed compatible Chromium executable. Use `TEST_BASE_URL` to test another served build.
 
-Version 6 is published on GitHub Pages following the operator's merge of PR #1. The frozen V5 baseline remains at `a5f107b4f8b413d07630858036090c46deb9fa72` for regression checks. V7 is prepared for operator review and merge; no automatic merge is performed. PR verification builds and tests offline/update behavior and isolated online services without deploying Pages; main-branch deployment also verifies the actual public studio. See the current results in [Version 6 verification](docs/verification-v6.md). No release tag or paid/secret changes are made by this rung.
+Version 7 is published on GitHub Pages after the reviewed merge of [PR #2](https://github.com/larrinamsalva/brainsweatstudios/pull/2). The actual public studio passed verification on 2026-10-04, including the Agent Garage, recorded-action replay, profile restoration, classes, council, learned rover and Spanish refresh. [Open the Agent Garage](https://larrinamsalva.github.io/brainsweatstudios/#/academy?tab=garage) or read the [published verification](docs/verification-v7.md). The frozen V6 baseline remains `e80052aefb19e972063a593cdf486b863e222988`; existing rules and artifact versions remain compatible. PR builds verify without deploying Pages; main-branch release builds also verify the actual public site. No release tag or paid/secret changes were made by this rung.
 
 ## GitHub Pages
 

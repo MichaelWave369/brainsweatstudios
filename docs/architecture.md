@@ -109,14 +109,15 @@ flowchart TD
 
 The Node bridge is a separate optional command, absent from website/online
 server bundles. Model descriptors contain no connection credential. Saved
-Garage data is capped at 500 KB, one receipt and two manifests. Academy import
+Garage data is capped at 500 KB, one receipt and at most two manifests, with
+older comparison history pruned when needed to retain the current receipt. Academy import
 is now 1.5 MB; progress stays 2 MB and profile schema 2. V5/V6 saves gain empty
-Garage data. Running work and local connections resume stopped/disconnected.
+Garage data. Saved records restore without starting sessions or reconnecting providers.
 
 World replay is deterministic from actions; model regeneration can vary.
 Provider and world-step timings are distinct. Context/history/trace/notebook,
 requests/retries and recordings have explicit caps; the UI yields between
 steps/episodes and pauses hidden work. Reference scenes redraw on state changes;
 existing geometric WebGL/vector/audio limits remain. No model authority enters
-the online server; model competitions remain future work. V7 publication is
-pending the operator's reviewed merge and actual-public verification.
+the online server; model competitions remain future work. V7 was published through the reviewed merge of PR #2 and passed actual-public
+verification on 2026-10-04. See [published evidence](verification-v7.md).

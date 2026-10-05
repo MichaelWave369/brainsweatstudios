@@ -45,8 +45,16 @@ export function writeCircuitNote(input: CircuitSave, note: CircuitNote): Circuit
 export function shareCircuitAsset(input: CircuitSave, assetId: string, toTeam: string): CircuitSave {
     const save = editCircuit(input), asset = [...save.operators, ...save.events.flatMap(eventAssets)].find(a => a.id === assetId);
     demand(asset && ['CAREER', 'TRAIN'].includes(asset.partition), 'Share only retained CAREER/TRAIN source assets.');
+    demand(asset.teamId !== toTeam, 'Choose another team for this exchange.');
+    demand(!save.grants.some(g => g.contentHash === asset.contentHash && g.fromTeam === asset.teamId && g.toTeam === toTeam), 'This verified content is already granted to that team.');
     const grant = { id: `grant-${hash({ assetId, toTeam }).slice(0, 24)}`, assetId, contentHash: asset.contentHash, fromTeam: asset.teamId, toTeam };
-    demand(!save.grants.some(g => g.id === grant.id), 'This exchange is already declared.'); save.grants.push(grant); return validateCircuit(save);
+    save.grants.push(grant); return validateCircuit(save);
+}
+export function revokeCircuitAssetGrant(input: CircuitSave, grantId: string): CircuitSave {
+    const save = editCircuit(input);
+    demand(save.grants.some(g => g.id === grantId), 'Choose a retained exchange grant.');
+    save.grants = save.grants.filter(g => g.id !== grantId);
+    return validateCircuit(save);
 }
 export function importCircuitWorldPack(input: CircuitSave, teamId: string, creator: string, content: unknown): CircuitSave {
     const save = editCircuit(input), pack = validatePack(content), asset = validateCircuitAsset({ schema: 'circuit-asset@1', id: `pack-${hash(pack).slice(0, 24)}`, teamId, creator, type: 'world-pack', content: pack, contentHash: hash(pack), origin: 'OPERATOR', sourceEvent: null, sourcePart: null, sourceDigest: null, partition: 'CAREER' });

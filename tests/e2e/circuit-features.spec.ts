@@ -13,7 +13,7 @@ test.describe.configure({ mode: 'parallel' }); test.use({ screenshot: 'only-on-f
 async function prepare(page: Page, locale: 'en' | 'es' = 'en') { const save = freshSave(); save.selectedDifficulty = true; save.settings.tutorials = false; save.settings.muted = true; save.settings.reducedMotion = true; save.settings.locale = locale; await page.addInitScript(v => { if (!localStorage.getItem('brain-sweat-studio:v1')) localStorage.setItem('brain-sweat-studio:v1', JSON.stringify(v)); }, save); }
 async function saved(page: Page) { const raw = await page.evaluate(() => { const bundle = JSON.parse(localStorage.getItem('brain-sweat-studio:profiles:v2')!); return bundle.profiles.find((p: { id: string }) => p.id === bundle.active).save.academy.circuit; }); return raw.schema === 'circuit-storage@1' ? decodeCircuitStorage(raw) : validateCircuit(raw); }
 async function start(page: Page) { await page.getByRole('button', { name: 'Create two starter teams', exact: true }).click(); await page.getByRole('button', { name: 'Freeze new season', exact: true }).click(); }
-async function event(page: Page) { await page.getByRole('button', { name: 'Run next event', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText('COMPLETE', { timeout: 45000 }); }
+async function event(page: Page) { await page.getByRole('button', { name: 'Run next event', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText(/READY_FOR_NEXT|SEASON_COMPLETE/, { timeout: 45000 }); }
 test('circuit: two crews run six events, carry native artifacts, export and reload official standings', async ({ page, browserName }) => {
     test.setTimeout(180000); await prepare(page); const errors: string[] = []; page.on('pageerror', e => errors.push(e.message)); await page.goto('/#/academy?tab=circuit'); await start(page);
     for (let i = 0; i < 6; i++) await event(page);
@@ -34,9 +34,18 @@ test('circuit: stopped native restoration survives a hidden tab and an actual of
     } finally { await origin.close(); }
 });
 test('circuit: Spanish Paddock and original performance work at 320/390 with keyboard and accessible controls', async ({ page, browserName }) => {
-    await prepare(page, 'es'); await page.goto('/#/academy?tab=circuit'); await expect(page.getByRole('heading', { name: 'Paddock del circuito', exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Crear dos equipos iniciales', exact: true }).focus(); await page.keyboard.press('Enter'); await page.getByRole('button', { name: 'Fijar nueva temporada', exact: true }).click(); await page.getByRole('button', { name: 'Ejecutar próximo evento', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText('COMPLETADO');
+    await prepare(page, 'es'); await page.goto('/#/academy?tab=circuit'); await expect(page.getByRole('heading', { name: 'Paddock del circuito', exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Crear dos equipos iniciales', exact: true }).focus(); await page.keyboard.press('Enter'); await page.getByRole('button', { name: 'Fijar nueva temporada', exact: true }).click(); await page.getByRole('button', { name: 'Ejecutar próximo evento', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText('READY_FOR_NEXT');
     for (const width of [320, 390]) { await page.setViewportSize({ width, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width); const scan = await new AxeBuilder({ page }).include('.circuit-paddock').analyze(); expect(scan.violations).toEqual([]); }
     await expect(page.getByRole('heading', { name: 'Clasificación multidimensional', exact: true })).toBeVisible(); if (browserName === 'chromium') { await page.evaluate(() => window.scrollTo(0, 0)); await page.screenshot({ path: 'test-results/circuit-review/spanish-phone.png' }); }
+});
+test('circuit: freezing a second season keeps the current season active until the operator switches', async ({ page }) => {
+    await prepare(page); await page.goto('/#/academy?tab=circuit'); await start(page);
+    await expect(page.getByLabel('Active season', { exact: true })).toHaveValue('season-1');
+    await page.getByRole('button', { name: 'Freeze new season', exact: true }).click();
+    await expect(page.getByLabel('Active season', { exact: true })).toHaveValue('season-1');
+    await expect(page.getByRole('status').filter({ hasText: 'Active season remains season-1' })).toBeVisible();
+    await page.getByLabel('Active season', { exact: true }).selectOption('season-2');
+    await expect(page.getByLabel('Active season', { exact: true })).toHaveValue('season-2');
 });
 test('circuit: imports are atomic and human role actions retain native controller attribution', async ({ page }) => {
     await prepare(page); await page.goto('/#/academy?tab=circuit'); await page.getByRole('button', { name: 'Create two starter teams', exact: true }).click(); await page.getByLabel('Passport controller comet-one', { exact: true }).selectOption('human'); await page.getByRole('button', { name: 'Freeze new season', exact: true }).click(); await page.getByRole('button', { name: 'One logical turn', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText('READY');

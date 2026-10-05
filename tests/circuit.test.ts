@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import v11Native from './fixtures/v11-native-receipts.json';
 import { canonical, clone, freeze, hash, sha256 } from '../src/runtime/data';
 import { freshCircuit, validateCircuit, verifyCircuitEvent } from '../src/circuit/evidence';
-import { addCircuitSeason, importCircuitWorldPack, rememberCircuitEvent, reviewCircuitPerformance, shareCircuitAsset, starterCircuit, updateCircuitAgent, writeCircuitNote } from '../src/circuit/operations';
+import { addCircuitSeason, importCircuitWorldPack, rememberCircuitEvent, reviewCircuitPerformance, revokeCircuitAssetGrant, shareCircuitAsset, starterCircuit, updateCircuitAgent, writeCircuitNote } from '../src/circuit/operations';
 import { makeSeason, validateSeason } from '../src/circuit/specs';
 import { CircuitSession } from '../src/circuit/session';
 import { runCircuitBatch, runCircuitEvent, runCircuitSeason, validateCircuitBatch } from '../src/circuit/cli';
@@ -110,10 +110,15 @@ describe('V12 Circuit evidence and scheduling', () => {
         expect(grouped[0].sources.map(source => source.eventId)).toEqual([asset.sourceEvent, 'event-copy']);
         expect(asset.id).not.toBe(duplicate.id);
     });
-    it('shared assets require explicit grants and an eligible source partition', () => {
+    it('shared assets require explicit grants, semantic dedupe and explicit revocation', () => {
         const asset = eventAssets(complete.events[0])[0]; const shared = shareCircuitAsset(complete, asset.id, 'aurora'); expect(shared.grants[0].contentHash).toBe(asset.contentHash);
         expect(() => validateCircuit({ ...shared, events: [] })).toThrow();
         expect(() => shareCircuitAsset(complete, asset.id, 'comet')).toThrow();
+        const sameContent = complete.events.flatMap(eventAssets).find(a => a.id !== asset.id && a.teamId === asset.teamId && a.contentHash === asset.contentHash);
+        if (sameContent) expect(() => shareCircuitAsset(shared, sameContent.id, 'aurora')).toThrow(/already granted/);
+        const revoked = revokeCircuitAssetGrant(shared, shared.grants[0].id);
+        expect(revoked.grants).toHaveLength(0);
+        expect(() => revokeCircuitAssetGrant(revoked, shared.grants[0].id)).toThrow(/retained exchange/);
         const spec = clone(makeSeason(['comet', 'aurora'], 6, 'GAUNTLET')); spec.rounds[0].artifacts = 'SHARED'; expect(() => validateSeason(spec)).toThrow(/gauntlet/);
     });
     it('declared team notes become immutable input snapshots without altering frozen rosters', async () => {

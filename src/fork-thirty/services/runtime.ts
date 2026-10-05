@@ -83,12 +83,14 @@ function nextStatus(state: AgentServiceState, command: ServiceCommand): AgentSer
 }
 
 export function transitionAgentService(state: AgentServiceState, command: ServiceCommand): AgentServiceState {
+  const commandType: ServiceCommand['type'] = command.type;
+  const actor = command.actor as 'operator' | 'service';
   const to = nextStatus(state, command);
-  if ((command.type === 'START' || command.type === 'PAUSE' || command.type === 'RESUME' || command.type === 'STOP') && command.actor !== 'operator') {
-    throw new Error(`${command.type} requires operator authority`);
+  if ((commandType === 'START' || commandType === 'PAUSE' || commandType === 'RESUME' || commandType === 'STOP') && actor !== 'operator') {
+    throw new Error(`${commandType} requires operator authority`);
   }
-  if ((command.type === 'READY' || command.type === 'BEGIN' || command.type === 'IDLE') && command.actor !== 'service') {
-    throw new Error(`${command.type} requires service authority`);
+  if ((commandType === 'READY' || commandType === 'BEGIN' || commandType === 'IDLE') && actor !== 'service') {
+    throw new Error(`${commandType} requires service authority`);
   }
 
   let activeTaskRef = state.activeTaskRef;

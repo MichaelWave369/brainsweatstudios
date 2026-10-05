@@ -73,6 +73,13 @@ describe('Fork-Thirty persistent service substrate', () => {
     expect(stopped.revision).toBe(0);
   });
 
+  it('rejects malformed runtime commands with the wrong actor even if JavaScript bypasses types', () => {
+    const stopped = createAgentServiceState('al');
+    const malformed = { type: 'START', actor: 'service' } as unknown as Parameters<typeof transitionAgentService>[1];
+    expect(() => transitionAgentService(stopped, malformed)).toThrow(/START requires operator authority/);
+    expect(stopped).toMatchObject({ status: 'STOPPED', revision: 0, logicalTick: 0 });
+  });
+
   it('keeps service-local memory bounded and deterministic', () => {
     let cache = ready('cache');
     for (let index = 0; index < SERVICE_MEMORY_LIMIT + 3; index++) {

@@ -41,6 +41,7 @@ export function removeNote(save: CareerSave, agentId: string, id: string): Caree
     return validateCareer(next);
 }
 export function evaluationInput(save: CareerSave, agentId: string, worldId: string, episode: string, partition: Partition = 'CAREER', condition: MemoryCondition = 'FRESH'): EvaluationInput {
+    demand(partition !== 'HOLDOUT' || condition === 'FRESH', 'HOLDOUT requires fresh context. Prior and frozen memory are not admissible.');
     const locker = validateCareer(save), agent = locker.agents.find(a => a.id === agentId);
     demand(agent && agent.compatibleWorlds.includes(worldId), 'Passport does not declare compatibility with this world.');
     const notes = condition === 'FRESH' ? [] : locker.notes[agentId].filter(n => ['CAREER', 'TRAIN'].includes(n.partition) && (n.scope === 'CAREER' || n.worldId === worldId && (n.scope !== 'EPISODE' || n.episode === episode))).slice(-6);

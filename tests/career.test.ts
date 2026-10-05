@@ -129,6 +129,15 @@ describe('memory firewall and artifact admission', () => {
         expect(input.condition).toBe('FRESH');
         expect(input.mode).toBe('BENCHMARK');
     });
+    it('rejects declared prior or frozen context in HOLDOUT before execution or evidence retention', () => {
+        const save = writeNote(locker(), 'iris', note());
+        expect(() => evaluationInput(save, 'iris', 'reserve-lesson', 'holdout-prior', 'HOLDOUT', 'PRIOR')).toThrow(/fresh context/);
+        expect(() => evaluationInput(save, 'iris', 'reserve-lesson', 'holdout-frozen', 'HOLDOUT', 'FROZEN')).toThrow(/fresh context/);
+        const clean = evaluationInput(save, 'iris', 'reserve-lesson', 'holdout-clean', 'HOLDOUT', 'FRESH');
+        const { snapshotHash: _hash, ...contaminated } = { ...clean, condition: 'PRIOR' as const, notes: [note()] };
+        void _hash;
+        expect(() => validateEvaluation({ ...contaminated, snapshotHash: inputHash(contaminated) })).toThrow(/HOLDOUT requires fresh context/);
+    });
     it('enforces episode/world/career scopes and excludes holdout/transfer notes', () => {
         let save = locker();
         for (const n of [note(), note({ id: 'world', scope: 'WORLD', worldId: 'town-zero' }), note({ id: 'episode', scope: 'EPISODE', worldId: 'reserve-lesson', episode: 'one' }), note({ id: 'holdout', partition: 'HOLDOUT' }), note({ id: 'transfer', partition: 'TRANSFER' })])

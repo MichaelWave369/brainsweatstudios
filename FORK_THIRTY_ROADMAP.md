@@ -20,8 +20,8 @@ Capability never implies authority. External projects are optional bridges, not 
 ### Rung 4 — Cast manifests
 Introduce Al, SAL, OilLeak, CoreGlow, Cache, Patch, Flux, Ping, Spark and Brian Sweat as data-defined identities and roles. No identity receives authority merely by being capable or memorable.
 
-### Rung 5 — Bridge adapters
-Implement one adapter at a time behind explicit feature gates. Start with local, operator-controlled contracts and preserve BrainSweat's world authority.
+### Rung 5 — Bridge contracts
+Define versioned, operator-only request and receipt contracts for Commonline, Domistika, Auralith, Infinite Porch and PhiOS. Keep every bridge unbound and proposal-only. Runtime adapters arrive later behind explicit feature gates and never inherit BrainSweat world authority.
 
 ### Rung 6 — Persistent services
 Add bounded presence, memory, role handoffs and service lifecycles with inspectable provenance and operator controls.

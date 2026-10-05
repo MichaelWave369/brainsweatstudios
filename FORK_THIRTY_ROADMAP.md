@@ -24,7 +24,7 @@ Introduce Al, SAL, OilLeak, CoreGlow, Cache, Patch, Flux, Ping, Spark and Brian 
 Define versioned, operator-only request and receipt contracts for Commonline, Domistika, Auralith, Infinite Porch and PhiOS. Keep every bridge unbound and proposal-only. Runtime adapters arrive later behind explicit feature gates and never inherit BrainSweat world authority.
 
 ### Rung 6 — Persistent services
-Add bounded presence, memory, role handoffs and service lifecycles with inspectable provenance and operator controls.
+Add bounded presence, service-local memory, role handoff receipts and deterministic service lifecycles with inspectable provenance and operator controls. The substrate remains isolated from BrainSweat save/world authority, and the application-level `persistentServices` gate stays off until a later integration rung explicitly enables it.
 
 ### Rung 7 — Local-model runtime
 Expand provider-neutral local model participation while keeping model output as proposals routed through existing validation and authority boundaries.

@@ -34,6 +34,10 @@ Compose teams, councils, institutions, shared services and long-horizon world pa
 
 ## CI policy
 
-Pull requests always run lint, unit tests and a production build. The full cross-browser and long-horizon regression wall also runs before merge whenever a change touches critical runtime, world, persistence, authority, online, dependency or workflow paths. Every merge to `main` still runs the full regression wall and the production deployment verifier.
+Pull requests always run lint, unit tests and a production build. The full cross-browser and long-horizon regression wall also runs before merge whenever a change touches critical runtime, world, persistence, authority, online, dependency or workflow paths.
 
-This keeps fast experimental rungs fast without converting "green" into a decorative color.
+The full regression suite additionally runs on a nightly schedule and remains manually dispatchable. It no longer reruns automatically after every ordinary merge to `main`.
+
+Merged `main` builds and publishes GitHub Pages, then runs a lightweight live smoke that checks the Fork-Thirty marker, repository metadata, world catalogue, Circuit route and Agent Locker route. The heavyweight `scripts/verify-live.mjs` verifier remains available for deliberate release-grade evidence runs.
+
+This keeps routine experimental rungs fast without converting "green" into a decorative color.

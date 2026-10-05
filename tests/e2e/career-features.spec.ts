@@ -55,6 +55,9 @@ test('career: scoped notes, verified plan handoffs, fresh holdout and invalid im
     expect((await saved(page)).artifacts).toHaveLength(1);
     await page.getByLabel('Destination world', { exact: true }).selectOption('town-zero');
     await page.getByLabel('Evaluation partition', { exact: true }).selectOption('HOLDOUT');
+    await expect(page.getByLabel('Memory condition', { exact: true }).locator('option[value="PRIOR"]')).toBeDisabled();
+    await expect(page.getByLabel('Memory condition', { exact: true }).locator('option[value="FROZEN"]')).toBeDisabled();
+    await expect(page.getByText(/HOLDOUT context policy/)).toBeVisible();
     await page.getByRole('button', { name: 'Prepare handoff', exact: true }).click();
     await page.getByRole('button', { name: 'Advance one tick', exact: true }).click();
     const before = await saved(page);

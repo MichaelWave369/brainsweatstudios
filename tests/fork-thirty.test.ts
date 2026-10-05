@@ -33,7 +33,37 @@ describe('Fork-Thirty foundation', () => {
     expect(canExerciseAuthority(capableWithoutAuthority, 'world', 'world.write')).toBe(false);
   });
 
-  it('starts with an empty cast registry for the next rung', () => {
-    expect(agents).toEqual([]);
+  it('registers the ten named Fork-Thirty residents', () => {
+    expect(agents.map(agent => agent.id)).toEqual([
+      'al',
+      'sal',
+      'oilleak',
+      'coreglow',
+      'cache',
+      'patch',
+      'flux',
+      'ping',
+      'spark',
+      'brian-sweat',
+    ]);
+    expect(new Set(agents.map(agent => agent.id)).size).toBe(agents.length);
+  });
+
+  it('gives the cast capabilities and identity without implicit authority', () => {
+    expect(agents.every(agent => agent.capabilities.length > 0)).toBe(true);
+    expect(agents.every(agent => agent.authority.length === 0)).toBe(true);
+    expect(agents.every(agent => ['episode', 'world', 'career'].includes(agent.defaultMemoryScope))).toBe(true);
+    expect(agents.every(agent => ['low', 'guarded', 'elevated'].includes(agent.riskProfile))).toBe(true);
+  });
+
+  it('only references registered bridge seams', () => {
+    const bridgeIds = new Set(bridges.map(bridge => bridge.id));
+    for (const agent of agents) {
+      expect(agent.bridgeAffinities.every(id => bridgeIds.has(id))).toBe(true);
+    }
+  });
+
+  it('keeps the cast runtime disabled until a later rung explicitly wires it', () => {
+    expect(forkThirty.features.castRuntime).toBe(false);
   });
 });

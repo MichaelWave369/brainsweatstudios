@@ -2,6 +2,10 @@ export type AuthorityScope = 'world' | 'memory' | 'media' | 'network' | 'operato
 
 export type AuthoritySource = 'world-rule' | 'operator-grant';
 
+export type AgentMemoryScope = 'episode' | 'world' | 'career';
+
+export type AgentRiskProfile = 'low' | 'guarded' | 'elevated';
+
 export interface AuthorityGrant {
   scope: AuthorityScope;
   actions: readonly string[];
@@ -13,7 +17,12 @@ export interface AgentManifest {
   id: string;
   displayName: string;
   role: string;
+  summary: string;
   capabilities: readonly string[];
+  defaultMemoryScope: AgentMemoryScope;
+  preferredWorlds: readonly string[];
+  bridgeAffinities: readonly string[];
+  riskProfile: AgentRiskProfile;
   authority: readonly AuthorityGrant[];
 }
 

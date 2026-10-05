@@ -1,8 +1,6 @@
 name: Verify and deploy Brain Sweat Studio
 
 on:
-  pull_request:
-    paths-ignore: ['docs/**', 'README.md']
   push:
     branches: [main]
     paths-ignore: ['docs/**', 'README.md']

@@ -1,0 +1,162 @@
+name: Full regression checks
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - 'src/agents/**'
+      - 'src/career/**'
+      - 'src/circuit/**'
+      - 'src/engine/**'
+      - 'src/families/**'
+      - 'src/games/**'
+      - 'src/online/**'
+      - 'src/performance/**'
+      - 'src/replay/**'
+      - 'src/runtime/**'
+      - 'src/systems/**'
+      - 'src/training/**'
+      - 'src/worlds/**'
+      - 'src/fork-thirty/runtime/**'
+      - 'src/fork-thirty/authority/**'
+      - 'src/fork-thirty/persistence/**'
+      - 'src/fork-thirty/bridges/runtime/**'
+      - 'src/fork-thirty/services/**'
+      - 'scripts/**'
+      - 'supabase/**'
+      - 'tests/agent-bridge.test.ts'
+      - 'tests/agents.test.ts'
+      - 'tests/career.test.ts'
+      - 'tests/checkpoints.test.ts'
+      - 'tests/circuit.test.ts'
+      - 'tests/families.test.ts'
+      - 'tests/family-career.test.ts'
+      - 'tests/online.test.ts'
+      - 'tests/performance.test.ts'
+      - 'tests/runtime.test.ts'
+      - 'tests/training.test.ts'
+      - 'tests/world-experiments.test.ts'
+      - 'tests/worlds.test.ts'
+      - 'tests/e2e/agent-garage-features.spec.ts'
+      - 'tests/e2e/career-features.spec.ts'
+      - 'tests/e2e/circuit-features.spec.ts'
+      - 'tests/e2e/family-features.spec.ts'
+      - 'tests/e2e/online-features.spec.ts'
+      - 'tests/e2e/performance-features.spec.ts'
+      - 'tests/e2e/runtime-features.spec.ts'
+      - 'tests/e2e/world-features.spec.ts'
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', 'README.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Preserve full-game evidence while interface/service follow-ups run separately.
+  group: browser-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run lint && npm run test && npm run build
+      - name: Headless determinism and performance sweep
+        run: npm run test:headless
+      - name: Verify WebKit connected phone navigation
+        run: npm run test:e2e -- tests/e2e/online-features.spec.ts --project=webkit --workers=2
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+          ONLINE_TEST_SERVER: 1
+      - name: Verify agent academy in three browsers
+        run: npm run test:e2e -- tests/e2e/academy-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Verify runtime experiments in three browsers
+        run: npm run test:e2e -- tests/e2e/runtime-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Repeat paused experiment persistence in WebKit
+        run: npm run test:e2e -- tests/e2e/runtime-features.spec.ts --project=webkit --grep 'experiments separate splits' --repeat-each=10 --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Verify V7 Agent Garage in three browsers
+        run: npm run test:e2e -- tests/e2e/agent-garage-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Verify WorldSpec authoring, long campaigns and offline workers in three browsers
+        run: npm run test:e2e -- tests/e2e/world-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Verify V9 passports, evidence, memory scopes and offline Locker in three browsers
+        run: npm run test:e2e -- tests/e2e/career-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Verify V10 distinct native families and portable evidence in three browsers
+        run: npm run test:e2e -- tests/e2e/family-features.spec.ts --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: Verify V12 frozen seasons and shared headless Circuit host
+        run: npm run test:circuit
+      - name: Verify shared headless family host
+        run: npm run test:families
+      - name: Verify shared headless career host
+        run: npm run test:career
+      - name: Deterministic model-controller and recovery sweep
+        run: npm run test:agents
+      - name: Repeat world visibility and origin-outage recovery in WebKit
+        run: npm run test:e2e -- tests/e2e/world-features.spec.ts --project=webkit --grep 'hidden and paused sessions' --repeat-each=10 --workers=3
+        env:
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+      - name: WorldSpec determinism and measured long-horizon capacity
+        run: npm run test:worlds
+      - name: Agent gameplay and cross-browser accessibility
+        run: |
+          studio_ui_only=0
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            studio_changed_files=$(git diff --name-only HEAD^ HEAD)
+            command -v grep >/dev/null
+            if ! printf '%s\n' "$studio_changed_files" | grep -Eqv '^(src/app/(Academy|Assistant|Online|RetroLab)\.tsx|src/styles/(academy|studio)\.css|src/i18n/(academy|es|rung4)\.json|src/data/rungFourClasses\.ts|src/online/.*\.ts|tests/online\.test\.ts|tests/e2e/(accessibility|localization|academy-features|advanced-features|rung4-features|online-features)\.spec\.ts|\.github/workflows/(verify|deploy)\.yml|README\.md|docs/.*)$'; then
+              studio_ui_only=1
+            fi
+          fi
+          if [ "$studio_ui_only" = "1" ]; then
+            npm run test:e2e -- --workers=3 --grep-invert 'agent:|academy:|runtime:|garage:|worlds:|career:|families:'
+          else
+            npm run test:e2e -- --workers=3 --grep-invert 'academy:|runtime:|garage:|worlds:|career:|families:'
+          fi
+        env:
+          BOT_FULL_SWEEP: 1
+          CROSS_BROWSER: 1
+          TEST_PRODUCTION: 1
+          ONLINE_TEST_SERVER: 1
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results
+          retention-days: 7

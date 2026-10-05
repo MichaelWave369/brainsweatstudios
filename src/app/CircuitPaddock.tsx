@@ -9,7 +9,7 @@ import { addCircuitAgents, addCircuitSeason, addCircuitTeam, careerTimeline, imp
 import { CircuitSession } from '../circuit/session';
 import { makeSeason, validateSeason } from '../circuit/specs';
 import { eventAssets } from '../circuit/assets';
-import { bridgeManifest, leagueTables, localProgram } from '../circuit/presentation';
+import { bridgeManifest, circuitOperatorStatus, groupCircuitAssets, leagueTables, localProgram } from '../circuit/presentation';
 import { generalizationMatrix, standings } from '../circuit/scoring';
 import { validateCircuitBatch } from '../circuit/cli';
 import { CIRCUIT_FAMILIES, CIRCUIT_LIMITS, CIRCUIT_METRICS, type CircuitBatch, type CircuitEvent, type CircuitSave } from '../circuit/types';
@@ -44,6 +44,8 @@ export default function CircuitPaddock() {
     const rows = useMemo(() => season ? standings(season, circuit.events, partition) : [], [season, circuit.events, partition]);
     const league = useMemo(() => season ? leagueTables(season, circuit.events) : null, [season, circuit.events]);
     const assets = useMemo(() => [...circuit.operators, ...circuit.events.flatMap(eventAssets)], [circuit]);
+    const assetGroups = useMemo(() => groupCircuitAssets(assets), [assets]);
+    const displayStatus = circuitOperatorStatus(status, Boolean(next));
     const music = circuit.events.flatMap(e => e.parts.map(p => ({ e, p }))).filter(({ p }) => p.native.schema === 'family-episode@1' && p.native.config.family === 'ensemble-lab' && p.native.result.terminal).at(-1);
     const commit = (value: CircuitSave) => { const updated = validateAcademy({ ...latest.current, circuit: value }); saveAcademy(updated, profile.id); latest.current = updated; setAcademy(updated); if (getWarning()) setNotice(getWarning()); };
     const attempt = (fn: () => void) => { try { setNotice(''); fn(); } catch (e) { setNotice(e instanceof Error ? e.message : 'The operation was rejected.'); } };
@@ -124,10 +126,11 @@ export default function CircuitPaddock() {
         const agent = circuit.agents.find(a => a.id === id)!; if (value === 'local' && (!provider.current || !model)) throw new Error('Connect the local bridge and select an installed model first.');
         const c = value === 'baseline' ? baselineController(agent.controller.world.id) : { ...agent.controller.world, family: value === 'human' ? 'human' as const : 'model' as const, provider: value === 'mock' ? 'mock' as const : value === 'local' ? 'ollama' as const : 'none' as const, model: value === 'local' ? model : value === 'mock' ? 'mock-policy' : 'public-baseline' };
         commit(updateCircuitAgent(latest.current.circuit, { ...agent, controller: { ...agent.controller, world: c } }));
+        setNotice(season?.agents.some(frozen => frozen.id === id) ? 'Passport controller updated for future seasons. The active season keeps its frozen controller snapshot.' : 'Passport controller updated. Freeze a season to capture it.');
     });
     const humans = session.current?.humanRoles() ?? [], matrix = batch ? generalizationMatrix(batch.season, batch.trials) : season?.spec.mode === 'GAUNTLET' ? generalizationMatrix(season, circuit.events) : [];
     void revision;
-    return <div className="circuit-paddock" data-circuit-status={status}>
+    return <div className="circuit-paddock" data-circuit-status={displayStatus}>
         <header className="circuit-hero"><span className="eyebrow">{t('THE AGENT CIRCUIT')}</span><h1>{t('Circuit Paddock')}</h1><p>{t('Keep a crew. Run a season. Bring the receipts.')}</p><div className="button-row"><a className="btn secondary" href="#/academy">{t('Agent academy')}</a><a className="btn secondary" href="#/academy?tab=locker">{t('Agent Locker')}</a><button className="btn secondary" onClick={() => download('brain-sweat-circuit.json', circuit)}>{t('Export Circuit')}</button><label className="btn secondary import-button">{t('Import Circuit')}<input type="file" aria-label={t('Import Circuit')} accept=".json,application/json" onChange={e => { void importFile(e.target.files?.[0], 'archive'); e.target.value = ''; }}/></label></div></header>
         <p role="status" className="circuit-notice">{t(notice || 'Every event advances in logical time. Reloads and imports start stopped.')}</p>{getWarning() && <p role="alert">{t(getWarning())}</p>}
         <div className="circuit-grid"><section className="academy-panel"><h2>{t('Persistent teams')}</h2>{!circuit.agents.length && <button className="btn primary" onClick={() => attempt(() => commit(starterCircuit(circuit)))}>{t('Create two starter teams')}</button>}

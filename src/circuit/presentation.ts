@@ -3,8 +3,33 @@ import { createFamilyEnvironment } from '../families/runtime.ts';
 import { inspectWorldReceipt } from '../worlds/receipts.ts';
 import { publicEvents } from '../worlds/session.ts';
 import { bindingAt } from './assets.ts';
-import { familyOfNative, type CircuitEvent, type CircuitPart, type CircuitSeason } from './types.ts';
+import { familyOfNative, type CircuitAsset, type CircuitEvent, type CircuitPart, type CircuitSeason } from './types.ts';
 
+export function controllerAt(part: CircuitPart, role: string, index = 0) {
+    if (!part.bindings[role]) throw new Error('Choose a retained Circuit role.');
+    const initial = part.native.initialControllers[role];
+    if (!initial) throw new Error('Circuit controller provenance is absent.');
+    const shift = part.shifts.filter(s => s.role === role && s.index <= index).at(-1);
+    return shift?.controller ?? initial;
+}
+export function groupCircuitAssets(assets: readonly CircuitAsset[]) {
+    const grouped = new Map<string, { asset: CircuitAsset; occurrences: number; sources: { eventId: string | null; partId: string | null; digest: string | null }[] }>();
+    for (const asset of assets) {
+        const key = `${asset.teamId}:${asset.type}:${asset.contentHash}`;
+        const source = { eventId: asset.sourceEvent, partId: asset.sourcePart, digest: asset.sourceDigest };
+        const prior = grouped.get(key);
+        if (prior) {
+            prior.asset = asset;
+            prior.occurrences++;
+            prior.sources.push(source);
+        } else grouped.set(key, { asset, occurrences: 1, sources: [source] });
+    }
+    return freeze([...grouped.values()].map(group => ({ ...group, sources: [...group.sources] })));
+}
+export function circuitOperatorStatus(status: string, hasPendingRound: boolean) {
+    if (!hasPendingRound) return 'SEASON_COMPLETE';
+    return status === 'COMPLETE' ? 'READY_FOR_NEXT' : status;
+}
 export function replayCircuitPart(part: CircuitPart, index: number, cameraRole = Object.keys(part.bindings)[0]) {
     const native = part.native;
     if (!Number.isInteger(index) || index < 0 || index > native.records.length || !part.bindings[cameraRole]) throw new Error('Choose a native replay frame and role.');

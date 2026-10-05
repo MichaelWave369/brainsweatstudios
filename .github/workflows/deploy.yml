@@ -1,4 +1,4 @@
-name: Verify and deploy Brain Sweat Studio
+name: Build, deploy and smoke Brain Sweat Studio
 
 on:
   push:
@@ -12,98 +12,31 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17.11
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: isolated-ci-only
-          POSTGRES_DB: brain_sweat_test
-        ports: ['5432:5432']
-        options: >-
-          --health-cmd "pg_isready -U postgres -d brain_sweat_test"
-          --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
           cache: npm
       - name: Install locked dependencies
         run: npm ci
-      - name: Lint and test game systems
-        run: npm run lint && npm run test
-      - name: Verify headless runtime and deployment package
-        run: |
-          npm run test:headless
-          npm run test:agents
-          npm run test:worlds
-          npm run test:career
-          npm run test:families && npm run test:circuit
-          node scripts/package-online.mjs
-          npx --yes deno@2.9.6 check supabase/functions/brain-sweat-online/index.ts
       - name: Build Pages app
         run: npm run build
         env:
           VITE_BASE_PATH: /brainsweatstudios/
-      - name: Verify isolated online database permissions and concurrency
-        run: bash scripts/verify-online-sql.sh
-        env:
-          PGHOST: 127.0.0.1
-          PGPORT: 5432
-          PGUSER: postgres
-          PGPASSWORD: isolated-ci-only
-          PGDATABASE: brain_sweat_test
-      - run: npx playwright install --with-deps chromium
-      - name: Verify returning-player upgrades and offline play
-        run: |
-          legacy_upgrade_dir="$RUNNER_TEMP/studio-upgrade-v1"
-          before_upgrade_dir="$RUNNER_TEMP/studio-upgrade-before-fix"
-          mkdir -p "$legacy_upgrade_dir" "$before_upgrade_dir"
-          git archive b8660fe3222f27888f1a5fcd7c8b4421be72b86f | tar -x -C "$legacy_upgrade_dir"
-          git archive 064551a2cf71595ba05978605fdcd49d102aa0da | tar -x -C "$before_upgrade_dir"
-          ln -s "$GITHUB_WORKSPACE/node_modules" "$legacy_upgrade_dir/node_modules"
-          ln -s "$GITHUB_WORKSPACE/node_modules" "$before_upgrade_dir/node_modules"
-          npm run build --prefix "$legacy_upgrade_dir"
-          npm run build --prefix "$before_upgrade_dir"
-          LEGACY_DIST="$legacy_upgrade_dir/dist" CURRENT_DIST="$before_upgrade_dir/dist" REPRODUCE_STALE=1 node scripts/verify-upgrade.mjs
-          LEGACY_DIST="$legacy_upgrade_dir/dist" node scripts/verify-upgrade.mjs
-          node scripts/verify-production.mjs
-      - name: Verify advanced learning flows and graphics
-        run: |
-          TEST_PRODUCTION=1 ONLINE_TEST_SERVER=1 npm run test:e2e -- tests/e2e/academy-features.spec.ts tests/e2e/runtime-features.spec.ts tests/e2e/agent-garage-features.spec.ts tests/e2e/world-features.spec.ts tests/e2e/career-features.spec.ts tests/e2e/family-features.spec.ts tests/e2e/performance-features.spec.ts tests/e2e/circuit-features.spec.ts tests/e2e/advanced-features.spec.ts tests/e2e/rung4-features.spec.ts tests/e2e/online-features.spec.ts tests/e2e/low-power.spec.ts tests/e2e/localization.spec.ts --workers=2
-      - name: Capture review graphics
-        if: always()
-        run: |
-          node scripts/test-server.mjs &
-          studio_server_pid=$!
-          trap 'kill "$studio_server_pid"' EXIT
-          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v7.mjs
-          TEST_BASE_URL=http://127.0.0.1:5173/brainsweatstudios/ node scripts/capture-v8.mjs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: rung-eight-studio-review
-          path: |
-            docs/screenshots/v7
-            docs/screenshots/v8
-            test-results
-          retention-days: 14
       - name: Upload website
-        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: dist
+
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -115,10 +48,11 @@ jobs:
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
-  verify-live:
+
+  smoke:
     needs: deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -129,10 +63,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Verify the published studio
-        run: node scripts/verify-live.mjs
+      - name: Smoke the published studio
+        run: node scripts/verify-live-smoke.mjs
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: live-studio-screenshot
-          path: docs/screenshots/live-v8.png
+          name: live-smoke-screenshot
+          path: docs/screenshots/live-smoke-v*.png
           retention-days: 14

@@ -1,4 +1,5 @@
 import type { AgentManifest, BridgeManifest, ForkThirtyManifest } from './contracts';
+import { cast } from './cast';
 import { assertUniqueIds } from './contracts';
 
 export const forkThirty: ForkThirtyManifest = Object.freeze({
@@ -18,7 +19,7 @@ export const forkThirty: ForkThirtyManifest = Object.freeze({
   }),
 });
 
-export const agents: readonly AgentManifest[] = Object.freeze([]);
+export const agents: readonly AgentManifest[] = cast;
 
 export const bridges: readonly BridgeManifest[] = Object.freeze([
   Object.freeze({

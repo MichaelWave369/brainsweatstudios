@@ -55,9 +55,9 @@ test('circuit: Fork-Thirty residents require explicit local connection before lo
     await expect(page.getByText('Fork-Thirty resident · strategic-planner', { exact: true })).toBeVisible();
     await page.getByLabel('Passport controller sal', { exact: true }).selectOption('local');
     await expect(page.getByRole('status').filter({ hasText: 'Connect the local bridge and select an installed model first.' })).toBeVisible();
-    expect((await saved(page)).agents.find((agent: { id: string }) => agent.id === 'sal').controller.world.family).toBe('baseline');
+    expect((await saved(page)).agents.find(agent => agent.id === 'sal')?.controller.world.family).toBe('baseline');
     await page.getByLabel('Passport controller sal', { exact: true }).selectOption('mock');
-    await expect.poll(async () => (await saved(page)).agents.find((agent: { id: string }) => agent.id === 'sal').controller.world.provider).toBe('mock');
+    await expect.poll(async () => (await saved(page)).agents.find(agent => agent.id === 'sal')?.controller.world.provider).toBe('mock');
 });
 test('circuit: imports are atomic and human role actions retain native controller attribution', async ({ page }) => {
     await prepare(page); await page.goto('/#/academy?tab=circuit'); await page.getByRole('button', { name: 'Create two starter teams', exact: true }).click(); await page.getByLabel('Passport controller comet-one', { exact: true }).selectOption('human'); await page.getByRole('button', { name: 'Freeze new season', exact: true }).click(); await page.getByRole('button', { name: 'One logical turn', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText('READY');

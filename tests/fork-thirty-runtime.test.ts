@@ -78,10 +78,10 @@ describe('Fork-Thirty governed local-model runtime', () => {
     expect(() => bindCastLocalModel(al, salBinding)).toThrow(/must match/);
   });
 
-  it('activates local-model runtime while external bridge and service authority stay closed', () => {
+  it('keeps local-model runtime active while society consumes services without opening external bridges', () => {
     expect(forkThirty.features.localModelRuntime).toBe(true);
     expect(forkThirty.features.bridgeRuntime).toBe(false);
-    expect(forkThirty.features.persistentServices).toBe(false);
-    expect(forkThirty.features.societyLayer).toBe(false);
+    expect(forkThirty.features.persistentServices).toBe(true);
+    expect(forkThirty.features.societyLayer).toBe(true);
   });
 });

@@ -12,10 +12,10 @@ export const forkThirty: ForkThirtyManifest = Object.freeze({
   }),
   invariant: 'Agents propose. The world decides.',
   features: Object.freeze({
-    castRuntime: false,
+    castRuntime: true,
     bridgeRuntime: false,
     persistentServices: false,
-    localModelRuntime: false,
+    localModelRuntime: true,
     societyLayer: false,
   }),
 });

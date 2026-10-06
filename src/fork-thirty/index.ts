@@ -6,3 +6,5 @@ export * from './bridges/catalog';
 export * from './services/contracts';
 export * from './services/runtime';
 export * from './services/persistence';
+export * from './runtime/contracts';
+export * from './runtime/local-model';

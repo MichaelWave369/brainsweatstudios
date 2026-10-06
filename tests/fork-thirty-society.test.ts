@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   acceptSocietyAssignment,
   addSocietyInstitution,
+  assignSocietyProposal,
   claimSocietyService,
   commandSocietyService,
   completeSocietyAssignment,

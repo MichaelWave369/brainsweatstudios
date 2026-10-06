@@ -11,13 +11,13 @@ describe('Fork-Thirty foundation', () => {
     expect(forkThirty.invariant).toBe('Agents propose. The world decides.');
   });
 
-  it('only activates the cast and governed local-model runtime at this rung', () => {
+  it('activates the governed cast, services, local models and society while external bridges remain closed', () => {
     expect(forkThirty.features).toEqual({
       castRuntime: true,
       bridgeRuntime: false,
-      persistentServices: false,
+      persistentServices: true,
       localModelRuntime: true,
-      societyLayer: false,
+      societyLayer: true,
     });
   });
 

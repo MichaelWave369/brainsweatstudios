@@ -11,8 +11,14 @@ describe('Fork-Thirty foundation', () => {
     expect(forkThirty.invariant).toBe('Agents propose. The world decides.');
   });
 
-  it('starts all experimental runtime features disabled', () => {
-    expect(Object.values(forkThirty.features).every(value => value === false)).toBe(true);
+  it('only activates the cast and governed local-model runtime at this rung', () => {
+    expect(forkThirty.features).toEqual({
+      castRuntime: true,
+      bridgeRuntime: false,
+      persistentServices: false,
+      localModelRuntime: true,
+      societyLayer: false,
+    });
   });
 
   it('declares bridge seams without silently integrating external systems', () => {
@@ -63,7 +69,8 @@ describe('Fork-Thirty foundation', () => {
     }
   });
 
-  it('keeps the cast runtime disabled until a later rung explicitly wires it', () => {
-    expect(forkThirty.features.castRuntime).toBe(false);
+  it('activates cast runtime without granting authority', () => {
+    expect(forkThirty.features.castRuntime).toBe(true);
+    expect(agents.every(agent => agent.authority.length === 0)).toBe(true);
   });
 });

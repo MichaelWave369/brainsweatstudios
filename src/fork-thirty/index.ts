@@ -11,3 +11,4 @@ export * from './runtime/local-model';
 export * from './society/contracts';
 export * from './society/runtime';
 export * from './society/persistence';
+export * from './society/audit';

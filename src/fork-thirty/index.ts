@@ -8,3 +8,6 @@ export * from './services/runtime';
 export * from './services/persistence';
 export * from './runtime/contracts';
 export * from './runtime/local-model';
+export * from './society/contracts';
+export * from './society/runtime';
+export * from './society/persistence';

@@ -26,10 +26,13 @@ Define versioned, operator-only request and receipt contracts for Commonline, Do
 ### Rung 6 — Persistent services
 Add bounded presence, service-local memory, role handoff receipts and deterministic service lifecycles with inspectable provenance and operator controls. The substrate remains isolated from BrainSweat save/world authority, and the application-level `persistentServices` gate stays off until a later integration rung explicitly enables it.
 
-### Rung 7 — Local-model runtime
+### Rung 7 — Circuit integrity hardening
+Turn the first external stress-test findings into substrate rules: fresh-only HOLDOUT context, frame-level controller provenance, truthful event-versus-season status, explicit frozen-season switching, grouped artifact receipt trails and inspectable/revocable grants.
+
+### Rung 8 — Local-model runtime
 Expand provider-neutral local model participation while keeping model output as proposals routed through existing validation and authority boundaries.
 
-### Rung 8 — Society layer
+### Rung 9 — Society layer
 Compose teams, councils, institutions, shared services and long-horizon world participation from the already verified identity, world, artifact, season and receipt substrate.
 
 ## CI policy

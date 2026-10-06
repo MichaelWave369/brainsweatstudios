@@ -3,13 +3,13 @@ import { createHash } from 'node:crypto';
 import v11Native from './fixtures/v11-native-receipts.json';
 import { canonical, clone, freeze, hash, sha256 } from '../src/runtime/data';
 import { freshCircuit, validateCircuit, verifyCircuitEvent } from '../src/circuit/evidence';
-import { addCircuitSeason, importCircuitWorldPack, rememberCircuitEvent, reviewCircuitPerformance, shareCircuitAsset, starterCircuit, writeCircuitNote } from '../src/circuit/operations';
+import { addCircuitSeason, importCircuitWorldPack, rememberCircuitEvent, reviewCircuitPerformance, revokeCircuitAssetGrant, shareCircuitAsset, starterCircuit, updateCircuitAgent, writeCircuitNote } from '../src/circuit/operations';
 import { makeSeason, validateSeason } from '../src/circuit/specs';
 import { CircuitSession } from '../src/circuit/session';
 import { runCircuitBatch, runCircuitEvent, runCircuitSeason, validateCircuitBatch } from '../src/circuit/cli';
 import { eventAssets } from '../src/circuit/assets';
 import { generalizationMatrix, standings } from '../src/circuit/scoring';
-import { bridgeManifest, leagueTables, localProgram, replayCircuitPart } from '../src/circuit/presentation';
+import { bridgeManifest, circuitOperatorStatus, controllerAt, groupCircuitAssets, leagueTables, localProgram, replayCircuitPart } from '../src/circuit/presentation';
 import { decodeCircuitStorage, encodeCircuitStorage } from '../src/circuit/storage';
 import { portData, prepareCircuitPort, validatePortData } from '../src/circuit/ports';
 import { familyConfig, validateFamilyConfig } from '../src/families/specs';
@@ -83,10 +83,42 @@ describe('V12 Circuit evidence and scheduling', () => {
         const mock = mockAdapter(), s = new CircuitSession(setup(6, 'mock'), 'first-circuit', 'round-1', 'CAREER', 0, { mock: { ...mock, async propose(r, signal) { await new Promise(resolve => setTimeout(resolve, 20)); return mock.propose(r, signal); } } });
         const before = s.fingerprint(); s.resume(); const turn = s.step(); await expect(s.step()).rejects.toThrow(); s.pause(); expect(await turn).toBe(false); expect(s.status).toBe('PAUSED'); expect(s.fingerprint()).toBe(before);
     });
-    it('shared assets require explicit grants and an eligible source partition', () => {
+    it('keeps frozen season controllers immutable while passport edits target future seasons', () => {
+        const source = setup(), agent = source.agents[0], frozen = source.seasons[0].agents.find(a => a.id === agent.id)!;
+        const changed = updateCircuitAgent(source, { ...agent, controller: { ...agent.controller, world: { ...agent.controller.world, family: 'model', provider: 'mock', model: 'mock-policy' } } });
+        expect(changed.agents.find(a => a.id === agent.id)?.controller.world.provider).toBe('mock');
+        expect(changed.seasons[0].agents.find(a => a.id === agent.id)?.controller.world).toEqual(frozen.controller.world);
+    });
+    it('reports controller provenance at the selected replay frame including Town handoffs', () => {
+        const part = complete.events[3].parts[0], role = Object.keys(part.bindings)[0];
+        expect(controllerAt(part, role, 0)).toEqual(part.native.initialControllers[role]);
+        const shift = part.shifts.find(row => row.role === role);
+        expect(shift).toBeDefined();
+        expect(controllerAt(part, role, shift!.index)).toEqual(shift!.controller);
+    });
+    it('distinguishes event completion from season completion in operator status', () => {
+        expect(circuitOperatorStatus('COMPLETE', true)).toBe('READY_FOR_NEXT');
+        expect(circuitOperatorStatus('COMPLETE', false)).toBe('SEASON_COMPLETE');
+        expect(circuitOperatorStatus('REQUESTING', true)).toBe('REQUESTING');
+    });
+    it('groups repeated artifact hashes into a receipt trail without rewriting evidence', () => {
+        const asset = eventAssets(complete.events[0])[0];
+        const duplicate = { ...clone(asset), id: 'duplicate-artifact', sourceEvent: 'event-copy', sourcePart: 'part-copy' };
+        const grouped = groupCircuitAssets([asset, duplicate]);
+        expect(grouped).toHaveLength(1);
+        expect(grouped[0].occurrences).toBe(2);
+        expect(grouped[0].sources.map(source => source.eventId)).toEqual([asset.sourceEvent, 'event-copy']);
+        expect(asset.id).not.toBe(duplicate.id);
+    });
+    it('shared assets require explicit grants, semantic dedupe and explicit revocation', () => {
         const asset = eventAssets(complete.events[0])[0]; const shared = shareCircuitAsset(complete, asset.id, 'aurora'); expect(shared.grants[0].contentHash).toBe(asset.contentHash);
         expect(() => validateCircuit({ ...shared, events: [] })).toThrow();
         expect(() => shareCircuitAsset(complete, asset.id, 'comet')).toThrow();
+        const sameContent = complete.events.flatMap(eventAssets).find(a => a.id !== asset.id && a.teamId === asset.teamId && a.contentHash === asset.contentHash);
+        if (sameContent) expect(() => shareCircuitAsset(shared, sameContent.id, 'aurora')).toThrow(/already granted/);
+        const revoked = revokeCircuitAssetGrant(shared, shared.grants[0].id);
+        expect(revoked.grants).toHaveLength(0);
+        expect(() => revokeCircuitAssetGrant(revoked, shared.grants[0].id)).toThrow(/retained exchange/);
         const spec = clone(makeSeason(['comet', 'aurora'], 6, 'GAUNTLET')); spec.rounds[0].artifacts = 'SHARED'; expect(() => validateSeason(spec)).toThrow(/gauntlet/);
     });
     it('declared team notes become immutable input snapshots without altering frozen rosters', async () => {

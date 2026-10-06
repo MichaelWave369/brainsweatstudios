@@ -50,6 +50,7 @@ export function validateEvaluation(input: unknown): EvaluationInput {
     const notes = input.notes.map(validateNote), artifacts = input.artifacts.map(validateArtifact);
     demand(new Set(notes.map(n => n.id)).size === notes.length && new Set(artifacts.map(a => a.id)).size === artifacts.length, 'Repeated evaluation input.');
     demand(input.condition !== 'FRESH' || notes.length === 0 && artifacts.length === 0, 'Fresh evaluation cannot carry prior memory or artifacts.');
+    demand(input.partition !== 'HOLDOUT' || input.condition === 'FRESH' && notes.length === 0 && artifacts.length === 0, 'HOLDOUT requires fresh context with no prior notes or artifacts.');
     demand(notes.every(n => n.partition === 'CAREER' || n.partition === 'TRAIN'), 'Holdout/transfer notes cannot become controller context.');
     const value = { mode: input.mode, partition: input.partition, condition: input.condition, episode: input.episode, notes, artifacts } as Omit<EvaluationInput, 'snapshotHash'>;
     demand(input.snapshotHash === inputHash(value), 'Frozen memory snapshot differs.');

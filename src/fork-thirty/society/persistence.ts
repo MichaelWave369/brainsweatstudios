@@ -46,7 +46,7 @@ function record(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function text(value: unknown, label: string, max = SOCIETY_LIMITS.text) {
+function text(value: unknown, label: string, max: number = SOCIETY_LIMITS.text) {
   if (typeof value !== 'string' || value.trim().length < 1 || value.length > max) throw new Error(`Invalid ${label}`);
   return value;
 }
@@ -121,7 +121,7 @@ export function validateSocietyState(value: unknown): SocietyState {
       purpose: text(raw.purpose, 'institution purpose', 240),
       quorum,
       members: Object.freeze(members),
-      authority: Object.freeze([]),
+      authority: [] as const,
     });
   });
   const institutionMap = new Map(institutions.map(item => [item.id, item]));

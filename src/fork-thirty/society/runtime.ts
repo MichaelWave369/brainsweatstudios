@@ -312,6 +312,7 @@ export function assignSocietyProposal(
   if (state.assignments.length >= SOCIETY_LIMITS.assignments) throw new Error('Society assignment limit reached');
   const proposal = state.proposals.find(item => item.id === proposalId);
   if (!proposal || proposal.status !== 'OPERATOR_APPROVED') throw new Error('Choose an operator-approved society proposal');
+  if (state.assignments.some(item => item.proposalId === proposalId)) throw new Error('This society proposal already has an assignment');
   const group = institution(state, proposal.institutionId);
   memberOf(group, input.assigneeId);
   knownAgent(input.assigneeId);

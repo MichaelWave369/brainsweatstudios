@@ -13,6 +13,9 @@ import {
   enqueueSocietyService,
   loadSocietyState,
   saveSocietyState,
+  societyAuditTrail,
+  societyBridgeReadiness,
+  runSocietyRedTeam,
   submitSocietyProposal,
   type SocietyServiceKind,
   type SocietyState,
@@ -33,6 +36,7 @@ export default function ForkThirtySocietyPanel() {
   const [receiptRef, setReceiptRef] = useState('');
   const [serviceKind, setServiceKind] = useState<SocietyServiceKind>('RECOVERY');
   const [notice, setNotice] = useState('');
+  const [redTeam, setRedTeam] = useState<ReturnType<typeof runSocietyRedTeam> | null>(null);
 
   const group = society.institutions.find(item => item.id === institutionId) ?? society.institutions[0];
   const activeActor = group?.members.some(member => member.agentId === actorId)
@@ -54,6 +58,11 @@ export default function ForkThirtySocietyPanel() {
     () => society.memory.filter(item => item.institutionId === group?.id),
     [society.memory, group?.id],
   );
+  const audit = useMemo(
+    () => societyAuditTrail(society).filter(row => row.institutionId === group?.id),
+    [society, group?.id],
+  );
+  const bridgeReadiness = useMemo(() => societyBridgeReadiness(), []);
 
   const commit = (next: SocietyState, message = '') => {
     const stored = saveSocietyState(next, typeof window === 'undefined' ? undefined : window.localStorage);
@@ -186,6 +195,27 @@ export default function ForkThirtySocietyPanel() {
           <strong>{item.origin}</strong><p>{item.summary}</p><span className="circuit-hash">{item.sourceRef}</span>
         </article>)}
       </div>
+    <div className="society-grid">
+      <div>
+        <h3>Audit transcript</h3>
+        <p>Derived from retained society state. It shows who proposed, endorsed, approved, executed and which receipt closed the work.</p>
+        {audit.length === 0 && <p>No audit rows yet.</p>}
+        <ol className="society-audit">{audit.slice(-24).map(row => <li key={`${row.sequence}-${row.subjectRef}-${row.stage}`}>
+          <strong>{row.stage}</strong> · {row.actor} · {row.subjectRef}
+          {row.receiptRef && <span className="circuit-hash">{row.receiptRef}</span>}
+          <small>authority granted: {String(row.authorityGranted)}</small>
+        </li>)}</ol>
+      </div>
+      <div>
+        <h3>Red-team & bridge preflight</h3>
+        <button className="btn secondary" onClick={() => setRedTeam(runSocietyRedTeam())}>Run society red-team</button>
+        {redTeam && <p data-testid="society-redteam-status"><strong>{redTeam.attacks.filter(attack => attack.blocked).length}/{redTeam.attacks.length}</strong> attacks blocked · {redTeam.passed ? 'PASS' : 'FAIL'}</p>}
+        {redTeam && <details><summary>Attack results</summary><ol>{redTeam.attacks.map(attack => <li key={attack.id}><strong>{attack.id}</strong> · {attack.blocked ? 'BLOCKED' : 'FAILED'}<span className="circuit-hash">{attack.detail}</span></li>)}</ol></details>}
+        <p><strong>Bridge contract readiness:</strong> {bridgeReadiness.contractReady ? 'PASS' : 'FAIL'} · <strong>Activation:</strong> {bridgeReadiness.activationReady ? 'READY' : 'BLOCKED'}</p>
+        <ol>{bridgeReadiness.bridges.map(bridge => <li key={bridge.id}>{bridge.target} · interface-only {String(bridge.interfaceOnly)} · unbound {String(bridge.unbound)} · authority 0 {String(bridge.zeroAuthority)}</li>)}</ol>
+        <details><summary>Activation blockers</summary><ul>{bridgeReadiness.blockers.map(blocker => <li key={blocker}>{blocker}</li>)}</ul></details>
+      </div>
+    </div>
     </div>
   </section>;
 }

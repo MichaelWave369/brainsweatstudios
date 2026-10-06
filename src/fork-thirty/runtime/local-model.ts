@@ -48,7 +48,7 @@ export function createLocalModelBinding(
     timeoutMs: overrides.timeoutMs ?? 10000,
     temperature: overrides.temperature ?? 0,
     seed: overrides.seed ?? 369,
-    authority: Object.freeze([]),
+    authority: [] as const,
   };
 
   validateWorldController({

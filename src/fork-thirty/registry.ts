@@ -14,9 +14,9 @@ export const forkThirty: ForkThirtyManifest = Object.freeze({
   features: Object.freeze({
     castRuntime: true,
     bridgeRuntime: false,
-    persistentServices: false,
+    persistentServices: true,
     localModelRuntime: true,
-    societyLayer: false,
+    societyLayer: true,
   }),
 });
 

@@ -145,7 +145,7 @@ describe('Fork-Thirty persistent service substrate', () => {
     );
   });
 
-  it('keeps the application-level persistent service feature gate closed', () => {
-    expect(forkThirty.features.persistentServices).toBe(false);
+  it('activates persistent services when the society layer begins consuming them', () => {
+    expect(forkThirty.features.persistentServices).toBe(true);
   });
 });

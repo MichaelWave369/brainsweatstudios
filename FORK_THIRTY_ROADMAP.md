@@ -33,7 +33,7 @@ Turn the first external stress-test findings into substrate rules: fresh-only HO
 Activate the Fork-Thirty cast as runnable Circuit passports and bind operator-selected Ollama models through the existing loopback Agent Bridge. Model output remains proposal-only, controller bindings freeze into season evidence, endpoints/tokens are never persisted in cast identity, and no model receives world or ecosystem authority.
 
 ### Rung 9 — Society layer
-Compose teams, councils, institutions, shared services and long-horizon world participation from the already verified identity, world, artifact, season and receipt substrate.
+Activate the bounded service substrate and compose teams, councils and institutions from the verified cast. Society proposals require institutional quorum plus explicit operator approval; approval coordinates work but never grants world authority. Assignments and shared service requests flow through resident service lifecycles, completion requires receipt references, and institutional memory retains explicit provenance in a persistence domain isolated from BrainSweat world/career saves.
 
 ## CI policy
 

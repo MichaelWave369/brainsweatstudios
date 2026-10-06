@@ -79,6 +79,13 @@ test('circuit: Society Board persists quorum-approved coordination without grant
     await board.getByRole('button', { name: 'Operator approve', exact: true }).click();
     await expect(board.getByText(/OPERATOR_APPROVED · endorsements 2\/2 · authority granted:/)).toBeVisible();
     await expect(board.getByText('false', { exact: true })).toBeVisible();
+    await expect(board.getByText('PROPOSED', { exact: true })).toBeVisible();
+    await expect(board.getByText('ENDORSED', { exact: true })).toBeVisible();
+    await expect(board.getByText('OPERATOR_APPROVED', { exact: true })).toBeVisible();
+    await board.getByRole('button', { name: 'Run society red-team', exact: true }).click();
+    await expect(board.getByTestId('society-redteam-status')).toHaveText('9/9 attacks blocked · PASS');
+    await expect(board.getByText(/Bridge contract readiness:/)).toContainText('PASS');
+    await expect(board.getByText(/Activation:/)).toContainText('BLOCKED');
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fork-thirty-society:v1')!).proposals[0].authorityGranted)).toBe(false);
     expect(await page.evaluate(() => localStorage.getItem('brain-sweat-studio:profiles:v2') ?? localStorage.getItem('brain-sweat-studio:v1'))).toBe(brainBefore);
     await page.reload();

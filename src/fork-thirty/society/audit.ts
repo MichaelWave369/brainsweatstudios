@@ -171,7 +171,7 @@ export function societyAuditTrail(input: SocietyState): readonly SocietyAuditRow
 }
 
 function ready(state: SocietyState, agentId: string) {
-  let next = commandSocietyService(state, agentId, { type: 'START', actor: 'operator' });
+  const next = commandSocietyService(state, agentId, { type: 'START', actor: 'operator' });
   return commandSocietyService(next, agentId, { type: 'READY', actor: 'service' });
 }
 

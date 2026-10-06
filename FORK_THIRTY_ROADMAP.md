@@ -35,6 +35,9 @@ Activate the Fork-Thirty cast as runnable Circuit passports and bind operator-se
 ### Rung 9 — Society layer
 Activate the bounded service substrate and compose teams, councils and institutions from the verified cast. Society proposals require institutional quorum plus explicit operator approval; approval coordinates work but never grants world authority. Assignments and shared service requests flow through resident service lifecycles, completion requires receipt references, and institutional memory retains explicit provenance in a persistence domain isolated from BrainSweat world/career saves.
 
+### Rung 10 — Society red-team & bridge readiness
+Attack the society boundary before any external adapter is activated. Reject forged membership, fake quorum, replayed approval, duplicate completion receipts, stale assignments, service impersonation, malicious receipt-backed memory, cross-institution leakage and authority escalation. Derive an inspectable proposal-to-receipt audit transcript and report bridge contracts as contract-ready while activation remains blocked until transports, operator revocation and adapter qualification are implemented.
+
 ## CI policy
 
 Pull requests always run lint, unit tests and a production build. The full cross-browser and long-horizon regression wall also runs before merge whenever a change touches critical runtime, world, persistence, authority, online, dependency or workflow paths.

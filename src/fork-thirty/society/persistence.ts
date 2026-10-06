@@ -1,5 +1,5 @@
 import { cast } from '../cast';
-import { decodeAgentServiceDirectory, encodeAgentServiceDirectory } from '../services/persistence';
+import { decodeAgentServiceDirectory } from '../services/persistence';
 import {
   SOCIETY_LIMITS,
   type AssignmentStatus,
@@ -33,6 +33,14 @@ const assignmentStatuses = new Set<AssignmentStatus>(['ASSIGNED', 'ACCEPTED', 'R
 const serviceKinds = new Set<SocietyServiceKind>(['MEMORY', 'RECOVERY', 'COMPUTE', 'COMMS', 'COORDINATION']);
 const queueStatuses = new Set<SocietyQueueStatus>(['QUEUED', 'CLAIMED', 'COMPLETED', 'REJECTED']);
 const authorityScopes = new Set(['world', 'memory', 'media', 'network', 'operator']);
+const serviceCapability: Record<SocietyServiceKind, string> = {
+  MEMORY: 'memory-retrieval',
+  RECOVERY: 'debugging',
+  COMPUTE: 'compute-routing',
+  COMMS: 'structured-comms',
+  COORDINATION: 'team-coordination',
+};
+const castById = new Map(cast.map(resident => [resident.id, resident]));
 
 function record(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -75,6 +83,7 @@ export function validateSocietyState(value: unknown): SocietyState {
   if (!record(value) || value.schema !== 'fork-thirty-society@1') throw new Error('Invalid society state schema');
   const revision = integer(value.revision, 'society revision');
   const logicalTick = integer(value.logicalTick, 'society logicalTick');
+  if (logicalTick !== revision) throw new Error('Society logical time must match its revision');
   const services = decodeAgentServiceDirectory(JSON.stringify(value.services));
 
   if (!Array.isArray(value.institutions) || value.institutions.length > SOCIETY_LIMITS.institutions) throw new Error('Invalid society institutions');
@@ -139,7 +148,9 @@ export function validateSocietyState(value: unknown): SocietyState {
       });
     })();
     if ((raw.status === 'ENDORSED' || raw.status === 'OPERATOR_APPROVED' || raw.status === 'COMPLETED') && endorsements.length < group.quorum) throw new Error('Proposal status exceeds institutional quorum');
+    if ((raw.status === 'OPEN' || raw.status === 'ENDORSED') && raw.operatorDecision !== 'PENDING') throw new Error('Undecided proposal has an operator decision');
     if (raw.status === 'OPERATOR_APPROVED' && raw.operatorDecision !== 'APPROVED') throw new Error('Approved proposal lacks operator approval');
+    if (raw.status === 'COMPLETED' && (raw.operatorDecision !== 'APPROVED' || raw.receiptRef === null)) throw new Error('Completed proposal requires operator approval and a receipt');
     if (raw.status === 'REJECTED' && raw.operatorDecision !== 'REJECTED') throw new Error('Rejected proposal lacks operator rejection');
 
     return Object.freeze({
@@ -186,6 +197,15 @@ export function validateSocietyState(value: unknown): SocietyState {
     });
   });
   if (new Set(assignments.map(item => item.id)).size !== assignments.length) throw new Error('Duplicate assignment id');
+  if (new Set(assignments.map(item => item.proposalId)).size !== assignments.length) throw new Error('A society proposal may have only one assignment');
+  for (const assignment of assignments) {
+    const proposal = proposalMap.get(assignment.proposalId)!;
+    if (assignment.status === 'COMPLETED') {
+      if (!assignment.receiptRef || proposal.status !== 'COMPLETED' || proposal.receiptRef !== assignment.receiptRef) throw new Error('Completed assignment must match the proposal receipt');
+    } else {
+      if (assignment.receiptRef !== null || proposal.status !== 'OPERATOR_APPROVED') throw new Error('Open assignment must belong to an operator-approved proposal without a receipt');
+    }
+  }
 
   const queue: SocietyQueueItem[] = value.queue.map(raw => {
     if (!record(raw) || raw.schema !== 'fork-thirty-service-request@1') throw new Error('Invalid society service request');
@@ -197,6 +217,14 @@ export function validateSocietyState(value: unknown): SocietyState {
     if (typeof raw.kind !== 'string' || !serviceKinds.has(raw.kind as SocietyServiceKind)) throw new Error('Invalid society service kind');
     if (typeof raw.status !== 'string' || !queueStatuses.has(raw.status as SocietyQueueStatus)) throw new Error('Invalid society queue status');
     const assignedTo = raw.assignedTo === null ? null : agent(raw.assignedTo, 'service assignee');
+    const receiptRef = raw.receiptRef === null ? null : text(raw.receiptRef, 'service receiptRef', 240);
+    if (raw.status === 'QUEUED' && (assignedTo !== null || receiptRef !== null)) throw new Error('Queued service work cannot already have an assignee or receipt');
+    if (raw.status === 'CLAIMED' && (assignedTo === null || receiptRef !== null)) throw new Error('Claimed service work needs an assignee and no completion receipt');
+    if (raw.status === 'COMPLETED' && (assignedTo === null || receiptRef === null)) throw new Error('Completed service work needs an assignee and receipt');
+    if (assignedTo) {
+      const resident = castById.get(assignedTo)!;
+      if (!resident.capabilities.includes(serviceCapability[raw.kind as SocietyServiceKind])) throw new Error('Service assignee lacks the required declared capability');
+    }
 
     return Object.freeze({
       schema: 'fork-thirty-service-request@1' as const,
@@ -207,7 +235,7 @@ export function validateSocietyState(value: unknown): SocietyState {
       taskRef: text(raw.taskRef, 'service taskRef', 200),
       status: raw.status as SocietyQueueStatus,
       assignedTo,
-      receiptRef: raw.receiptRef === null ? null : text(raw.receiptRef, 'service receiptRef', 240),
+      receiptRef,
       tick: integer(raw.tick, 'service request tick'),
     });
   });
@@ -273,8 +301,4 @@ export function saveSocietyState(state: SocietyState, storage?: SocietyStorage):
   const validated = validateSocietyState(state);
   if (storage) storage.setItem(SOCIETY_STORAGE_KEY, JSON.stringify(validated));
   return validated;
-}
-
-export function societyServiceDigest(state: SocietyState): string {
-  return encodeAgentServiceDirectory(validateSocietyState(state).services);
 }

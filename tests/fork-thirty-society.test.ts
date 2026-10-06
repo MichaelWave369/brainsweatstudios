@@ -17,6 +17,9 @@ import {
   forkThirty,
   loadSocietyState,
   saveSocietyState,
+  societyAuditTrail,
+  societyBridgeReadiness,
+  runSocietyRedTeam,
   submitSocietyProposal,
   validateSocietyState,
 } from '../src/fork-thirty';
@@ -199,6 +202,82 @@ describe('Fork-Thirty society layer', () => {
       localModelRuntime: true,
       societyLayer: true,
     });
+  });
+
+  it('blocks the society red-team attack matrix before bridge activation', () => {
+    const result = runSocietyRedTeam();
+    expect(result.passed).toBe(true);
+    expect(result.attacks).toHaveLength(9);
+    expect(result.attacks.every(attack => attack.blocked)).toBe(true);
+    expect(result.attacks.map(attack => attack.id)).toEqual([
+      'forged-membership',
+      'fake-quorum',
+      'replayed-operator-approval',
+      'duplicate-completion-receipt',
+      'stale-assignment',
+      'service-impersonation',
+      'malicious-receipt-memory',
+      'cross-institution-assignment',
+      'authority-escalation',
+    ]);
+  });
+
+  it('derives an inspectable proposal-to-receipt audit transcript without inventing authority', () => {
+    let state = createStarterSociety(createSocietyState());
+    state = ready(state, 'sal');
+    state = ready(state, 'al');
+    state = ready(state, 'brian-sweat');
+    state = submitSocietyProposal(state, {
+      institutionId: 'mission-council',
+      proposerId: 'sal',
+      summary: 'Audit a bounded Circuit run.',
+      taskRef: 'circuit:audit:round-1',
+    });
+    const proposalId = state.proposals[0].id;
+    state = endorseSocietyProposal(state, proposalId, 'al');
+    state = decideSocietyProposal(state, proposalId, { actor: 'operator', decision: 'APPROVE' });
+    state = assignSocietyProposal(state, proposalId, { actor: 'operator', assigneeId: 'brian-sweat' });
+    state = acceptSocietyAssignment(state, state.assignments[0].id, 'brian-sweat');
+    state = completeSocietyAssignment(state, state.assignments[0].id, {
+      agentId: 'brian-sweat',
+      receiptRef: 'receipt:audit:round-1',
+    });
+
+    const trail = societyAuditTrail(state);
+    expect(trail.map(row => row.stage)).toEqual([
+      'PROPOSED',
+      'ENDORSED',
+      'OPERATOR_APPROVED',
+      'ASSIGNED',
+      'ACCEPTED',
+      'COMPLETED',
+    ]);
+    expect(trail.map(row => row.actor)).toEqual([
+      'sal',
+      'al',
+      'operator',
+      'operator',
+      'brian-sweat',
+      'brian-sweat',
+    ]);
+    expect(trail.at(-1)?.receiptRef).toBe('receipt:audit:round-1');
+    expect(trail.every(row => row.authorityGranted === false)).toBe(true);
+  });
+
+  it('reports bridge contracts ready for adapter work while activation stays blocked', () => {
+    const readiness = societyBridgeReadiness();
+    expect(readiness.contractReady).toBe(true);
+    expect(readiness.activationReady).toBe(false);
+    expect(readiness.bridgeRuntimeEnabled).toBe(false);
+    expect(readiness.bridges).toHaveLength(5);
+    expect(readiness.bridges.every(bridge =>
+      bridge.interfaceOnly &&
+      bridge.unbound &&
+      bridge.operatorOnly &&
+      bridge.proposalOnly &&
+      bridge.zeroAuthority
+    )).toBe(true);
+    expect(readiness.blockers).toContain('No external adapter qualification receipt exists in this rung.');
   });
 
   it('requires the operator to create institutions', () => {

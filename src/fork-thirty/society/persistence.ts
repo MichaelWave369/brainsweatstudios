@@ -241,6 +241,16 @@ export function validateSocietyState(value: unknown): SocietyState {
   });
   if (new Set(queue.map(item => item.id)).size !== queue.length) throw new Error('Duplicate service request id');
 
+  const receiptOwners = new Map<string, string>();
+  const retainReceipt = (receiptRef: string | null, owner: string) => {
+    if (!receiptRef) return;
+    const prior = receiptOwners.get(receiptRef);
+    if (prior && prior !== owner) throw new Error('Completion receipt cannot be replayed across different society work');
+    receiptOwners.set(receiptRef, owner);
+  };
+  for (const assignment of assignments) retainReceipt(assignment.receiptRef, `assignment:${assignment.id}`);
+  for (const item of queue) retainReceipt(item.receiptRef, `service:${item.id}`);
+
   const memory: InstitutionMemoryRecord[] = value.memory.map(raw => {
     if (!record(raw) || raw.schema !== 'fork-thirty-institution-memory@1') throw new Error('Invalid institution memory');
     const institutionId = id(raw.institutionId, 'memory institution');
@@ -257,6 +267,20 @@ export function validateSocietyState(value: unknown): SocietyState {
     });
   });
   if (new Set(memory.map(item => item.id)).size !== memory.length) throw new Error('Duplicate institution memory id');
+  for (const item of memory) {
+    if (item.origin !== 'RECEIPT') continue;
+    const assignmentMatch = assignments.some(assignment =>
+      assignment.status === 'COMPLETED' &&
+      assignment.institutionId === item.institutionId &&
+      assignment.receiptRef === item.sourceRef
+    );
+    const serviceMatch = queue.some(request =>
+      request.status === 'COMPLETED' &&
+      request.institutionId === item.institutionId &&
+      request.receiptRef === item.sourceRef
+    );
+    if (!assignmentMatch && !serviceMatch) throw new Error('Receipt-backed institutional memory must match completed work in the same institution');
+  }
 
   return freezeState({
     schema: 'fork-thirty-society@1',

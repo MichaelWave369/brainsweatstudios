@@ -79,10 +79,19 @@ test('circuit: Society Board persists quorum-approved coordination without grant
     await board.getByRole('button', { name: 'Operator approve', exact: true }).click();
     await expect(board.getByText(/OPERATOR_APPROVED · endorsements 2\/2 · authority granted:/)).toBeVisible();
     await expect(board.getByText('false', { exact: true })).toBeVisible();
+    await expect(board.getByText('PROPOSED', { exact: true })).toBeVisible();
+    await expect(board.getByText('ENDORSED', { exact: true })).toBeVisible();
+    await expect(board.getByText('OPERATOR_APPROVED', { exact: true })).toBeVisible();
+    await board.getByRole('button', { name: 'Run society red-team', exact: true }).click();
+    await expect(board.getByTestId('society-redteam-status')).toHaveText('9/9 attacks blocked · PASS');
+    const bridgePreflight = board.locator('p').filter({ hasText: 'Bridge contract readiness:' });
+    await expect(bridgePreflight).toContainText('PASS');
+    await expect(bridgePreflight).toContainText('Activation: BLOCKED');
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fork-thirty-society:v1')!).proposals[0].authorityGranted)).toBe(false);
     expect(await page.evaluate(() => localStorage.getItem('brain-sweat-studio:profiles:v2') ?? localStorage.getItem('brain-sweat-studio:v1'))).toBe(brainBefore);
     await page.reload();
-    await expect(page.getByRole('region', { name: 'Fork-Thirty Society Board' }).getByText(/OPERATOR_APPROVED/)).toBeVisible();
+    const reloadedBoard = page.getByRole('region', { name: 'Fork-Thirty Society Board' });
+    await expect(reloadedBoard.locator('.society-card p').filter({ hasText: 'OPERATOR_APPROVED · endorsements 2/2' })).toBeVisible();
 });
 test('circuit: imports are atomic and human role actions retain native controller attribution', async ({ page }) => {
     await prepare(page); await page.goto('/#/academy?tab=circuit'); await page.getByRole('button', { name: 'Create two starter teams', exact: true }).click(); await page.getByLabel('Passport controller comet-one', { exact: true }).selectOption('human'); await page.getByRole('button', { name: 'Freeze new season', exact: true }).click(); await page.getByRole('button', { name: 'One logical turn', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText('READY');

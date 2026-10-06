@@ -30,7 +30,7 @@ function knownAgent(agentId: string) {
   return agent;
 }
 
-function bounded(value: string, label: string, max = SOCIETY_LIMITS.text) {
+function bounded(value: string, label: string, max: number = SOCIETY_LIMITS.text) {
   if (typeof value !== 'string' || value.trim().length < 1 || value.length > max) throw new Error(`Invalid ${label}`);
   return value;
 }
@@ -159,7 +159,7 @@ export function addSocietyInstitution(
     purpose: bounded(input.purpose, 'institution purpose', 240),
     quorum,
     members: Object.freeze(members),
-    authority: Object.freeze([]),
+    authority: [] as const,
   });
 
   return mutate(state, { institutions: [...state.institutions, value] });

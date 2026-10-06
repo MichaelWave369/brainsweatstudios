@@ -51,7 +51,7 @@ export interface SocietyBridgeReadiness {
   schema: 'fork-thirty-bridge-readiness@1';
   contractReady: boolean;
   activationReady: false;
-  bridgeRuntimeEnabled: false;
+  bridgeRuntimeEnabled: boolean;
   bridges: readonly {
     id: string;
     target: string;
@@ -352,7 +352,7 @@ export function societyBridgeReadiness(): SocietyBridgeReadiness {
     schema: 'fork-thirty-bridge-readiness@1',
     contractReady,
     activationReady: false,
-    bridgeRuntimeEnabled: false,
+    bridgeRuntimeEnabled: forkThirty.features.bridgeRuntime,
     bridges: Object.freeze(bridges),
     blockers: Object.freeze([
       'Bridge runtime feature gate remains disabled.',

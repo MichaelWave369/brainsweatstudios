@@ -61,6 +61,7 @@ test('circuit: Fork-Thirty residents require explicit local connection before lo
 });
 test('circuit: Society Board persists quorum-approved coordination without granting authority', async ({ page }) => {
     await prepare(page); await page.goto('/#/academy?tab=circuit');
+    const brainBefore = await page.evaluate(() => localStorage.getItem('brain-sweat-studio:profiles:v2') ?? localStorage.getItem('brain-sweat-studio:v1'));
     const board = page.getByRole('region', { name: 'Fork-Thirty Society Board' });
     await board.getByRole('button', { name: 'Create starter society', exact: true }).click();
     await expect(board.getByRole('heading', { name: 'Society Board', exact: true })).toBeVisible();
@@ -79,7 +80,7 @@ test('circuit: Society Board persists quorum-approved coordination without grant
     await expect(board.getByText(/OPERATOR_APPROVED · endorsements 2\/2 · authority granted:/)).toBeVisible();
     await expect(board.getByText('false', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fork-thirty-society:v1')!).proposals[0].authorityGranted)).toBe(false);
-    expect((await saved(page)).agents).toHaveLength(0);
+    expect(await page.evaluate(() => localStorage.getItem('brain-sweat-studio:profiles:v2') ?? localStorage.getItem('brain-sweat-studio:v1'))).toBe(brainBefore);
     await page.reload();
     await expect(page.getByRole('region', { name: 'Fork-Thirty Society Board' }).getByText(/OPERATOR_APPROVED/)).toBeVisible();
 });

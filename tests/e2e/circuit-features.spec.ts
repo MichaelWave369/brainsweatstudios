@@ -59,6 +59,30 @@ test('circuit: Fork-Thirty residents require explicit local connection before lo
     await page.getByLabel('Passport controller sal', { exact: true }).selectOption('mock');
     await expect.poll(async () => (await saved(page)).agents.find(agent => agent.id === 'sal')?.controller.world.provider).toBe('mock');
 });
+test('circuit: Society Board persists quorum-approved coordination without granting authority', async ({ page }) => {
+    await prepare(page); await page.goto('/#/academy?tab=circuit');
+    const board = page.getByRole('region', { name: 'Fork-Thirty Society Board' });
+    await board.getByRole('button', { name: 'Create starter society', exact: true }).click();
+    await expect(board.getByRole('heading', { name: 'Society Board', exact: true })).toBeVisible();
+    await expect(board.getByLabel('Society institution', { exact: true })).toHaveValue('mission-council');
+    await board.getByLabel('Society acting resident', { exact: true }).selectOption('sal');
+    const sal = board.locator('.society-service').filter({ hasText: 'SAL' });
+    await sal.getByRole('button', { name: 'Start', exact: true }).click();
+    await sal.getByRole('button', { name: 'Mark ready', exact: true }).click();
+    await board.getByLabel('Society proposal summary', { exact: true }).fill('Run a same-seed controller comparison.');
+    await board.getByLabel('Society task reference', { exact: true }).fill('circuit:season-1:round-1');
+    await board.getByRole('button', { name: 'Submit proposal', exact: true }).click();
+    await expect(board.getByText(/OPEN · endorsements 1\/2 · authority granted:/)).toBeVisible();
+    await board.getByLabel('Society acting resident', { exact: true }).selectOption('al');
+    await board.getByRole('button', { name: 'Endorse', exact: true }).click();
+    await board.getByRole('button', { name: 'Operator approve', exact: true }).click();
+    await expect(board.getByText(/OPERATOR_APPROVED · endorsements 2\/2 · authority granted:/)).toBeVisible();
+    await expect(board.getByText('false', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fork-thirty-society:v1')!).proposals[0].authorityGranted)).toBe(false);
+    expect((await saved(page)).agents).toHaveLength(0);
+    await page.reload();
+    await expect(page.getByRole('region', { name: 'Fork-Thirty Society Board' }).getByText(/OPERATOR_APPROVED/)).toBeVisible();
+});
 test('circuit: imports are atomic and human role actions retain native controller attribution', async ({ page }) => {
     await prepare(page); await page.goto('/#/academy?tab=circuit'); await page.getByRole('button', { name: 'Create two starter teams', exact: true }).click(); await page.getByLabel('Passport controller comet-one', { exact: true }).selectOption('human'); await page.getByRole('button', { name: 'Freeze new season', exact: true }).click(); await page.getByRole('button', { name: 'One logical turn', exact: true }).click(); await expect(page.getByTestId('circuit-status')).toHaveText('READY');
     const actions = page.getByLabel(/^Human action /); expect(await actions.count()).toBeGreaterThan(0); for (const select of await actions.all()) await select.selectOption({ index: 1 }); await page.getByRole('button', { name: 'Advance human turn', exact: true }).click(); const before = await saved(page); expect(before.events[0].parts[0].native.records).toHaveLength(1);

@@ -30,7 +30,7 @@ Add bounded presence, service-local memory, role handoff receipts and determinis
 Turn the first external stress-test findings into substrate rules: fresh-only HOLDOUT context, frame-level controller provenance, truthful event-versus-season status, explicit frozen-season switching, grouped artifact receipt trails and inspectable/revocable grants.
 
 ### Rung 8 — Local-model runtime
-Expand provider-neutral local model participation while keeping model output as proposals routed through existing validation and authority boundaries.
+Activate the Fork-Thirty cast as runnable Circuit passports and bind operator-selected Ollama models through the existing loopback Agent Bridge. Model output remains proposal-only, controller bindings freeze into season evidence, endpoints/tokens are never persisted in cast identity, and no model receives world or ecosystem authority.
 
 ### Rung 9 — Society layer
 Compose teams, councils, institutions, shared services and long-horizon world participation from the already verified identity, world, artifact, season and receipt substrate.
